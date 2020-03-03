@@ -32,6 +32,10 @@ public class CarController : MonoBehaviour
     public float previousFrameLocalZVelocity = 0.0f;
     
     public Transform carVisual;
+    public Transform frontLeftWheelHolder;
+    public Transform frontRightWheelHolder;
+    public Transform rearLeftWheelHolder;
+    public Transform rearRightWheelHolder;
 
     void Start()
     {
@@ -54,6 +58,9 @@ public class CarController : MonoBehaviour
         }
 
         CarInput();
+
+        UpdateVisualRoll();
+        UpdateWheelVisual();
     }
 
     void FixedUpdate()
@@ -63,8 +70,6 @@ public class CarController : MonoBehaviour
         SteeringForce();
         DownForce();
         BrakingForce();
-
-        UpdateVisualRoll();
 
         previousFramePosition = transform.position;
     }
@@ -275,6 +280,19 @@ public class CarController : MonoBehaviour
 
         Debug.DrawLine(WheelPosition(axles[Axle.REAR_AXLE_INDEX], axles[Axle.REAR_AXLE_INDEX].leftWheel, true), WheelPosition(axles[Axle.REAR_AXLE_INDEX], axles[Axle.REAR_AXLE_INDEX].leftWheel, false), Color.blue);
         Debug.DrawLine(WheelPosition(axles[Axle.REAR_AXLE_INDEX], axles[Axle.REAR_AXLE_INDEX].rightWheel, true), WheelPosition(axles[Axle.REAR_AXLE_INDEX], axles[Axle.REAR_AXLE_INDEX].rightWheel, false), Color.blue);
+    }
+
+    void UpdateWheelVisual()
+    {
+        Vector3 frontLeftWheelPos = WheelPosition(axles[Axle.FRONT_AXLE_INDEX], axles[Axle.FRONT_AXLE_INDEX].leftWheel);
+        Vector3 frontRightWheelPos = WheelPosition(axles[Axle.FRONT_AXLE_INDEX], axles[Axle.FRONT_AXLE_INDEX].rightWheel);
+        Vector3 rearLeftWheelPos = WheelPosition(axles[Axle.REAR_AXLE_INDEX], axles[Axle.REAR_AXLE_INDEX].leftWheel);
+        Vector3 rearRightWheelPos = WheelPosition(axles[Axle.REAR_AXLE_INDEX], axles[Axle.REAR_AXLE_INDEX].rightWheel);
+
+        frontLeftWheelHolder.position = frontLeftWheelPos;
+        frontRightWheelHolder.position = frontRightWheelPos;
+        rearLeftWheelHolder.position = rearLeftWheelPos;
+        rearRightWheelHolder.position = rearRightWheelPos;
     }
 
     void UpdateVisualRoll()
