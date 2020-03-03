@@ -358,6 +358,11 @@ public class CarController : MonoBehaviour
 
             float accelerationPercentage = Mathf.Clamp(-(localZVelocity - previousFrameLocalZVelocity) / carVisualXRollAccelerationSensitivity, -1.0f, 1.0f);
 
+            if(Mathf.Abs(accelerationPercentage) < 0.05f)
+            {
+                accelerationPercentage = 0.0f;
+            }
+
             float newXRot = Mathf.MoveTowardsAngle(oldXRot, accelerationPercentage * carVisualXRollMaxDegrees, Time.fixedDeltaTime * carVisualXRollMaxSpeed);
 
             carVisualXRoll = newXRot;
