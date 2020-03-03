@@ -33,6 +33,13 @@ public class CarController : MonoBehaviour
         rb.centerOfMass = centerOfMass;
     }
 
+    void Reset()
+    {
+        rb.velocity = new Vector3();
+        rb.angularVelocity = new Vector3();
+        transform.localEulerAngles = new Vector3(transform.localEulerAngles.x, transform.localEulerAngles.y, 0.0f);
+    }
+
     void Update()
     {
         if(debugDraw)
@@ -74,6 +81,11 @@ public class CarController : MonoBehaviour
         } else
         {
             brakingInput = 0.0f;
+        }
+
+        if(Input.GetKeyDown(KeyCode.R))
+        {
+            Reset();
         }
     }
 
