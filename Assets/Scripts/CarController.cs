@@ -23,8 +23,14 @@ public class CarController : MonoBehaviour
     public float carVisualZRollMaxDegrees = 15.0f;
     public float carVisualZRollMaxSpeed = 15.0f;
 
-    public Vector3 previousFramePosition = new Vector3();
+    public float carVisualXRoll = 0.0f;
+    public float carVisualXRollMaxDegrees = 3.0f;
+    public float carVisualXRollMaxSpeed = 6.0f;
+    public float carVisualXRollAccelerationSensitivity = 40f;
 
+    public Vector3 previousFramePosition = new Vector3();
+    public float previousFrameLocalZVelocity = 0.0f;
+    
     public Transform carVisual;
 
     void Start()
@@ -275,49 +281,72 @@ public class CarController : MonoBehaviour
     {
         // Refactor this section
 
-        Vector3 forward = transform.forward;
-        forward = transform.InverseTransformVector(forward);
-        forward.Set(forward.x, 0.0f, forward.z);
-        forward = transform.TransformVector(forward);
+        // Z Roll calculation
 
-        Vector3 velocity = rb.velocity.normalized;
-        velocity = transform.InverseTransformVector(velocity);
-
-        float directionMultiplier = 1.0f;
-
-        if (velocity.x < 0.0f)
         {
-            directionMultiplier = -1.0f;
+            Vector3 forward = transform.forward;
+            forward = transform.InverseTransformVector(forward);
+            forward.Set(forward.x, 0.0f, forward.z);
+            forward = transform.TransformVector(forward);
+
+            Vector3 velocity = rb.velocity.normalized;
+            velocity = transform.InverseTransformVector(velocity);
+
+            float directionMultiplier = 1.0f;
+
+            if (velocity.x < 0.0f)
+            {
+                directionMultiplier = -1.0f;
+            }
+
+            float localZVelocity = velocity.z;
+
+            velocity.Set(velocity.x, 0.0f, velocity.z);
+            velocity = transform.TransformVector(velocity);
+
+
+            float angleVelocityOffset = (Vector3.Dot(forward, velocity) + 1) / 2.0f;
+
+            carVisualZRoll = (1.0f - angleVelocityOffset) * directionMultiplier;
+
+            carVisualZRoll = Mathf.Clamp(carVisualZRoll, -0.2f, 0.2f);
+
+            carVisualZRoll = carVisualZRoll / 0.2f;
+
+            if (localZVelocity > 0.0f)
+            {
+                float oldZRot = carVisual.localEulerAngles.z;
+
+                float newZRot = Mathf.MoveTowardsAngle(oldZRot, 0.0f - (carVisualZRoll * carVisualZRollMaxDegrees), Time.fixedDeltaTime * carVisualZRollMaxSpeed);
+
+                carVisual.localEulerAngles = new Vector3(carVisual.localEulerAngles.x, carVisual.localEulerAngles.y, newZRot);
+            }
+            else
+            {
+                float oldZRot = carVisual.localEulerAngles.z;
+
+                float newZRot = Mathf.MoveTowardsAngle(oldZRot, 0.0f, Time.fixedDeltaTime * carVisualZRollMaxSpeed);
+
+                carVisual.localEulerAngles = new Vector3(carVisual.localEulerAngles.x, carVisual.localEulerAngles.y, newZRot);
+            }
         }
 
-        float localZVelocity = velocity.z;
+        // X Roll calculation
 
-        velocity.Set(velocity.x, 0.0f, velocity.z);
-        velocity = transform.TransformVector(velocity);
-
-
-        float angleVelocityOffset = (Vector3.Dot(forward, velocity) + 1) / 2.0f;
-
-        carVisualZRoll = (1.0f - angleVelocityOffset) * directionMultiplier;
-
-        carVisualZRoll = Mathf.Clamp(carVisualZRoll, -0.2f, 0.2f);
-
-        carVisualZRoll = carVisualZRoll / 0.2f;
-
-        if(localZVelocity > 0.0f)
         {
-            float oldZRot = carVisual.localEulerAngles.z;
+            float localZVelocity = transform.InverseTransformVector(rb.velocity).z;
 
-            float newZRot = Mathf.MoveTowardsAngle(oldZRot, 0.0f - (carVisualZRoll * carVisualZRollMaxDegrees), Time.fixedDeltaTime * carVisualZRollMaxSpeed);
+            float oldXRot = carVisual.localEulerAngles.x;
 
-            carVisual.localEulerAngles = new Vector3(carVisual.localEulerAngles.x, carVisual.localEulerAngles.y, newZRot);
-        } else
-        {
-            float oldZRot = carVisual.localEulerAngles.z;
+            float accelerationPercentage = Mathf.Clamp(-(localZVelocity - previousFrameLocalZVelocity) / carVisualXRollAccelerationSensitivity, -1.0f, 1.0f);
 
-            float newZRot = Mathf.MoveTowardsAngle(oldZRot, 0.0f, Time.fixedDeltaTime * carVisualZRollMaxSpeed);
+            float newXRot = Mathf.MoveTowardsAngle(oldXRot, accelerationPercentage * carVisualXRollMaxDegrees, Time.fixedDeltaTime * carVisualXRollMaxSpeed);
 
-            carVisual.localEulerAngles = new Vector3(carVisual.localEulerAngles.x, carVisual.localEulerAngles.y, newZRot);
+            carVisualXRoll = newXRot;
+
+            carVisual.localEulerAngles = new Vector3(carVisualXRoll, carVisual.localEulerAngles.y, carVisual.localEulerAngles.z);
+
+            previousFrameLocalZVelocity = localZVelocity;
         }
     }
 
