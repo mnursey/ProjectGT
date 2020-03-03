@@ -352,10 +352,9 @@ public class CarController : MonoBehaviour
 
     bool IsMovingForward()
     {
-        Vector3 direction = transform.position - previousFramePosition;
-        float forwardTest = Vector3.Dot(-direction.normalized, transform.position.normalized);
+        float forwardTest = transform.TransformVector(rb.velocity).z;
 
-        if(forwardTest > 0)
+        if(forwardTest > 0.005f)
         {
             return true;
         }
