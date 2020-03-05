@@ -25,8 +25,8 @@ public class CarController : MonoBehaviour
 
     public float carVisualXRoll = 0.0f;
     public float carVisualXRollMaxDegrees = 3.0f;
-    public float carVisualXRollMaxSpeed = 6.0f;
-    public float carVisualXRollAccelerationSensitivity = 40f;
+    public float carVisualXRollSpeed = 6.0f;
+    public float carVisualXRollSensitivity = 40f;
 
     public Vector3 previousFramePosition = new Vector3();
     public float previousFrameLocalZVelocity = 0.0f;
@@ -335,7 +335,7 @@ public class CarController : MonoBehaviour
             {
                 float oldZRot = carVisual.localEulerAngles.z;
 
-                float newZRot = Mathf.MoveTowardsAngle(oldZRot, 0.0f - (carVisualZRoll * carVisualZRollMaxDegrees), Time.fixedDeltaTime * carVisualZRollMaxSpeed);
+                float newZRot = Mathf.MoveTowardsAngle(oldZRot, 0.0f - (carVisualZRoll * carVisualZRollMaxDegrees), Time.deltaTime * carVisualZRollMaxSpeed);
 
                 carVisual.localEulerAngles = new Vector3(carVisual.localEulerAngles.x, carVisual.localEulerAngles.y, newZRot);
             }
@@ -343,7 +343,7 @@ public class CarController : MonoBehaviour
             {
                 float oldZRot = carVisual.localEulerAngles.z;
 
-                float newZRot = Mathf.MoveTowardsAngle(oldZRot, 0.0f, Time.fixedDeltaTime * carVisualZRollMaxSpeed);
+                float newZRot = Mathf.MoveTowardsAngle(oldZRot, 0.0f, Time.deltaTime * carVisualZRollMaxSpeed);
 
                 carVisual.localEulerAngles = new Vector3(carVisual.localEulerAngles.x, carVisual.localEulerAngles.y, newZRot);
             }
@@ -356,14 +356,16 @@ public class CarController : MonoBehaviour
 
             float oldXRot = carVisual.localEulerAngles.x;
 
-            float accelerationPercentage = Mathf.Clamp(-(localZVelocity - previousFrameLocalZVelocity) / carVisualXRollAccelerationSensitivity, -1.0f, 1.0f);
+            float zAcceleration = (localZVelocity - previousFrameLocalZVelocity) * Time.deltaTime;
 
-            if(Mathf.Abs(accelerationPercentage) < 0.05f)
+            float targetRot = 0.0f;
+
+            if(Mathf.Abs(zAcceleration) > carVisualXRollSensitivity)
             {
-                accelerationPercentage = 0.0f;
+                targetRot = -carVisualXRollMaxDegrees * Mathf.Sign(zAcceleration);
             }
 
-            float newXRot = Mathf.MoveTowardsAngle(oldXRot, accelerationPercentage * carVisualXRollMaxDegrees, Time.fixedDeltaTime * carVisualXRollMaxSpeed);
+            float newXRot = Mathf.MoveTowardsAngle(oldXRot, targetRot, Time.deltaTime * carVisualXRollSpeed);
 
             carVisualXRoll = newXRot;
 
