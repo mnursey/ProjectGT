@@ -5,6 +5,8 @@ using System;
 
 public class CarController : MonoBehaviour
 {
+    public bool controllable = true;
+
     public Vector3 centerOfMass = Vector3.zero;
     public Rigidbody rb;
     public Axle[] axles = new Axle[2];
@@ -64,7 +66,10 @@ public class CarController : MonoBehaviour
             DebugAxle();
         }
 
-        CarInput();
+        if(controllable)
+        {
+            CarInput();
+        }
 
         UpdateVisualRoll();
         UpdateWheelVisual();
@@ -335,11 +340,8 @@ public class CarController : MonoBehaviour
                 directionMultiplier = -1.0f;
             }
 
-            float localZVelocity = velocity.z;
-
             velocity.Set(velocity.x, 0.0f, velocity.z);
             velocity = transform.TransformVector(velocity);
-
 
             float angleVelocityOffset = (Vector3.Dot(forward, velocity) + 1) / 2.0f;
 
@@ -349,7 +351,7 @@ public class CarController : MonoBehaviour
 
             carVisualZRoll = carVisualZRoll / 0.2f;
 
-            if (localZVelocity > 0.0f)
+            if (transform.InverseTransformVector(rb.velocity).z > 0.0001f)
             {
                 float oldZRot = carVisual.localEulerAngles.z;
 
