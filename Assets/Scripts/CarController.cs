@@ -28,6 +28,10 @@ public class CarController : MonoBehaviour
     public float carVisualXRollSpeed = 6.0f;
     public float carVisualXRollSensitivity = 40f;
 
+    public float visualSteeringAngle = 0.0f;
+    public float visualSteeringAngleMax = 5.0f;
+    public float visualSteeringAngleSpeed = 5.0f;
+
     public Vector3 previousFramePosition = new Vector3();
     public float previousFrameLocalZVelocity = 0.0f;
     
@@ -36,6 +40,9 @@ public class CarController : MonoBehaviour
     public Transform frontRightWheelHolder;
     public Transform rearLeftWheelHolder;
     public Transform rearRightWheelHolder;
+
+    public Transform frontLeftWheelVisual;
+    public Transform frontRightWheelVisual;
 
     void Start()
     {
@@ -284,6 +291,9 @@ public class CarController : MonoBehaviour
 
     void UpdateWheelVisual()
     {
+
+        // Position
+
         Vector3 frontLeftWheelPos = WheelPosition(axles[Axle.FRONT_AXLE_INDEX], axles[Axle.FRONT_AXLE_INDEX].leftWheel);
         Vector3 frontRightWheelPos = WheelPosition(axles[Axle.FRONT_AXLE_INDEX], axles[Axle.FRONT_AXLE_INDEX].rightWheel);
         Vector3 rearLeftWheelPos = WheelPosition(axles[Axle.REAR_AXLE_INDEX], axles[Axle.REAR_AXLE_INDEX].leftWheel);
@@ -293,6 +303,14 @@ public class CarController : MonoBehaviour
         frontRightWheelHolder.position = frontRightWheelPos;
         rearLeftWheelHolder.position = rearLeftWheelPos;
         rearRightWheelHolder.position = rearRightWheelPos;
+
+        // Front Tire Turning Rotation
+        float targetTireYRot = visualSteeringAngleMax * steeringInput;
+        float newTireRot = Mathf.MoveTowardsAngle(frontLeftWheelVisual.transform.localEulerAngles.y, targetTireYRot, Time.deltaTime * visualSteeringAngleSpeed);
+
+        frontLeftWheelVisual.transform.localEulerAngles = new Vector3(frontLeftWheelVisual.transform.localEulerAngles.x , newTireRot, frontLeftWheelVisual.transform.localEulerAngles.z);
+        frontRightWheelVisual.transform.localEulerAngles = new Vector3(frontRightWheelVisual.transform.localEulerAngles.x, newTireRot, frontRightWheelVisual.transform.localEulerAngles.z);
+
     }
 
     void UpdateVisualRoll()
@@ -360,7 +378,7 @@ public class CarController : MonoBehaviour
 
             float targetRot = 0.0f;
 
-            if(Mathf.Abs(zAcceleration) > carVisualXRollSensitivity)
+            if(Mathf.Abs(zAcceleration) > carVisualXRollSensitivity * Time.deltaTime)
             {
                 targetRot = -carVisualXRollMaxDegrees * Mathf.Sign(zAcceleration);
             }
