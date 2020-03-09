@@ -13,9 +13,13 @@ public class ServerController : MonoBehaviour
     public int serverPort = 10069;
     Socket socket;
     SocketFlags socketFlags = SocketFlags.None;
-    bool serverActive = true;
+    bool serverActive = false;
+    public bool acceptingClients = true;
 
     public bool testSend = false;
+
+    public List<ServerConnection> clients = new List<ServerConnection>();
+    private int clientIDTracker = 0;
 
     // Start is called before the first frame update
     void Start()
@@ -48,7 +52,7 @@ public class ServerController : MonoBehaviour
         IPEndPoint endPoint = new IPEndPoint(serverAddr, serverPort);
 
         string text = "Test UDP Message!";
-        byte[] send_buffer = Encoding.ASCII.GetBytes(text);
+        byte[] send_buffer = Encoding.UTF8.GetBytes(text);
 
         sock.SendTo(send_buffer, endPoint);
 
@@ -60,6 +64,9 @@ public class ServerController : MonoBehaviour
         Debug.Log("Starting server...");
 
         serverActive = true;
+
+        clients = new List<ServerConnection>();
+        clientIDTracker = 0;
 
         socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
         //socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
@@ -85,8 +92,72 @@ public class ServerController : MonoBehaviour
 
         if(bytesRead > 0)
         {
-            data = Encoding.ASCII.GetString(receiveObject.buffer, 0, bytesRead);
+            data = Encoding.UTF8.GetString(receiveObject.buffer, 0, bytesRead);
             Debug.Log("Server Received:" + data + " From " + receiveObject.sender.ToString());
+
+            NetworkingMessage msg = NetworkingMessageTranslator.ParseMessage(data);
+
+            int clientID = msg.clientID;
+
+            // New clients
+            if (msg.type == NetworkingMessageType.CLIENT_JOIN)
+            {
+                ServerConnection newConnection = new ServerConnection(GetNewClientID(), receiveObject.sender, socket);
+
+                if (AcceptingNewClients())
+                {
+                    Debug.Log("Server Allowed connection!");
+                    Debug.Log(newConnection.clientID);
+                    // Add new server connection
+                    clients.Add(newConnection);
+
+                    // Send Accept Connect msg
+                    newConnection.BeginSend(NetworkingMessageTranslator.GenerateServerJoinResponseMessage(newConnection.clientID));
+                } else
+                {
+                    Debug.Log("Server Disallowed connection!");
+                    // Send Disconnect msg
+                    newConnection.BeginSend(NetworkingMessageTranslator.GenerateServerJoinResponseMessage(-1));
+                }
+            } else
+            {
+                // Check if existing server connection
+                if (clientID > -1 && clients.Exists(x => x.clientID == clientID))
+                {
+                    // Update serverConnection info
+
+                    ServerConnection serverConnection = clients.Find(x => x.clientID == clientID);
+
+                    // serverConnection.lastReceivedTime = Time.time;
+
+                    // TODO
+                    // Last msg accepted
+
+                    switch (msg.type)
+                    {
+                        case NetworkingMessageType.PING:
+                            break;
+
+                        case NetworkingMessageType.PING_RESPONSE:
+                            break;
+
+                        case NetworkingMessageType.DISCONNECT:
+                            clients.Remove(serverConnection);
+
+                            Debug.Log("Client " + serverConnection.clientID + " disconnected...");
+
+                            break;
+
+                        case NetworkingMessageType.GAME_STATE:
+
+                        default:
+                            break;
+                    }
+                }
+
+                // If not a new connecting client or not an existing client...
+                // Ignore.. if too many send msg? or block or something...
+            }
         }
 
         if (serverActive)
@@ -95,14 +166,14 @@ public class ServerController : MonoBehaviour
         }
     }
 
-    void BeginSend()
+    public int GetNewClientID()
     {
-
+        return ++clientIDTracker;
     }
 
-    void EndSend()
+    public bool AcceptingNewClients()
     {
-
+        return acceptingClients;
     }
 
     void Close()
@@ -110,5 +181,62 @@ public class ServerController : MonoBehaviour
         socket.Close();
         serverActive = false;
         Debug.Log("Server closed...");
+    }
+}
+
+[System.Serializable]
+public class ServerConnection
+{
+    public int clientID;
+    public EndPoint clientEndpoint;
+    public float lastReceivedTime;
+    public float lastSentTime;
+    public int lastAcceptedMessage;
+    public Socket socket;
+
+    public ServerConnection(int clientID, EndPoint clientEndpoint, Socket socket)
+    {
+        this.clientID = clientID;
+        this.clientEndpoint = clientEndpoint;
+        this.socket = socket;
+        //lastReceivedTime = Time.time;
+    }
+
+    public void BeginSend(string msg)
+    {
+        BeginSend(msg, null);
+    }
+
+    public void BeginSend(string msg, OnSent onSent)
+    {
+        MessageObject message = new MessageObject();
+
+        message.onSent = onSent;
+
+        message.buffer = Encoding.UTF8.GetBytes(msg);
+        int messageBufferSize = Encoding.UTF8.GetByteCount(msg);
+
+        socket.BeginSendTo(message.buffer, 0, messageBufferSize, SocketFlags.None, clientEndpoint, new AsyncCallback(EndSend), message);
+    }
+
+    public void EndSend(IAsyncResult ar)
+    {
+        MessageObject message = (MessageObject)ar.AsyncState;
+
+        int bytesSent = socket.EndSend(ar);
+
+        message.onSent?.Invoke();
+
+        //lastSentTime = Time.time;
+    }
+
+    void Disconnect()
+    {
+        BeginSend(NetworkingMessageTranslator.GenerateDisconnectMessage(clientID));
+    }
+
+    void Ping()
+    {
+        BeginSend(NetworkingMessageTranslator.GeneratePingMessage(clientID));
     }
 }

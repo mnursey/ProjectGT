@@ -1,0 +1,134 @@
+{
+    "name": "InputMaster",
+    "maps": [
+        {
+            "name": "CarControls",
+            "id": "b936cc16-adeb-4540-87b9-5138444331a5",
+            "actions": [
+                {
+                    "name": "Throttle",
+                    "type": "Button",
+                    "id": "3a65521f-1f48-42a9-a6bc-e56159076ef4",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "Press(behavior=2)"
+                },
+                {
+                    "name": "Steering",
+                    "type": "Button",
+                    "id": "c469739e-1957-4d29-8694-bc301e1462e6",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": ""
+                },
+                {
+                    "name": "Reset",
+                    "type": "Button",
+                    "id": "ddc3f4ef-0261-41f2-9298-08ac3268ba9a",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": ""
+                },
+                {
+                    "name": "Brake",
+                    "type": "Button",
+                    "id": "781c6b96-2e0b-473c-9ad3-305a79788c8d",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": ""
+                }
+            ],
+            "bindings": [
+                {
+                    "name": "",
+                    "id": "2234b421-75c2-40fb-8e7c-e84f44d850e9",
+                    "path": "<Keyboard>/w",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "Keyboard",
+                    "action": "Throttle",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "11c95abd-9a67-42d9-b420-96c18108cc58",
+                    "path": "<Keyboard>/r",
+                    "interactions": "Hold",
+                    "processors": "",
+                    "groups": "Keyboard",
+                    "action": "Reset",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "Steering",
+                    "id": "59664bf0-4a43-4e86-84a4-29f731e90edf",
+                    "path": "1DAxis",
+                    "interactions": "Press(behavior=2)",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Steering",
+                    "isComposite": true,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "negative",
+                    "id": "40e7abee-8419-4659-b5cd-38ad31184c6d",
+                    "path": "<Keyboard>/a",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "Keyboard",
+                    "action": "Steering",
+                    "isComposite": false,
+                    "isPartOfComposite": true
+                },
+                {
+                    "name": "positive",
+                    "id": "8a64a986-f6ba-4cc0-9ebe-74fee521c4a4",
+                    "path": "<Keyboard>/d",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "Keyboard",
+                    "action": "Steering",
+                    "isComposite": false,
+                    "isPartOfComposite": true
+                },
+                {
+                    "name": "",
+                    "id": "cced2ef5-1948-4986-9484-e6e3558b82e8",
+                    "path": "<Keyboard>/s",
+                    "interactions": "Press(behavior=2)",
+                    "processors": "",
+                    "groups": "Keyboard",
+                    "action": "Brake",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                }
+            ]
+        }
+    ],
+    "controlSchemes": [
+        {
+            "name": "Keyboard",
+            "bindingGroup": "Keyboard",
+            "devices": [
+                {
+                    "devicePath": "<Keyboard>",
+                    "isOptional": false,
+                    "isOR": false
+                },
+                {
+                    "devicePath": "<Mouse>",
+                    "isOptional": false,
+                    "isOR": false
+                }
+            ]
+        },
+        {
+            "name": "Gamepad",
+            "bindingGroup": "Gamepad",
+            "devices": []
+        }
+    ]
+}

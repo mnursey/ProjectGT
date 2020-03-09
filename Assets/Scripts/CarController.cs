@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.InputSystem;
 using System;
 
 public class CarController : MonoBehaviour
@@ -46,6 +47,27 @@ public class CarController : MonoBehaviour
     public Transform frontLeftWheelVisual;
     public Transform frontRightWheelVisual;
 
+    InputMaster controls;
+
+    void Awake()
+    {
+        controls = new InputMaster();
+
+        if(controllable)
+        {
+            EnableControls();
+        }
+    }
+
+    void EnableControls()
+    {
+        controls.CarControls.Throttle.performed += context => accelerationInput = context.ReadValue<float>();
+        controls.CarControls.Brake.performed += context => brakingInput = context.ReadValue<float>();
+        controls.CarControls.Steering.performed += context => steeringInput = context.ReadValue<float>();
+
+        controls.CarControls.Reset.performed += context => Reset();
+    }
+
     void Start()
     {
         rb = GetComponent<Rigidbody>();
@@ -66,11 +88,6 @@ public class CarController : MonoBehaviour
             DebugAxle();
         }
 
-        if(controllable)
-        {
-            CarInput();
-        }
-
         UpdateVisualRoll();
         UpdateWheelVisual();
     }
@@ -84,32 +101,6 @@ public class CarController : MonoBehaviour
         BrakingForce();
 
         previousFramePosition = transform.position;
-    }
-
-    void CarInput()
-    {
-        steeringInput = Input.GetAxisRaw("Horizontal");
-
-        // Refactor this... use input manager
-        if(Mathf.Abs(steeringInput) < 0.025f)
-        {
-            steeringInput = 0.0f;
-        }
-
-        accelerationInput = Mathf.Max(Input.GetAxisRaw("Vertical"), 0.0f);
-        
-        if(Input.GetAxisRaw("Vertical") < -0.5f)
-        {
-            brakingInput = Input.GetAxisRaw("Vertical");
-        } else
-        {
-            brakingInput = 0.0f;
-        }
-
-        if(Input.GetKeyDown(KeyCode.R))
-        {
-            Reset();
-        }
     }
 
     void EngineForce()
@@ -165,12 +156,12 @@ public class CarController : MonoBehaviour
             // Refactor this and remove the divide by 4. First count number of braking wheels on all axis
             if (axle.leftWheel.isGrounded)
             {
-                rb.AddForce(transform.forward * brakingPower * Time.fixedDeltaTime * brakingInput / 4, ForceMode.Acceleration);
+                rb.AddForce(-transform.forward * brakingPower * Time.fixedDeltaTime * brakingInput / 4, ForceMode.Acceleration);
             }
 
             if (axle.rightWheel.isGrounded)
             {
-                rb.AddForce(transform.forward * brakingPower * Time.fixedDeltaTime * brakingInput / 4, ForceMode.Acceleration);
+                rb.AddForce(-transform.forward * brakingPower * Time.fixedDeltaTime * brakingInput / 4, ForceMode.Acceleration);
             }
         }
     }
@@ -460,6 +451,16 @@ public class CarController : MonoBehaviour
         point.Set(point.x, 0.0f, point.z);
         point = transform.TransformPoint(point);
         return point;
+    }
+
+    private void OnEnable()
+    {
+        controls.Enable();
+    }
+
+    private void OnDisabled()
+    {
+        controls.Disable();
     }
 }
 
