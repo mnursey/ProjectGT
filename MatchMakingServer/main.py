@@ -268,6 +268,12 @@ def play_mode(party_id, mode):
             output = "server_found"
 
         else:
+
+            for party_user in party.users:
+                state = get_user_state(party_user.id)
+                state["action"] = "could_not_find_game_server"
+                server.SendMessageToEndpoint(json.dumps(state), party_user.endpoint)
+
             output = "no_servers_found"
 
     print("Attempting to play mode... {}".format(output))
