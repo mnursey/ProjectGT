@@ -59,8 +59,8 @@ def process_requests():
     global requests
 
     if len(requests) > 0:
-        request = request.pop(0)
-        request.procress()
+        request = requests.pop(0)
+        request.process()
 
         return True
 
@@ -90,27 +90,58 @@ def handle_new_request(data, endpoint):
         "update_server_status" : update_server_status
     }
 
-    input_map = {
-        "register_user" : [endpoint, data['car_id']],
-        "unregister_user" : [data['user_id']],
-        "play_mode" : [data['party_id'], data['mode']],
-        "create_party" : [data['user_id']],
-        "dissolve_party" : [data['party_id']],
-        "join_party" : [data['party_id'], data['user_id']],
-        "leave_party" : [data['party_id'], data['user_id']],
-        "invite_to_party" : [data['party_id'], data['user_id']],
-        "uninvite_to_party" : [data['party_id'], data['user_id']],
-        "select_car" : [data['user_id'], data['car_id']],
-        "get_user_state" : [data['user_id']],
-        "register_server" : [endpoint],
-        "unregister_server" : [data['server_id'], data['mode'], data['state'], data['population'], data['max_population']],
-        "get_game_server_info" : [data['server_id']],
-        "update_server_status" : [data['server_id'], data['mode'], data['state'], data['population'], data['max_population']]
-    }
-
-    request_type = data.request_type
+    request_type = data["request_type"]
     request_function = function_map.get(request_type, None)
-    request_input = input_map.get(request_type, None)
+    request_input = None
+
+    # User requests:
+    if request_type == "register_user":
+        request_input = [endpoint, data['car_id']]
+
+    elif request_type == "unregister_user":
+        request_input = [data['user_id']]
+
+    elif request_type == "play_mode":
+        request_input = [data['party_id'], data['mode']]
+
+    elif request_type == "create_party":
+        request_input = [data['user_id']]
+
+    elif request_type == "dissolve_party":
+        request_input = [data['party_id']]
+
+    elif request_type == "join_party":
+        request_input = [data['user_id'], data['party_id']]
+
+    elif request_type == "leave_party":
+        request_input = [data['party_id'], data['user_id']]
+
+    elif request_type == "invite_to_party":
+        request_input = [data['party_id'], data['user_id']]
+
+    elif request_type == "uninvite_to_party":
+        request_input = [data['party_id'], data['user_id']]
+
+    elif request_type == "select_car":
+        request_input = [data['user_id'], data['car_id']]
+
+    elif request_type == "get_user_state":
+        request_input = [data['user_id']]
+
+    # Game server requests
+    elif request_type == "register_server":
+        request_input = [endpoint]
+
+    elif request_type == "unregister_server":
+        request_input = [data['server_id'], data['mode'], data['state'], data['population'], data['max_population']]
+
+    elif request_type == "get_game_server_info":
+        request_input = [data['server_id']]
+
+    elif request_type == "update_server_status":
+        request_input = [data['server_id'], data['mode'], data['state'], data['population'], data['max_population']]
+    else:
+        request_input = None
 
     requests.append(Request(request_input, request_function))
 
@@ -141,7 +172,7 @@ def unregister_user(user_id):
 
     if user is not None:
 
-        leave_party(user.active_party.id, user_id)
+        leave_party(user.active_party.id, user_id, False)
 
         for invite in iter(i for i in invites if i.user == user):
             uninvite_to_party(invite.party.id, invite.user.id)
@@ -287,7 +318,7 @@ def join_party(party_id, user_id):
         uninvite_to_party(party_id, user_id)
 
         if user.active_party != None:
-            leave_party(user.active_party.id, user.id)
+            leave_party(user.active_party.id, user.id, False)
 
         user.active_party = party
         party.users.append(user)
@@ -299,7 +330,7 @@ def join_party(party_id, user_id):
 
     return
 
-def leave_party(party_id, user_id):
+def leave_party(party_id, user_id, create_new_party=True):
 
     global active_users
     global parties
@@ -310,6 +341,7 @@ def leave_party(party_id, user_id):
     if user is not None and party is not None:
 
         party.users.remove(user)
+        user.active_party = None
 
         if party.lead_user is user:
             party.lead_user = None
@@ -321,7 +353,8 @@ def leave_party(party_id, user_id):
 
         debug("User left party... User ID : {}, Party ID : {}".format(user.id, party.id))
 
-        user.active_party = create_party(user)
+        if create_new_party:
+            user.active_party = create_party(user)
 
         for party_user in party.users:
             server.SendMessageToEndpoint(json.dumps(get_user_state(party_user.id)), party_user.endpoint)
@@ -469,13 +502,13 @@ class Request:
         self.inputs = inputs
         self.function = function
 
-    def process():
-        if function is not None:
-            if inputs is not None:
-                function(*inputs)
+    def process(self):
+        if self.function is not None:
+            if self.inputs is not None:
+                self.function(*self.inputs)
             else:
                 print("Warning: Request with input as None...")
-                function()
+                self.function()
         else:
             print("Warning: Request with function as None...")
 
@@ -498,7 +531,7 @@ def run():
     process_thread.daemon = True
     process_thread.start()
 
-    server.RunServer("localhost", 10069)
+    server.RunServer("localhost", 10069, handle_new_request)
 
     if testing:
 
@@ -531,6 +564,8 @@ def run():
         unregister_server(1)
 
     input()
+
+    server.ShutdownServer()
 
 if __name__ == "__main__":
     run()

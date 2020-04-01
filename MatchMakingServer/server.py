@@ -2,23 +2,31 @@ import socket
 import threading
 import socketserver
 
+server = None
 socket = None
+
+request_callback = None
 
 class ThreadedUDPRequestHandler(socketserver.BaseRequestHandler):
 
     def handle(self):
-        data = self.request[0].strip()
-        socket = self.request[1]
+        data = self.request[0]
 
-        #print("{} wrote".format(self.client_address[0]))
-        #print(data)
+        if len(data) > 0:
+            data = data.decode().strip()
+            socket = self.request[1]
 
-        handle_new_request(data, endoint)
+            endpoint = self.client_address
+
+            #print("{} wrote".format(endpoint))
+            #print(data)
+
+            request_callback(data, endpoint)
+
+        else:
+            print("Warning: Received 0 bytes...")
 
         return
-
-class ThreadedUDPServer(socketserver.ThreadingMixIn, socketserver.UDPServer):
-    pass
 
 def SendMessageToEndpoint(data, endpoint):
 
@@ -27,17 +35,26 @@ def SendMessageToEndpoint(data, endpoint):
         return
 
     if socket is not None:
-        socket.sendto(data, endpoint)
+        data = data.encode()
+
+        if len(data) > 0:
+            bytes_sent = socket.sendto(data, endpoint)
+            #print("Sent {} bytes".format(bytes_sent))
+        else:
+            print("Warning: Tried sending msg with zero data")
     else:
         print("Warning: Could not send message... socket not defined yet")
 
     return
 
-def RunServer(HOST, PORT):
+def RunServer(HOST, PORT, request_cb):
 
+    global server
     global socket
+    global request_callback
 
-    with ThreadedUDPServer((HOST, PORT), ThreadedUDPRequestHandler) as server:
+    """
+    with socketserver.ThreadingUDPServer((HOST, PORT), ThreadedUDPRequestHandler) as server:
         ip, port = server.server_address
         socket = server.socket
 
@@ -46,8 +63,31 @@ def RunServer(HOST, PORT):
         server_thread = threading.Thread(target=server.serve_forever)
         server_thread.daemon = True
         server_thread.start()
+    """
 
-        # server.shutdown()
+    request_callback = request_cb
+
+    server = socketserver.ThreadingUDPServer((HOST, PORT), ThreadedUDPRequestHandler)
+
+    ip, port = server.server_address
+    socket = server.socket
+
+    print("Starting server at {}:{}".format(ip,port))
+
+    server_thread = threading.Thread(target=server.serve_forever)
+    server_thread.daemon = True
+    server_thread.start()
+
+    return
+
+def ShutdownServer():
+
+    global server
+
+    server.shutdown()
+
+    print("Shutdown server")
+
     return
 
 if __name__ == "__main__":
