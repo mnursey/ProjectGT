@@ -45,6 +45,14 @@ def unregister_user_request():
 
     return
 
+def play_mode_request():
+
+    data = { "request_type" : "play_mode" , "party_id" : user_state["active_party"]["id"], "mode" : "Practice" }
+
+    send_msg(data)
+
+    return
+
 def join_party_request(party_id):
 
     data = { "request_type" : "join_party" , "user_id" : user_state["id"], "party_id" : party_id }
@@ -95,7 +103,7 @@ def run():
 
     while True:
 
-        print("reg - register user\nunreg - unregister user\njn_p - join party\nlv_p - leave party\ndis_p - dissolve party\nsel_c - select car\nquit - duh...")
+        print("play - play practice mode\nreg - register user\nunreg - unregister user\njn_p - join party\nlv_p - leave party\ndis_p - dissolve party\nsel_c - select car\nquit - duh...")
         print("----------------")
         print(user_state)
         print("----------------")
@@ -104,6 +112,8 @@ def run():
 
         if cmd == "quit":
             break
+        elif cmd == "play":
+            play_mode_request()
         elif cmd == "reg":
             car_id = input("car id: ")
             register_user_request(car_id)

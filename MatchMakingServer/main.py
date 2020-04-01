@@ -257,14 +257,20 @@ def play_mode(party_id, mode):
 
             # TODO:
             # Check ping
-            # select server
-            # send all clients msg to connect to server
             # update client state?
+
+            for party_user in party.users:
+                state = get_user_state(party_user.id)
+                state["action"] = "join_game_server"
+                state["game_server_endpoint"] = potential_servers[0].endpoint
+                server.SendMessageToEndpoint(json.dumps(state), party_user.endpoint)
 
             output = "server_found"
 
         else:
             output = "no_servers_found"
+
+    print("Attempting to play mode... {}".format(output))
 
     return output
 
