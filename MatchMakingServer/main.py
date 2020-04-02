@@ -21,6 +21,8 @@ server_id_tracker = 0
 party_id_tracker = 0
 msg_id_tracker = 0
 
+max_number_messages = 25
+
 enable_debug = True
 testing = False
 
@@ -283,10 +285,6 @@ def play_mode(party_id, mode):
 
         if len(potential_servers) > 0:
 
-            # TODO:
-            # Check ping
-            # update client state?
-
             party.search_mode = None
             parties_searching.remove(party)
 
@@ -486,6 +484,9 @@ def send_user_msg(user_id, party_id, msg):
         msg = UserMessage(user, msg)
 
         party.messages.append(msg)
+
+        if len(party.messages) > max_number_messages:
+            party.messages.pop(0)
 
         for party_user in party.users:
             server.SendMessageToEndpoint(json.dumps(get_user_state(party_user.id)), party_user.endpoint)
