@@ -47,7 +47,7 @@ def unregister_user_request():
 
 def play_mode_request():
 
-    data = { "request_type" : "play_mode" , "party_id" : user_state["active_party"]["id"], "mode" : "Practice" }
+    data = { "request_type" : "play_mode" , "party_id" : user_state["active_party"]["id"], "mode" : "practice" }
 
     send_msg(data)
 

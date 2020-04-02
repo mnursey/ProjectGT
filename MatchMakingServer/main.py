@@ -12,6 +12,8 @@ active_servers = []
 parties = []
 invites = []
 
+parties_searching = []
+
 requests = []
 
 user_id_tracker = 0
@@ -266,6 +268,17 @@ def play_mode(party_id, mode):
     party = next((p for p in parties if p.id == party_id), None)
 
     if party is not None:
+
+        party.search_mode = mode
+
+        parties_searching.append(party)
+
+        for party_user in party.users:
+            state = get_user_state(party_user.id)
+            state["action"] = "searching_for_server"
+            server.SendMessageToEndpoint(json.dumps(state), party_user.endpoint)
+
+
         potential_servers = [s for s in active_servers if s.mode == mode and s.state == "Accepting" and s.max_population >= s.population + len(party.users)]
 
         if len(potential_servers) > 0:
@@ -273,6 +286,9 @@ def play_mode(party_id, mode):
             # TODO:
             # Check ping
             # update client state?
+
+            party.search_mode = None
+            parties_searching.remove(party)
 
             for party_user in party.users:
                 state = get_user_state(party_user.id)
@@ -284,12 +300,16 @@ def play_mode(party_id, mode):
 
         else:
 
+            party.search_mode = None
+            parties_searching.remove(party)
+
             for party_user in party.users:
                 state = get_user_state(party_user.id)
                 state["action"] = "could_not_find_game_server"
                 server.SendMessageToEndpoint(json.dumps(state), party_user.endpoint)
 
             output = "no_servers_found"
+
 
     print("Attempting to play mode... {}".format(output))
 
@@ -490,6 +510,7 @@ def get_user_state(user_id):
             "id" : user.active_party.id,
             "leader" : user.active_party.lead_user.id,
             "users" : [u.id for u in user.active_party.users],
+            "search_mode" : user.active_party.search_mode,
             'messages': [{ "user" : msg.user.id, "msg" : msg.msg, "timestamp" : str(msg.timestamp), "id" : msg.id } for msg in user.active_party.messages]
             }
 
@@ -526,6 +547,7 @@ class Party:
         self.lead_user = party_leader
         self.users = [party_leader]
         self.messages = []
+        self.search_mode = None
 
 
 class PartyInvite:
