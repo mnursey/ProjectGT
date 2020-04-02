@@ -83,6 +83,14 @@ def select_car_request(car_id):
 
     return
 
+def send_user_msg_request(msg):
+
+    data = { "request_type" : "send_user_msg" , "user_id" : user_state["id"], "party_id" : user_state["active_party"]["id"], "msg" : msg}
+
+    send_msg(data)
+
+    return
+
 def handle_responce(data, endpoint):
 
     global user_state
@@ -103,7 +111,7 @@ def run():
 
     while True:
 
-        print("play - play practice mode\nreg - register user\nunreg - unregister user\njn_p - join party\nlv_p - leave party\ndis_p - dissolve party\nsel_c - select car\nquit - duh...")
+        print("play - play practice mode\nreg - register user\nunreg - unregister user\njn_p - join party\nlv_p - leave party\ndis_p - dissolve party\nsel_c - select car\nmsg - send chat message to party\nquit - duh...")
         print("----------------")
         print(user_state)
         print("----------------")
@@ -129,6 +137,9 @@ def run():
         elif cmd == "sel_c":
             car_id = input("car id: ")
             select_car_request(car_id)
+        elif cmd == "msg":
+            msg = input("msg: ")
+            send_user_msg_request(msg)
         else:
             print("invalid cmd")
 

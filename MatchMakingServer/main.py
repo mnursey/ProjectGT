@@ -2,6 +2,7 @@ import server
 import json
 import time
 import threading
+import datetime
 
 print("Project GT\nMatch Making Server")
 
@@ -16,6 +17,7 @@ requests = []
 user_id_tracker = 0
 server_id_tracker = 0
 party_id_tracker = 0
+msg_id_tracker = 0
 
 enable_debug = True
 testing = False
@@ -54,6 +56,15 @@ def new_party_id():
 
     return party_id_tracker
 
+def new_msg_id():
+
+    global msg_id_tracker
+
+    id = msg_id_tracker
+    msg_id_tracker += 1
+
+    return msg_id_tracker
+
 def process_requests():
 
     global requests
@@ -84,6 +95,7 @@ def handle_new_request(data, endpoint):
         "uninvite_to_party" : uninvite_to_party,
         "select_car" : select_car,
         "get_user_state" : get_user_state,
+        "send_user_msg" : send_user_msg,
         "register_server" : register_server,
         "unregister_server" : unregister_user,
         "get_game_server_info" : get_game_server_info,
@@ -127,6 +139,9 @@ def handle_new_request(data, endpoint):
 
     elif request_type == "get_user_state":
         request_input = [data['user_id']]
+
+    elif request_type == "send_user_msg":
+        request_input = [data['user_id'], data['party_id'], data['msg']]
 
     # Game server requests
     elif request_type == "register_server":
@@ -438,6 +453,25 @@ def select_car(user_id, car_id):
 
     return
 
+def send_user_msg(user_id, party_id, msg):
+
+    global active_users
+    global parties
+
+    user = next((u for u in active_users if u.id == user_id), None)
+    party = next((p for p in parties if p.id == party_id), None)
+
+    if user != None and party != None:
+
+        msg = UserMessage(user, msg)
+
+        party.messages.append(msg)
+
+        for party_user in party.users:
+            server.SendMessageToEndpoint(json.dumps(get_user_state(party_user.id)), party_user.endpoint)
+
+    return
+
 def get_user_state(user_id):
 
     global active_users
@@ -449,9 +483,21 @@ def get_user_state(user_id):
     if user is not None:
         state["car_id"] = user.car_id
         state["invites"] = [i.party.id for i in invites if i.user == user]
-        state["active_party"] = { "id" : user.active_party.id, "leader" : user.active_party.lead_user.id, "users" : [u.id for u in user.active_party.users] } if user.active_party is not None else None
+
+        if user.active_party is not None:
+
+            state["active_party"] = {
+            "id" : user.active_party.id,
+            "leader" : user.active_party.lead_user.id,
+            "users" : [u.id for u in user.active_party.users],
+            'messages': [{ "user" : msg.user.id, "msg" : msg.msg, "timestamp" : str(msg.timestamp), "id" : msg.id } for msg in user.active_party.messages]
+            }
+
+        else:
+            state["active_party"] = None
+
     else:
-        state["error"] = "Unregistered"
+        state["error"] = "unregistered"
 
     return state
 
@@ -479,6 +525,7 @@ class Party:
         self.id = id
         self.lead_user = party_leader
         self.users = [party_leader]
+        self.messages = []
 
 
 class PartyInvite:
@@ -507,6 +554,15 @@ class GameServer:
         self.state = state
         self.population = population
         self.max_population = max_population
+
+class UserMessage:
+
+    def __init__(self, user, msg):
+
+        self.user = user
+        self.msg = msg
+        self.timestamp = datetime.datetime.now()
+        self.id = new_msg_id()
 
 class Request:
 
