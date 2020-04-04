@@ -616,9 +616,8 @@ class User:
 
     def get_new_outgoing_nmsg_id(self):
 
-        nmsg_id = self.outgoing_nmsg_id_tracker
-
         self.outgoing_nmsg_id_tracker += 1
+        nmsg_id = self.outgoing_nmsg_id_tracker
 
         return nmsg_id
 
