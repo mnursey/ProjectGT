@@ -142,81 +142,78 @@ def handle_new_request(data, endpoint):
 
     data = json.loads(data)
 
-    function_map = {
-        "register_user" : register_user,
-        "unregister_user" : unregister_user,
-        "play_mode" : play_mode,
-        "cancel_play_search" : cancel_play_search,
-        "create_party" : create_party,
-        "dissolve_party" : dissolve_party,
-        "join_party" : join_party,
-        "leave_party" : leave_party,
-        "invite_to_party" : invite_to_party,
-        "uninvite_to_party" : uninvite_to_party,
-        "select_car" : select_car,
-        "get_user_state" : get_user_state,
-        "send_user_msg" : send_user_msg,
-        "register_server" : register_server,
-        "unregister_server" : unregister_user,
-        "get_game_server_info" : get_game_server_info,
-        "update_server_status" : update_server_status
-    }
-
     request_type = data["request_type"]
-    request_function = function_map.get(request_type, None)
+    request_function = None
     request_input = None
 
     # User requests:
     if request_type == "register_user":
+        request_function = register_user
         request_input = [endpoint, data['car_id']]
 
     elif request_type == "unregister_user":
+        request_function = unregister_user
         request_input = [data['user_id']]
 
     elif request_type == "play_mode":
+        request_function = play_mode
         request_input = [data['party_id'], data['mode']]
 
     elif request_type == "create_party":
+        request_function = create_party
         request_input = [data['user_id']]
 
     elif request_type == "dissolve_party":
+        request_function = dissolve_party
         request_input = [data['party_id']]
 
     elif request_type == "join_party":
+        request_function = join_party
         request_input = [data['user_id'], data['party_id']]
 
     elif request_type == "cancel_play_search":
+        request_function = cancel_play_search
         request_input = [data['party_id']]
 
     elif request_type == "leave_party":
+        request_function = leave_party
         request_input = [data['party_id'], data['user_id']]
 
     elif request_type == "invite_to_party":
+        request_function = invite_to_party
         request_input = [data['party_id'], data['user_id']]
 
     elif request_type == "uninvite_to_party":
+        request_function = uninvite_to_party
         request_input = [data['party_id'], data['user_id']]
 
     elif request_type == "select_car":
+        request_function = select_car
         request_input = [data['user_id'], data['car_id']]
 
     elif request_type == "get_user_state":
+        request_function = get_user_state
         request_input = [data['user_id']]
 
     elif request_type == "send_user_msg":
+        request_function = send_user_msg
         request_input = [data['user_id'], data['party_id'], data['msg']]
 
     # Game server requests
     elif request_type == "register_server":
+        request_function = register_server
         request_input = [endpoint]
 
     elif request_type == "unregister_server":
+        request_function = unregister_server
         request_input = [data['server_id'], data['mode'], data['state'], data['population'], data['max_population']]
 
     elif request_type == "get_game_server_info":
+        request_function = get_game_server_info
         request_input = [data['server_id']]
 
     elif request_type == "update_server_status":
+        request_function = update_server_status
         request_input = [data['server_id'], data['mode'], data['state'], data['population'], data['max_population']]
     else:
         request_input = None
