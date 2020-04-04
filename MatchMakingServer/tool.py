@@ -142,6 +142,7 @@ def run():
 
         input()
         os.system('clear')
+        os.system('cls')
 
     server.ShutdownServer()
 

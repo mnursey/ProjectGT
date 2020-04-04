@@ -70,6 +70,15 @@ def new_msg_id():
 
     return msg_id_tracker
 
+def send_network_message(message_obj, client):
+
+    message_obj["nmsg_id"] = client.get_new_outgoing_nmsg_id()
+    client.unconfirmed_sent_nmsgs.append(message_obj)
+
+    server.SendMessageToEndpoint(json.dumps(message_obj), client.endpoint)
+
+    return
+
 def process_searching_parties():
 
     global active_users
@@ -96,7 +105,7 @@ def process_searching_parties():
                 state = get_user_state(party_user.id)
                 state["action"] = "join_game_server"
                 state["game_server_endpoint"] = potential_servers[0].endpoint
-                server.SendMessageToEndpoint(json.dumps(state), party_user.endpoint)
+                send_network_message(state, party_user)
 
         else:
 
@@ -111,7 +120,7 @@ def process_searching_parties():
                 for party_user in party.users:
                     state = get_user_state(party_user.id)
                     state["action"] = "could_not_find_game_server"
-                    server.SendMessageToEndpoint(json.dumps(state), party_user.endpoint)
+                    send_network_message(state, party_user)
 
     return True
 
@@ -229,7 +238,7 @@ def register_user(user_endpoint, car_id):
 
     debug("Registered new user... ID : {}".format(user.id))
 
-    server.SendMessageToEndpoint(json.dumps(get_user_state(user.id)), user.endpoint)
+    send_network_message(get_user_state(user.id), user)
 
     return
 
@@ -250,7 +259,7 @@ def unregister_user(user_id):
 
         debug("Unregistered user... ID : {}".format(user.id))
 
-        server.SendMessageToEndpoint(json.dumps({"msg" : "unregistered"}), user.endpoint)
+        send_network_message({"msg" : "unregistered"}, user)
 
     return
 
@@ -264,7 +273,7 @@ def register_server(server_endpoint, mode, state, population, max_population):
 
     debug("Registered new server... ID : {}".format(game_server.id))
 
-    server.SendMessageToEndpoint(json.dumps(get_game_server_info(game_server.id)), game_server.endpoint)
+    send_network_message(get_game_server_info(game_server.id), game_server.endpoint)
 
     return
 
@@ -279,7 +288,7 @@ def unregister_server(server_id):
 
         debug("Unregistered server... ID : {}".format(game_server.id))
 
-        server.SendMessageToEndpoint(json.dumps({ "msg" : "unregistered" }), game_server.endpoint)
+        send_network_message({ "msg" : "unregistered" }, game_server)
 
     return
 
@@ -297,7 +306,7 @@ def update_server_status(server_id, mode, state, population, max_population):
 
         debug("Updated server state... ID : {}, Mode : {}, State : {}, Population : {}, Max Population : {}".format(game_server.id, game_server.mode, game_server.state, game_server.population, game_server.max_population))
 
-        server.SendMessageToEndpoint(json.dumps(get_game_server_info(game_server.id)), game_server.endpoint)
+        send_network_message(get_game_server_info(game_server.id), game_server)
 
     return
 
@@ -323,7 +332,7 @@ def play_mode(party_id, mode):
         for party_user in party.users:
             state = get_user_state(party_user.id)
             state["action"] = "searching_for_server"
-            server.SendMessageToEndpoint(json.dumps(state), party_user.endpoint)
+            send_network_message(state, party_user)
 
     return
 
@@ -345,7 +354,7 @@ def cancel_play_search(party_id):
         for party_user in party.users:
             state = get_user_state(party_user.id)
             state["action"] = "canceled_search"
-            server.SendMessageToEndpoint(json.dumps(state), party_user.endpoint)
+            send_network_message(state, party_user)
 
     return
 
@@ -380,7 +389,7 @@ def dissolve_party(party_id):
         debug("Dissolved party... ID : {}".format(party.id))
 
         for party_user in party.users:
-            server.SendMessageToEndpoint(json.dumps(get_user_state(party_user.id)), party_user.endpoint)
+            send_network_message(get_user_state(party_user.id), party_user)
 
     return
 
@@ -406,7 +415,7 @@ def join_party(party_id, user_id):
         debug("User joined party... User ID : {}, Party ID : {}".format(user.id, party.id))
 
         for party_user in party.users:
-            server.SendMessageToEndpoint(json.dumps(get_user_state(party_user.id)), party_user.endpoint)
+            send_network_message(get_user_state(party_user.id), party_user)
 
     return
 
@@ -437,9 +446,9 @@ def leave_party(party_id, user_id, create_new_party=True):
             user.active_party = create_party(user)
 
         for party_user in party.users:
-            server.SendMessageToEndpoint(json.dumps(get_user_state(party_user.id)), party_user.endpoint)
+            send_network_message(get_user_state(party_user.id), party_user)
 
-        server.SendMessageToEndpoint(json.dumps(get_user_state(user.id)), user.endpoint)
+        send_network_message(get_user_state(user.id), user)
 
     else:
         print("Warning: could not remove user {} from party {}".format(user_id, party_id))
@@ -463,7 +472,7 @@ def invite_to_party(party_id, user_id):
 
         debug("User invited to party... User ID : {}, Party ID : {}".format(user.id, party.id))
 
-        server.SendMessageToEndpoint(json.dumps(get_user_state(user.id)), user.endpoint)
+        send_network_message(get_user_state(user.id), user)
 
     return
 
@@ -486,7 +495,7 @@ def uninvite_to_party(party_id, user_id):
 
         debug("User uninvited to party... User ID : {}, Party ID : {}".format(user.id, party.id))
 
-        server.SendMessageToEndpoint(json.dumps(get_user_state(user.id)), user.endpoint)
+        send_network_message(get_user_state(user.id), user)
 
     return
 
@@ -502,7 +511,7 @@ def select_car(user_id, car_id):
 
         debug("User selected car... User ID : {}, Car ID : {}".format(user.id, car_id))
 
-        server.SendMessageToEndpoint(json.dumps(get_user_state(user.id)), user.endpoint)
+        send_network_message(get_user_state(user.id), user)
 
     return
 
@@ -524,7 +533,7 @@ def send_user_msg(user_id, party_id, msg):
             party.messages.pop(0)
 
         for party_user in party.users:
-            server.SendMessageToEndpoint(json.dumps(get_user_state(party_user.id)), party_user.endpoint)
+            send_network_message(get_user_state(party_user.id), party_user)
 
     return
 
@@ -602,6 +611,19 @@ class User:
         self.car_id = car_id
         self.active_party = None
 
+        # nmsg -> network messages
+        self.unconfirmed_sent_nmsgs = []
+        self.outgoing_nmsg_id_tracker = 0
+
+        self.incoming_nmsg_id_tracker = 0
+
+    def get_new_outgoing_nmsg_id(self):
+
+        nmsg_id = self.outgoing_nmsg_id_tracker
+
+        self.outgoing_nmsg_id_tracker += 1
+
+        return nmsg_id
 
 class GameServer:
 
@@ -613,6 +635,20 @@ class GameServer:
         self.state = state
         self.population = population
         self.max_population = max_population
+
+        # nmsg -> network messages
+        self.unconfirmed_sent_nmsgs = []
+        self.outgoing_nmsg_id_tracker = 0
+
+        self.incoming_nmsg_id_tracker = 0
+
+    def get_new_outgoing_nmsg_id(self):
+
+        nmsg_id = self.outgoing_nmsg_id_tracker
+
+        self.outgoing_nmsg_id_tracker += 1
+
+        return nmsg_id
 
 class UserMessage:
 
