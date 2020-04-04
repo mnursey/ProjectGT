@@ -22,6 +22,7 @@ party_id_tracker = 0
 msg_id_tracker = 0
 
 max_number_messages = 25
+max_search_time = 300
 
 enable_debug = True
 testing = False
@@ -69,6 +70,48 @@ def new_msg_id():
 
     return msg_id_tracker
 
+def process_searching_parties():
+
+    global active_users
+    global active_servers
+    global parties
+
+    # TODO:
+    # ping and skill level dependant
+
+    for party in parties_searching:
+
+        potential_servers = [s for s in active_servers if s.mode == mode and s.state == "accepting" and s.max_population >= s.population + len(party.users)]
+
+        if len(potential_servers) > 0:
+
+            party.search_mode = None
+            parties_searching.remove(party)
+            party.search_time = 0
+
+            for party_user in party.users:
+                state = get_user_state(party_user.id)
+                state["action"] = "join_game_server"
+                state["game_server_endpoint"] = potential_servers[0].endpoint
+                server.SendMessageToEndpoint(json.dumps(state), party_user.endpoint)
+
+        else:
+
+            party.search_time += 1
+
+            if party.search_time > max_search_time:
+
+                party.search_mode = None
+                parties_searching.remove(party)
+                party.search_time = 0
+
+                for party_user in party.users:
+                    state = get_user_state(party_user.id)
+                    state["action"] = "could_not_find_game_server"
+                    server.SendMessageToEndpoint(json.dumps(state), party_user.endpoint)
+
+    return
+
 def process_requests():
 
     global requests
@@ -91,6 +134,7 @@ def handle_new_request(data, endpoint):
         "register_user" : register_user,
         "unregister_user" : unregister_user,
         "play_mode" : play_mode,
+        "cancel_play_search" : cancel_play_search,
         "create_party" : create_party,
         "dissolve_party" : dissolve_party,
         "join_party" : join_party,
@@ -128,6 +172,9 @@ def handle_new_request(data, endpoint):
 
     elif request_type == "join_party":
         request_input = [data['user_id'], data['party_id']]
+
+    elif request_type == "cancel_play_search":
+        request_input = [data['party_id']]
 
     elif request_type == "leave_party":
         request_input = [data['party_id'], data['user_id']]
@@ -261,17 +308,12 @@ def play_mode(party_id, mode):
     global active_servers
     global parties
 
-    # TODO:
-    # find server for party to join
-    # ping and skill level dependant
-
-    output = ""
-
     party = next((p for p in parties if p.id == party_id), None)
 
     if party is not None:
 
         party.search_mode = mode
+        party.search_time = 0
 
         parties_searching.append(party)
 
@@ -280,39 +322,29 @@ def play_mode(party_id, mode):
             state["action"] = "searching_for_server"
             server.SendMessageToEndpoint(json.dumps(state), party_user.endpoint)
 
+    return
 
-        potential_servers = [s for s in active_servers if s.mode == mode and s.state == "Accepting" and s.max_population >= s.population + len(party.users)]
+def cancel_play_search(party_id):
 
-        if len(potential_servers) > 0:
+    global active_users
+    global active_servers
+    global parties
 
-            party.search_mode = None
-            parties_searching.remove(party)
+    party = next((p for p in parties if p.id == party_id), None)
 
-            for party_user in party.users:
-                state = get_user_state(party_user.id)
-                state["action"] = "join_game_server"
-                state["game_server_endpoint"] = potential_servers[0].endpoint
-                server.SendMessageToEndpoint(json.dumps(state), party_user.endpoint)
+    if party is not None:
 
-            output = "server_found"
+        party.search_mode = None
+        party.search_time = 0
 
-        else:
+        parties_searching.remove(party)
 
-            party.search_mode = None
-            parties_searching.remove(party)
+        for party_user in party.users:
+            state = get_user_state(party_user.id)
+            state["action"] = "canceled_search"
+            server.SendMessageToEndpoint(json.dumps(state), party_user.endpoint)
 
-            for party_user in party.users:
-                state = get_user_state(party_user.id)
-                state["action"] = "could_not_find_game_server"
-                server.SendMessageToEndpoint(json.dumps(state), party_user.endpoint)
-
-            output = "no_servers_found"
-
-
-    print("Attempting to play mode... {}".format(output))
-
-    return output
-
+    return
 
 def create_party(party_leader):
 
@@ -549,6 +581,7 @@ class Party:
         self.users = [party_leader]
         self.messages = []
         self.search_mode = None
+        self.search_time = 0
 
 
 class PartyInvite:
@@ -611,8 +644,14 @@ def process_loop():
 
         had_request = process_requests()
 
-        if not had_request:
-            time.sleep(0.5)
+        # Todo:
+        # refactor this.. slightly ugly
+
+        if len(parties_searching) > 0:
+            process_searching_parties()
+        else:
+            if not had_request:
+                time.sleep(0.5)
 
     return
 

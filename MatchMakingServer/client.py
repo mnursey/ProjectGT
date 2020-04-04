@@ -9,21 +9,8 @@ user_state = None
 
 match_making_server_endpoint = ('localhost', 10069)
 
-def send_single_message(endpoint, message):
-    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-
-    try:
-        sock.sendto(message, endpoint)
-        #response = sock.recv(1024)
-        #print("Received: {}".format(response))
-    finally:
-        sock.close()
-
-    print("Sent message to {}".format(endpoint))
 
 def send_msg(data):
-
-    #send_single_message(match_making_server_endpoint, json.dumps(data).encode())
 
     server.SendMessageToEndpoint(json.dumps(data) , match_making_server_endpoint)
 
@@ -48,6 +35,14 @@ def unregister_user_request():
 def play_mode_request():
 
     data = { "request_type" : "play_mode" , "party_id" : user_state["active_party"]["id"], "mode" : "practice" }
+
+    send_msg(data)
+
+    return
+
+def cancel_play_search_request():
+
+    data = { "request_type" : "cancel_play_search" , "party_id" : user_state["active_party"]["id"] }
 
     send_msg(data)
 
@@ -111,7 +106,7 @@ def run():
 
     while True:
 
-        print("play - play practice mode\nreg - register user\nunreg - unregister user\njn_p - join party\nlv_p - leave party\ndis_p - dissolve party\nsel_c - select car\nmsg - send chat message to party\nquit - duh...")
+        print("play - play practice mode\ncpr - cancel play request\nreg - register user\nunreg - unregister user\njn_p - join party\nlv_p - leave party\ndis_p - dissolve party\nsel_c - select car\nmsg - send chat message to party\nquit - duh...")
         print("----------------")
         print(user_state)
         print("----------------")
@@ -122,6 +117,8 @@ def run():
             break
         elif cmd == "play":
             play_mode_request()
+        elif cmd == "cpr":
+            cancel_play_search_request()
         elif cmd == "reg":
             car_id = input("car id: ")
             register_user_request(car_id)
