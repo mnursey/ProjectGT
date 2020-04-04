@@ -9,8 +9,31 @@ user_state = None
 
 match_making_server_endpoint = ('localhost', 10069)
 
+match_making_server_nmsg_incoming_tracker = -1
+match_making_server_nmsg_outgoing_tracker = 0
+
+unconfirmed_sent_match_making_nmsgs = []
+
+def get_new_match_making_outgoing_nmsg_id():
+
+    global match_making_server_nmsg_outgoing_tracker
+
+    nmsg_id = match_making_server_nmsg_outgoing_tracker
+
+    match_making_server_nmsg_outgoing_tracker += 1
+
+    return nmsg_id
 
 def send_msg(data):
+
+    global unconfirmed_sent_match_making_nmsgs
+
+    data["nmsg_id"] = get_new_match_making_outgoing_nmsg_id()
+
+    if user_state != None and "user_id" in user_state:
+        data["requester"] = user_state["user_id"]
+    
+    unconfirmed_sent_match_making_nmsgs.append(data)
 
     server.SendMessageToEndpoint(json.dumps(data) , match_making_server_endpoint)
 
@@ -89,8 +112,18 @@ def send_user_msg_request(msg):
 def handle_responce(data, endpoint):
 
     global user_state
+    global match_making_server_nmsg_incoming_tracker
 
     user_state = json.loads(data)
+
+    nmsg_id_delta = user_state["nmsg_id"] - match_making_server_nmsg_incoming_tracker
+
+    if nmsg_id_delta != 1:
+        print("Warning nmsg was lost... {} {}".format(match_making_server_nmsg_incoming_tracker, user_state["nmsg_id"]))
+
+        # request all msgs again... disregard this msg?
+
+    match_making_server_nmsg_incoming_tracker = user_state["nmsg_id"]
 
     #print("{} wrote".format(endpoint))
     #print(data)

@@ -87,7 +87,7 @@ def process_searching_parties():
 
     # TODO:
     # ping and skill level dependant
-
+       
     if len(parties_searching) <= 0:
         return False
 
