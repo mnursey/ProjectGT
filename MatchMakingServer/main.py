@@ -79,6 +79,9 @@ def process_searching_parties():
     # TODO:
     # ping and skill level dependant
 
+    if len(parties_searching) <= 0:
+        return False
+
     for party in parties_searching:
 
         potential_servers = [s for s in active_servers if s.mode == mode and s.state == "accepting" and s.max_population >= s.population + len(party.users)]
@@ -110,7 +113,7 @@ def process_searching_parties():
                     state["action"] = "could_not_find_game_server"
                     server.SendMessageToEndpoint(json.dumps(state), party_user.endpoint)
 
-    return
+    return True
 
 def process_requests():
 
@@ -643,15 +646,10 @@ def process_loop():
     while True:
 
         had_request = process_requests()
+        had_party = process_searching_parties()
 
-        # Todo:
-        # refactor this.. slightly ugly
-
-        if len(parties_searching) > 0:
-            process_searching_parties()
-        else:
-            if not had_request:
-                time.sleep(0.5)
+        if not had_request and not had_party:
+            time.sleep(0.5)
 
     return
 
