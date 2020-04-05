@@ -41,7 +41,7 @@ def new_user_id():
     id = user_id_tracker
     user_id_tracker += 1
 
-    return user_id_tracker
+    return "U" + str(user_id_tracker)
 
 def new_server_id():
 
@@ -50,7 +50,7 @@ def new_server_id():
     id = server_id_tracker
     server_id_tracker += 1
 
-    return server_id_tracker
+    return "S" + str(server_id_tracker)
 
 def new_party_id():
 
@@ -139,6 +139,8 @@ def process_requests():
 def handle_new_request(data, endpoint):
 
     global requests
+    global active_users
+    global active_servers
 
     data = json.loads(data)
 
@@ -146,6 +148,35 @@ def handle_new_request(data, endpoint):
     request_function = None
     request_input = None
 
+    requester_id = None
+
+    if "requester_id" in data:
+        requester_id = data["requester_id"]
+
+        requester_obj = None
+
+        if "U" in requester_id:
+            # is user
+            requester_obj = next((u for u in active_users if u.id == requester_id), None)
+
+        elif "S" in requester_id:
+            # is game server
+            requester_obj = next((s for s in active_servers if s.id == server_id), None)
+
+        else:
+            # unknown id type
+            print("Warning: unknown id type... requester_id : {}".format(requester_id))
+
+        if requester_obj != None:
+
+            # check for missing received messages                
+
+            # if msgs not received send msgs
+
+            # remove saved nmsgs that have been accepted
+
+            pass
+            
     # User requests:
     if request_type == "register_user":
         request_function = register_user

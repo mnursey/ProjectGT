@@ -33,8 +33,10 @@ def send_msg(data):
     data["nmsg_id"] = get_new_match_making_outgoing_nmsg_id()
 
     if user_state != None and "user_id" in user_state:
-        data["requester"] = user_state["user_id"]
-    
+        data["requester_id"] = user_state["user_id"]
+
+    data["incoming_tracker"] = match_making_server_nmsg_incoming_tracker
+
     unconfirmed_sent_match_making_nmsgs.append(data)
 
     server.SendMessageToEndpoint(json.dumps(data) , match_making_server_endpoint)
