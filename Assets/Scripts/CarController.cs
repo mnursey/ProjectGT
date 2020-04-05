@@ -94,6 +94,11 @@ public class CarController : MonoBehaviour
 
     void FixedUpdate()
     {
+        
+    }
+
+    public void UpdatePhysics()
+    {
         SuspensionForce();
         EngineForce();
         SteeringForce();

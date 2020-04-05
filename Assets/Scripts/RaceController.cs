@@ -20,6 +20,11 @@ public class RaceController : MonoBehaviour
 
     public int networkID;
 
+    void Awake()
+    {
+        Physics.autoSimulation = false;
+    }
+
     // Start is called before the first frame update
     void Start()
     {
@@ -34,7 +39,17 @@ public class RaceController : MonoBehaviour
 
     void FixedUpdate()
     {
+        RunSinglePhysicsFrame();
+    }
 
+    void RunSinglePhysicsFrame()
+    {
+        foreach (PlayerEntity player in players)
+        {
+            player.car.UpdatePhysics();
+        }
+
+        Physics.Simulate(Time.fixedDeltaTime);
     }
 
     PlayerEntity CreatePlayer(int networkID)
