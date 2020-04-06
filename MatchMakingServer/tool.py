@@ -4,40 +4,45 @@ import socketserver
 import server
 import json
 import os
+import random
 
 user_state = None
 
 match_making_server_endpoint = ('localhost', 10069)
 
-match_making_server_nmsg_incoming_tracker = 0
-match_making_server_nmsg_outgoing_tracker = 0
+# mms -> match making server
+# nmsg -> network message
 
-unconfirmed_sent_match_making_nmsgs = []
+mms_nmsg_tracker = 0
+nmsg_tracker = 0
+
+unconfirmed_sent_nmsgs = []
 
 queued_incoming_messages = []
 
-def get_new_match_making_outgoing_nmsg_id():
+def get_outgoing_nmsg_id():
 
-    global match_making_server_nmsg_outgoing_tracker
+    global nmsg_tracker
 
-    nmsg_id = match_making_server_nmsg_outgoing_tracker
+    nmsg_id = nmsg_tracker
 
-    match_making_server_nmsg_outgoing_tracker += 1
+    nmsg_tracker += 1
 
     return nmsg_id
 
 def send_msg(data):
 
-    global unconfirmed_sent_match_making_nmsgs
+    global unconfirmed_sent_nmsgs
+    global user_state
 
-    data["nmsg_id"] = get_new_match_making_outgoing_nmsg_id()
+    data["nmsg_id"] = get_outgoing_nmsg_id()
 
-    if user_state != None and "user_id" in user_state:
-        data["requester_id"] = user_state["user_id"]
+    if user_state != None and "id" in user_state:
+        data["client_id"] = user_state["id"]
 
-    data["incoming_tracker"] = match_making_server_nmsg_incoming_tracker
+    data["confirmed_nmsg_id"] = mms_nmsg_tracker
 
-    unconfirmed_sent_match_making_nmsgs.append(data)
+    unconfirmed_sent_nmsgs.append(data)
 
     server.SendMessageToEndpoint(json.dumps(data) , match_making_server_endpoint)
 
@@ -113,55 +118,84 @@ def send_user_msg_request(msg):
 
     return
 
+def missing_nmsgs_request(nmsg_ids):
+
+    print("Requested lost msgs... {}".format(nmsg_ids))
+
+    data = { "request_type" : "missing_nmsgs" , "nmsg_ids" : nmsg_ids }
+
+    send_msg(data)
+
+    return
+
+def store_nmsg(new_state):
+
+    global queued_incoming_messages 
+
+    nmsg = next((n for n in queued_incoming_messages if n["nmsg_id"] == new_state["nmsg_id"]), None)
+
+    if nmsg == None:
+        queued_incoming_messages.append(new_state)
+
+    return
+
+def get_missing_nmsg_ids(new_state):
+
+    global mms_nmsg_tracker
+
+    missing_nmsg_ids = []
+
+    for i in range(mms_nmsg_tracker + 1, new_state["nmsg_id"]):
+        missing_nmsg_ids.append(i)
+
+    return missing_nmsg_ids
+
 def handle_responce(data, endpoint):
 
     global user_state
-    global match_making_server_nmsg_incoming_tracker
+    global mms_nmsg_tracker
     global queued_incoming_messages
 
     new_state = json.loads(data)
 
-    nmsg_id_delta = new_state["nmsg_id"] - match_making_server_nmsg_incoming_tracker
+    nmsg_id_delta = new_state["nmsg_id"] - mms_nmsg_tracker
 
     if nmsg_id_delta != 1:
-        print("Warning nmsg was lost... {} {}".format(match_making_server_nmsg_incoming_tracker, new_state["nmsg_id"]))
 
-        nmsg = next((n for n in queued_incoming_messages if n.nmsg_id == new_state["nmsg_id"]), None)
+        if nmsg_id_delta > 0:
+            print("Warning nmsg was lost... {} {}".format(mms_nmsg_tracker, new_state["nmsg_id"]))
 
-        if nmsg == None:
-            queued_incoming_messages.append(new_state)
+            store_nmsg(new_state)
+            missing_nmsg_ids = get_missing_nmsg_ids(new_state)
+            missing_nmsgs_request(missing_nmsg_ids)
 
-        missing_messages = []
+        else:
+            # ignore old msgs
+            print("Warning old extra nmsg... {} {}".format(mms_nmsg_tracker, new_state["nmsg_id"]))
 
-        for i in range(match_making_server_nmsg_incoming_tracker + 1, new_state["nmsg_id"]):
-            missing_messages.append(i)
-
-        # request missing messages...
     else:
-        handle_accepted_responce(new_state)
+        process_request(new_state)
 
-    #print("{} wrote".format(endpoint))
-    #print(data)
     return
 
-def handle_accepted_responce(state):
+def process_request(state):
 
     global user_state
-    global match_making_server_nmsg_incoming_tracker
+    global mms_nmsg_tracker
     global queued_incoming_messages
 
     user_state = state
-    match_making_server_nmsg_incoming_tracker = state["nmsg_id"]
+    mms_nmsg_tracker = state["nmsg_id"]
 
     print("State has been updated:")
     print(state)
 
     # check queued msg for next msg to process
-    nmsg = next((n for n in queued_incoming_messages if n.nmsg_id == match_making_server_nmsg_incoming_tracker + 1), None)
+    nmsg = next((n for n in queued_incoming_messages if n["nmsg_id"] == mms_nmsg_tracker + 1), None)
 
     if nmsg != None:
         queued_incoming_messages.remove(nmsg)
-        handle_accepted_responce(nmsg)
+        process_request(nmsg)
 
     return
 

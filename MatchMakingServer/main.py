@@ -70,10 +70,11 @@ def new_msg_id():
 
     return msg_id_tracker
 
-def send_network_message(message_obj, client):
+def send_network_message(message_obj, client, repeat_nmsg = False):
 
-    message_obj["nmsg_id"] = client.get_new_outgoing_nmsg_id()
-    client.unconfirmed_sent_nmsgs.append(message_obj)
+    if not repeat_nmsg:
+        message_obj["nmsg_id"] = client.get_new_outgoing_nmsg_id()
+        client.unconfirmed_sent_nmsgs.append(message_obj)
 
     server.SendMessageToEndpoint(json.dumps(message_obj), client.endpoint)
 
@@ -136,6 +137,53 @@ def process_requests():
 
     return False
 
+def get_client_from_id(client_id):
+
+    client = None
+
+    if "U" in client_id:
+        # is user
+        client = next((u for u in active_users if u.id == client_id), None)
+
+    elif "S" in client_id:
+        # is game server
+        client = next((s for s in active_servers if s.id == client_id), None)
+
+    else:
+        # unknown id type
+        print("Warning: unknown id type... id : {}".format(client_id))    
+
+    return client
+
+def nmsg_confirmation(data): 
+
+    client_id = None
+    client = None
+
+    if "client_id" in data:
+
+        client_id = data["client_id"]
+
+        client = get_client_from_id(client_id)
+
+        if client != None:
+
+            if data["confirmed_nmsg_id"] != client.outgoing_nmsg_id_tracker:
+                add_request_to_queue(missing_nmsgs_request, [client_id, list(range(data["confirmed_nmsg_id"] + 1, client.outgoing_nmsg_id_tracker))])
+
+            for nmsg in client.unconfirmed_sent_nmsgs:
+                if nmsg["nmsg_id"] <= data["confirmed_nmsg_id"]:
+                    client.unconfirmed_sent_nmsgs.remove(nmsg)
+    return
+
+def add_request_to_queue(request_function, request_input):
+
+    global requests
+
+    requests.append(Request(request_input, request_function))
+
+    return
+
 def handle_new_request(data, endpoint):
 
     global requests
@@ -148,37 +196,14 @@ def handle_new_request(data, endpoint):
     request_function = None
     request_input = None
 
-    requester_id = None
-
-    if "requester_id" in data:
-        requester_id = data["requester_id"]
-
-        requester_obj = None
-
-        if "U" in requester_id:
-            # is user
-            requester_obj = next((u for u in active_users if u.id == requester_id), None)
-
-        elif "S" in requester_id:
-            # is game server
-            requester_obj = next((s for s in active_servers if s.id == server_id), None)
-
-        else:
-            # unknown id type
-            print("Warning: unknown id type... requester_id : {}".format(requester_id))
-
-        if requester_obj != None:
-
-            # check for missing received messages                
-
-            # if msgs not received send msgs
-
-            # remove saved nmsgs that have been accepted
-
-            pass
+    nmsg_confirmation(data)
             
+    if request_type == "missing_nmsgs":
+        request_function = missing_nmsgs_request
+        request_input = [data['client_id'], data['nmsg_ids']]
+
     # User requests:
-    if request_type == "register_user":
+    elif request_type == "register_user":
         request_function = register_user
         request_input = [endpoint, data['car_id']]
 
@@ -249,7 +274,21 @@ def handle_new_request(data, endpoint):
     else:
         request_input = None
 
-    requests.append(Request(request_input, request_function))
+    add_request_to_queue(request_function, request_input)
+
+    return
+
+def missing_nmsgs_request(user_id, nmsg_ids):
+
+    global active_users
+
+    user = next((u for u in active_users if u.id == user_id), None)
+    if user is not None:
+        for nmsg_id in nmsg_ids:
+            nmsg = next((nmsg for nmsg in user.unconfirmed_sent_nmsgs if nmsg["nmsg_id"] == nmsg_id), None)
+
+            if nmsg != None:
+                send_network_message(nmsg, user, True)
 
     return
 
@@ -671,9 +710,8 @@ class GameServer:
 
     def get_new_outgoing_nmsg_id(self):
 
-        nmsg_id = self.outgoing_nmsg_id_tracker
-
         self.outgoing_nmsg_id_tracker += 1
+        nmsg_id = self.outgoing_nmsg_id_tracker
 
         return nmsg_id
 
