@@ -113,3 +113,24 @@ public class NetworkingMessage
         this.content = content;
     }
 }
+
+[Serializable]
+public class SVector3
+{
+    public string valueS;
+
+    public SVector3(Vector3 vector3)
+    {
+        // Todo
+        // use string building or something... ugly.. and slow..
+
+        valueS = vector3.x.ToString() + "|" + vector3.y.ToString() + "|" + vector3.z.ToString();
+    }
+
+    public Vector3 GetValue()
+    {
+        string[] vals = valueS.Split(new Char[] { '|' });
+
+        return new Vector3(float.Parse(vals[0]), float.Parse(vals[1]), float.Parse(vals[2]));
+    }
+}

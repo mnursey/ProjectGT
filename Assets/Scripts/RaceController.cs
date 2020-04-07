@@ -238,9 +238,9 @@ public class RaceController : MonoBehaviour
     {
         foreach(EntityState entityState in state.entities)
         {
-            if(entityState.created || !players.Exists(x => x.networkID == entityState.networkID))
+            if(entityState.created || !players.Exists(x => x.networkID == entityState.id))
             {
-                PlayerEntity pe = CreatePlayer(entityState.networkID);
+                PlayerEntity pe = CreatePlayer(entityState.id);
                 SpawnCar(pe);
             }
 
@@ -249,7 +249,7 @@ public class RaceController : MonoBehaviour
 
             // else lerp to
 
-            PlayerEntity player = players.Find(x => x.networkID == entityState.networkID);
+            PlayerEntity player = players.Find(x => x.networkID == entityState.id);
 
             if(player != null && player.car != null)
             {
@@ -339,48 +339,6 @@ public class PlayerEntity
 public class GameState
 {
     public List<EntityState> entities = new List<EntityState>();
-}
-
-[Serializable]
-public class SVector3
-{
-    public string valueS;
-
-    public SVector3(Vector3 vector3)
-    {
-        // Todo
-        // use string building or something... ugly.. and slow..
-
-        valueS = vector3.x.ToString() + "|" + vector3.y.ToString() + "|" + vector3.z.ToString();
-    }
-
-    public Vector3 GetValue()
-    {
-        string[] vals = valueS.Split(new Char[] { '|' });
-
-        return new Vector3(float.Parse(vals[0]), float.Parse(vals[1]), float.Parse(vals[2]));
-    }
-}
-
-[Serializable]
-public class EntityState
-{
-    public int networkID;
-    public SVector3 velocity;
-    public SVector3 position;
-    public SVector3 angularVelocity;
-    public SVector3 rotation;
-    public bool set;
-    public bool created;
-
-    public EntityState(int networkID, Vector3 velocity, Vector3 position, Vector3 angularVelocity, Vector3 rotation)
-    {
-        this.networkID = networkID;
-        this.velocity = new SVector3(velocity);
-        this.position = new SVector3(position);
-        this.angularVelocity = new SVector3(angularVelocity);
-        this.rotation = new SVector3(rotation);
-    }
 }
 
 [Serializable]
