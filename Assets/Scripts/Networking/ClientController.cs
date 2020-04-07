@@ -19,13 +19,15 @@ public class ClientController : MonoBehaviour
     Socket socket;
     SocketFlags socketFlags = SocketFlags.None;
 
-    ClientState state = ClientState.IDLE;
+    public ClientState state = ClientState.IDLE;
 
     public float lastReceivedTime;
     public float lastSentTime;
     public int lastAcceptedMessage;
 
     IPEndPoint serverEndPoint;
+
+    public RaceController rc;
 
     public bool disconnect = false;
 
@@ -86,6 +88,21 @@ public class ClientController : MonoBehaviour
         BeginSend(NetworkingMessageTranslator.GenerateClientJoinMessage());
     }
 
+    public void Disconnect()
+    {
+        BeginSend(NetworkingMessageTranslator.GenerateDisconnectMessage(clientID), Purge);
+    }
+
+    public void Ping()
+    {
+        BeginSend(NetworkingMessageTranslator.GeneratePingMessage(clientID));
+    }
+
+    public void SendInput(InputState inputState)
+    {
+        BeginSend(NetworkingMessageTranslator.GenerateInputMessage(inputState, clientID));
+    }
+
     public void BeginSend(string msg)
     {
         BeginSend(msg, null);
@@ -137,8 +154,7 @@ public class ClientController : MonoBehaviour
         if (bytesRead > 0)
         {
             data = Encoding.UTF8.GetString(receiveObject.buffer, 0, bytesRead);
-            Debug.Log("Client Received:" + data + " From " + receiveObject.sender.ToString());
-
+            //Debug.Log("Client Received:" + data + " From " + receiveObject.sender.ToString());
             NetworkingMessage msg = NetworkingMessageTranslator.ParseMessage(data);
 
             // Check if connection request was accepted...
@@ -147,6 +163,10 @@ public class ClientController : MonoBehaviour
                 if (msg.type == NetworkingMessageType.SERVER_JOIN_RESPONSE)
                 {
                     clientID = msg.clientID;
+
+                    // Todo
+                    // Refactor this.... ugly.. very ugly...
+                    rc.networkID = clientID;
 
                     if(clientID > -1)
                     {
@@ -177,6 +197,11 @@ public class ClientController : MonoBehaviour
 
                     case NetworkingMessageType.GAME_STATE:
 
+                        GameState gameState = NetworkingMessageTranslator.ParseGameState(msg.content);
+                        rc.QueueGameState(gameState);
+
+                        break;
+
                     default:
                         break;
                 }
@@ -187,16 +212,6 @@ public class ClientController : MonoBehaviour
         {
             BeginReceive();
         }
-    }
-
-    void Disconnect()
-    {
-        BeginSend(NetworkingMessageTranslator.GenerateDisconnectMessage(clientID), Purge);
-    }
-
-    void Ping()
-    {
-        BeginSend(NetworkingMessageTranslator.GeneratePingMessage(clientID));
     }
 
     void Close()

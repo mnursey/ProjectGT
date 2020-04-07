@@ -21,6 +21,8 @@ public class ServerController : MonoBehaviour
     public List<ServerConnection> clients = new List<ServerConnection>();
     private int clientIDTracker = 0;
 
+    public RaceController rc;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -75,6 +77,22 @@ public class ServerController : MonoBehaviour
         BeginReceive();
     }
 
+    public void SendToAll(string msg)
+    {
+        foreach(ServerConnection sc in clients)
+        {
+            sc.BeginSend(msg);
+        }
+    }
+
+    public void SendGameState(GameState gameState)
+    {
+        foreach (ServerConnection sc in clients)
+        {
+            sc.BeginSend(NetworkingMessageTranslator.GenerateGameStateMessage(gameState, sc.clientID));
+        }
+    }
+
     void BeginReceive()
     {
         MessageObject receiveObject = new MessageObject();
@@ -93,7 +111,7 @@ public class ServerController : MonoBehaviour
         if(bytesRead > 0)
         {
             data = Encoding.UTF8.GetString(receiveObject.buffer, 0, bytesRead);
-            Debug.Log("Server Received:" + data + " From " + receiveObject.sender.ToString());
+            //Debug.Log("Server Received:" + data + " From " + receiveObject.sender.ToString());
 
             NetworkingMessage msg = NetworkingMessageTranslator.ParseMessage(data);
 
@@ -107,7 +125,7 @@ public class ServerController : MonoBehaviour
                 if (AcceptingNewClients())
                 {
                     Debug.Log("Server Allowed connection!");
-                    Debug.Log(newConnection.clientID);
+
                     // Add new server connection
                     clients.Add(newConnection);
 
@@ -149,6 +167,14 @@ public class ServerController : MonoBehaviour
                             break;
 
                         case NetworkingMessageType.GAME_STATE:
+                            break;
+
+                        case NetworkingMessageType.INPUT_STATE:
+
+                            InputState s = NetworkingMessageTranslator.ParseInputState(msg.content);
+                            rc.QueueInputState(s);
+
+                            break;
 
                         default:
                             break;
@@ -174,6 +200,11 @@ public class ServerController : MonoBehaviour
     public bool AcceptingNewClients()
     {
         return acceptingClients;
+    }
+
+    public bool ServerActive()
+    {
+        return serverActive;
     }
 
     void Close()

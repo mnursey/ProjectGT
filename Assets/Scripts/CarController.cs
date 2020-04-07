@@ -3,9 +3,12 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using System;
+using UnityEngine.SceneManagement;
 
 public class CarController : MonoBehaviour
 {
+    public PhysicsScene physicsScene;
+
     public bool controllable = true;
 
     public Vector3 centerOfMass = Vector3.zero;
@@ -187,7 +190,7 @@ public class CarController : MonoBehaviour
         RaycastHit hit;
 
         int layerMask = ~LayerMask.GetMask("Cars");
-        bool hitSomething = Physics.Raycast(compressedWheelPos, -transform.up, out hit, axle.suspensionHeight, layerMask);
+        bool hitSomething = physicsScene.Raycast(compressedWheelPos, -transform.up, out hit, axle.suspensionHeight, layerMask);
 
         Debug.DrawLine(compressedWheelPos, compressedWheelPos - (transform.up * axle.suspensionHeight), Color.green);
 

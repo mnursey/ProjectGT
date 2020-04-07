@@ -55,10 +55,17 @@ public static class NetworkingMessageTranslator
         return ToJson(msg);
     }
 
-    public static string GenerateGameStateMessage(System.Object gamestate, int clientID)
+    public static string GenerateGameStateMessage(GameState gamestate, int clientID)
     {
         NetworkingMessage msg = new NetworkingMessage(NetworkingMessageType.GAME_STATE, clientID);
         msg.content = ToJson(gamestate);
+        return ToJson(msg);
+    }
+
+    public static string GenerateInputMessage(InputState inputState, int clientID)
+    {
+        NetworkingMessage msg = new NetworkingMessage(NetworkingMessageType.INPUT_STATE, clientID);
+        msg.content = ToJson(inputState);
         return ToJson(msg);
     }
 
@@ -67,15 +74,19 @@ public static class NetworkingMessageTranslator
         return JsonUtility.FromJson<NetworkingMessage>(json);
     }
 
-    public static System.Object ParseGameState(string json)
+    public static GameState ParseGameState(string json)
     {
-        //return JsonUtility.FromJson<GameState>(json);
-        return null;
+        return JsonUtility.FromJson<GameState>(json);
+    }
+
+    public static InputState ParseInputState(string json)
+    {
+        return JsonUtility.FromJson<InputState>(json);
     }
 }
 
 [Serializable]
-public enum NetworkingMessageType { CLIENT_JOIN, SERVER_JOIN_RESPONSE, DISCONNECT, PING, PING_RESPONSE, GAME_STATE };
+public enum NetworkingMessageType { CLIENT_JOIN, SERVER_JOIN_RESPONSE, DISCONNECT, PING, PING_RESPONSE, GAME_STATE, INPUT_STATE };
 
 [Serializable]
 public class NetworkingMessage
