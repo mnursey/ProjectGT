@@ -20,6 +20,7 @@ public class CarController : MonoBehaviour
     public float steeringInput = 0.0f;
     public float accelerationInput = 0.0f;
     public float brakingInput = 0.0f;
+    public bool resetInput = false;
 
     public float enginePower = 100.0f;
     public float steeringPower = 100.0f;
@@ -62,7 +63,7 @@ public class CarController : MonoBehaviour
         }
     }
 
-    void EnableControls()
+    public void EnableControls()
     {
         controls.CarControls.Throttle.performed += context => accelerationInput = context.ReadValue<float>();
         controls.CarControls.Brake.performed += context => brakingInput = context.ReadValue<float>();
@@ -79,9 +80,8 @@ public class CarController : MonoBehaviour
 
     void Reset()
     {
-        rb.velocity = new Vector3();
-        rb.angularVelocity = new Vector3();
-        transform.localEulerAngles = new Vector3(transform.localEulerAngles.x, transform.localEulerAngles.y, 0.0f);
+        Debug.Log("Request to reset");
+        resetInput = true;
     }
 
     void Update()
@@ -102,6 +102,14 @@ public class CarController : MonoBehaviour
 
     public void UpdatePhysics()
     {
+        if(resetInput)
+        {
+            rb.velocity = new Vector3();
+            rb.angularVelocity = new Vector3();
+            transform.localEulerAngles = new Vector3(transform.localEulerAngles.x, transform.localEulerAngles.y, 0.0f);
+            resetInput = false;
+        }
+
         SuspensionForce();
         EngineForce();
         SteeringForce();

@@ -568,7 +568,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a1e4566216670d049a0b02576e2a2c78, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  controllable: 1
+  controllable: 0
   centerOfMass: {x: 0, y: 0, z: 0}
   rb: {fileID: 4261872027723047870}
   axles:

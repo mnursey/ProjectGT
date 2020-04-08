@@ -10,6 +10,7 @@ public enum RaceControllerMode { CLIENT, SERVER };
 
 public class RaceController : MonoBehaviour
 {
+    public EntityManager em;
 
     public CameraController cameraController;
 
@@ -35,12 +36,21 @@ public class RaceController : MonoBehaviour
     private ConcurrentQueue<InputState> incomingInputStates = new ConcurrentQueue<InputState>();
 
     GameState incomingGameState = new GameState();
-    private ConcurrentQueue<GameState> incomingGameStates = new ConcurrentQueue<GameState>();
 
     private int frame = 0;
     public int serverSendFrq = 30;
 
     public float rotDiff = 2.0f;
+
+    CarController GetCarControllerFromID(int id)
+    {
+        if(id < 0)
+        {
+            return null;
+        }
+
+        return em.GetEntity(id).GetGameObject().GetComponent<CarController>();
+    }
 
     void Awake()
     {
@@ -60,8 +70,10 @@ public class RaceController : MonoBehaviour
 
         foreach(PlayerEntity player in players)
         {
-            player.car.physicsScene = targetPhysicsScene;
+            GetCarControllerFromID(player.carID).physicsScene = targetPhysicsScene;
         }
+
+        em.SetTargetScene(targetScene);
     }
 
     // Start is called before the first frame update
@@ -77,7 +89,6 @@ public class RaceController : MonoBehaviour
 
     public void QueueGameState(GameState gameState)
     {
-        //incomingGameStates.Enqueue(gameState);
         incomingGameState = gameState;
     }
 
@@ -100,39 +111,58 @@ public class RaceController : MonoBehaviour
         // Todo:
         // Improve this system...
 
+        InputState input = new InputState();
+
         if (raceControllerMode == RaceControllerMode.CLIENT && cc.state == ClientState.CONNECTED)
         {
-            //GameState state = new GameState();
-
-            //if(incomingGameStates.TryDequeue(out state))
-            //{
-            //   UpdateGameState(state);
-            //}
+            input = GetUserInputs();
             UpdateGameState(incomingGameState);
+
+            if(cameraController.targetObject == null && networkID > -1)
+            {
+                PlayerEntity pe = players.Find(x => x.networkID == networkID);
+
+                if(pe != null)
+                {
+                    CarController c = GetCarControllerFromID(pe.carID);
+
+                    if (c != null)
+                    {
+                        c.EnableControls();
+                        AttachCamera(c.transform);
+                    }
+                }
+            }
         }
 
         if (raceControllerMode == RaceControllerMode.SERVER && sc.ServerActive())
         {
             InputState state = new InputState();
 
+            // Todo...
+            // Fix this to support multi users... aka dequeue everything and only use the latest input for all players
+
             if (incomingInputStates.TryDequeue(out state))
             {
                 UpdateUserInputs(state);
             }
-
-            sc.SendGameState(GetGameState());
         }
 
         RunSinglePhysicsFrame();
 
         if(raceControllerMode == RaceControllerMode.CLIENT && cc.state == ClientState.CONNECTED)
         {
-            cc.SendInput(GetUserInputs());
+            cc.SendInput(input);
         }
 
         if (raceControllerMode == RaceControllerMode.SERVER && sc.ServerActive())
         {
             frame++;
+
+            if(serverSendFrq < 1)
+            {
+                serverSendFrq = 1;
+            }
 
             if(frame % serverSendFrq == 0)
             {
@@ -145,9 +175,10 @@ public class RaceController : MonoBehaviour
     {
         foreach (PlayerEntity player in players)
         {
-            if(player.car != null)
+            CarController c = GetCarControllerFromID(player.carID);
+            if(c != null)
             {
-                player.car.UpdatePhysics();
+                c.UpdatePhysics();
             }
         }
 
@@ -171,30 +202,28 @@ public class RaceController : MonoBehaviour
         return pe;
     }
 
-    CarController SpawnCar(PlayerEntity pe)
+    void AttachCamera(Transform t)
     {
-        Debug.Assert(pe.car == null, "Player already assigned car...");
-
-        GameObject carGameObject = Instantiate(carPrefab, currentTrack.carStarts[0].position, currentTrack.carStarts[0].rotation);
-        SceneManager.MoveGameObjectToScene(carGameObject, targetScene);
-
-        pe.car = carGameObject.GetComponent<CarController>();
-        pe.car.physicsScene = targetPhysicsScene;
-
-        if(raceControllerMode == RaceControllerMode.CLIENT)
+        if(cameraController != null)
         {
-            pe.car.controllable = true;
-
-            if(pe.networkID == networkID && cameraController != null)
-            {
-                cameraController.targetObject = pe.car.transform;
-            }
+            cameraController.targetObject = t;
         }
+    }
+
+    int SpawnCar(PlayerEntity pe)
+    {
+        Debug.Assert(pe.carID == -1, "Player already assigned car... " + raceControllerMode.ToString() + " " + pe.carID);
+
+        int carID = em.AddEntity(0, currentTrack.carStarts[0].position, currentTrack.carStarts[0].rotation);
+
+        pe.carID = carID;
 
         if (raceControllerMode == RaceControllerMode.SERVER)
         {
-            pe.car.controllable = false;
-            MeshRenderer[] meshRenders = pe.car.GetComponentsInChildren<MeshRenderer>();
+            CarController c = GetCarControllerFromID(carID);
+            c.controllable = false;
+
+            MeshRenderer[] meshRenders = c.GetComponentsInChildren<MeshRenderer>();
             foreach(MeshRenderer mr in meshRenders)
             {
                 mr.enabled = false;
@@ -203,7 +232,7 @@ public class RaceController : MonoBehaviour
 
         Debug.Log("Spawned car for " + pe.networkID);
 
-        return pe.car;
+        return pe.carID;
     }
 
     void RemovePlayer(PlayerEntity pe)
@@ -214,61 +243,20 @@ public class RaceController : MonoBehaviour
 
     void RemoveCar(PlayerEntity pe)
     {
-        Destroy(pe.car.gameObject);
+        em.RemoveEntity(pe.carID);
     }
 
     public GameState GetGameState()
     {
-        GameState state = new GameState();
-
-        foreach(PlayerEntity player in players)
-        {
-            if(player.car != null)
-            {
-                Rigidbody carRb = player.car.rb;
-                EntityState entity = new EntityState(player.networkID, carRb.velocity, carRb.position, carRb.angularVelocity, carRb.rotation.eulerAngles);
-                state.entities.Add(entity);
-            }
-        }
+        GameState state = new GameState(em.GetAllStates(), players);
 
         return state;
     }
 
     public void UpdateGameState(GameState state)
     {
-        foreach(EntityState entityState in state.entities)
-        {
-            if(entityState.created || !players.Exists(x => x.networkID == entityState.id))
-            {
-                PlayerEntity pe = CreatePlayer(entityState.id);
-                SpawnCar(pe);
-            }
-
-            // TODO
-            // if set set to values to
-
-            // else lerp to
-
-            PlayerEntity player = players.Find(x => x.networkID == entityState.id);
-
-            if(player != null && player.car != null)
-            {
-                Rigidbody rb = player.car.rb;
-
-                rb.velocity = entityState.velocity.GetValue();
-                rb.position = entityState.position.GetValue();
-                rb.angularVelocity = entityState.angularVelocity.GetValue();
-
-                // Todo Fix this... we should not do this here
-                Vector3 rotE = entityState.rotation.GetValue();
-                Quaternion rot = Quaternion.Euler(rotE.x, rotE.y, rotE.z);
-
-                if(Quaternion.Angle(rb.rotation, rot) > rotDiff)
-                {
-                    rb.rotation = rot;
-                }
-            }
-        }
+        players = state.playerEntities;
+        em.SetAllStates(state.entities);
     }
 
     public InputState GetUserInputs()
@@ -277,7 +265,7 @@ public class RaceController : MonoBehaviour
         {
             PlayerEntity pe = players.Find(x => x.networkID == networkID);
 
-            CarController car = pe.car;
+            CarController car = GetCarControllerFromID(pe.carID);
 
             if (car == null)
             {
@@ -285,7 +273,7 @@ public class RaceController : MonoBehaviour
             }
             else
             {
-                return new InputState(networkID, car.steeringInput, car.accelerationInput, car.brakingInput);
+                return new InputState(networkID, car.steeringInput, car.accelerationInput, car.brakingInput, car.resetInput);
             }
         }
         else
@@ -305,7 +293,7 @@ public class RaceController : MonoBehaviour
             
         }
 
-        CarController car = p.car;
+        CarController car = GetCarControllerFromID(p.carID);
 
         if (car == null)
         {
@@ -319,6 +307,7 @@ public class RaceController : MonoBehaviour
             car.steeringInput = inputState.steeringInput;
             car.accelerationInput = inputState.accelerationInput;
             car.brakingInput = inputState.brakingInput;
+            car.resetInput = (inputState.resetInput || car.resetInput);
         }  
     }
 }
@@ -326,8 +315,14 @@ public class RaceController : MonoBehaviour
 [Serializable]
 public class PlayerEntity
 {
-    public CarController car = null;
+    public int carID = -1;
     public int networkID;
+
+    public PlayerEntity(int networkID, int carID)
+    {
+        this.networkID = networkID;
+        this.carID = carID;
+    }
 
     public PlayerEntity (int networkID)
     {
@@ -339,6 +334,18 @@ public class PlayerEntity
 public class GameState
 {
     public List<EntityState> entities = new List<EntityState>();
+    public List<PlayerEntity> playerEntities = new List<PlayerEntity>();
+
+    public GameState()
+    {
+
+    }
+
+    public GameState(List<EntityState> entities, List<PlayerEntity> playerEntities)
+    {
+        this.entities = entities;
+        this.playerEntities = playerEntities;
+    }
 }
 
 [Serializable]
@@ -349,6 +356,7 @@ public class InputState
     public float accelerationInput = 0.0f;
     public float brakingInput = 0.0f;
     public bool spawnCar = false;
+    public bool resetInput = false;
 
     public InputState()
     {
@@ -360,20 +368,22 @@ public class InputState
         this.networkID = networkID;
     }
 
-    public InputState(int networkID, float steeringInput, float accelerationInput, float brakingInput)
+    public InputState(int networkID, float steeringInput, float accelerationInput, float brakingInput, bool resetInput)
     {
         this.networkID = networkID;
         this.steeringInput = steeringInput;
         this.accelerationInput = accelerationInput;
         this.brakingInput = brakingInput;
+        this.resetInput = resetInput;
     }
 
-    public InputState(int networkID, float steeringInput, float accelerationInput, float brakingInput, bool spawnCar)
+    public InputState(int networkID, float steeringInput, float accelerationInput, float brakingInput, bool resetInput, bool spawnCar)
     {
         this.networkID = networkID;
         this.steeringInput = steeringInput;
         this.accelerationInput = accelerationInput;
         this.brakingInput = brakingInput;
+        this.resetInput = resetInput;
         this.spawnCar = spawnCar;
     }
 }

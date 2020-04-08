@@ -802,6 +802,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3a6210d8c4a052e4cb9a3d0abd5d1ce0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  em: {fileID: 1521271724}
+  cameraController: {fileID: 0}
   players: []
   currentTrack: {fileID: 7803681664355131091}
   raceControllerState: 0
@@ -814,7 +816,7 @@ MonoBehaviour:
   cc: {fileID: 0}
   sc: {fileID: 1375969245}
   spawnCar: 0
-  serverSendFrq: 30
+  serverSendFrq: 1
   rotDiff: 2
 --- !u!4 &368693197
 Transform:
@@ -2944,6 +2946,52 @@ Mesh:
     offset: 0
     size: 0
     path: 
+--- !u!1 &1521271723
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1521271725}
+  - component: {fileID: 1521271724}
+  m_Layer: 0
+  m_Name: 'EntityManager '
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1521271724
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1521271723}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2778df7329df74b4386ef2520c83ea57, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  prefabs:
+  - {fileID: 4261872027723047873, guid: 79fcae859fdeebe45ad20a44f9403132, type: 3}
+  entities: []
+--- !u!4 &1521271725
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1521271723}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_RootOrder: 4
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!43 &1580683414
 Mesh:
   m_ObjectHideFlags: 0

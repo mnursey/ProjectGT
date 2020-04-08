@@ -6,7 +6,9 @@ using UnityEngine.SceneManagement;
 
 public class EntityManager : MonoBehaviour
 {
-    List<Entity> entities = new List<Entity>();
+    public List<GameObject> prefabs = new List<GameObject>();
+
+    public List<Entity> entities = new List<Entity>();
 
     private int entityIDTracker = 0;
 
@@ -22,24 +24,24 @@ public class EntityManager : MonoBehaviour
         return ++entityIDTracker;
     }
 
-    public int AddEntity(GameObject prefab, Vector3 position, Quaternion rotation)
+    public int AddEntity(int prefabID, Vector3 position, Quaternion rotation)
     {
         int id = GetNextEntityID();
 
-        GameObject gameObject = Instantiate(prefab, position, rotation);
+        GameObject gameObject = Instantiate(prefabs[prefabID], position, rotation);
         SceneManager.MoveGameObjectToScene(gameObject, targetScene);
 
-        entities.Add(new Entity(GetNextEntityID(), gameObject));
+        entities.Add(new Entity(id, prefabID, gameObject));
 
         return id;
     }
 
-    public int AddEntity(GameObject prefab, int id, Vector3 position, Quaternion rotation)
+    public int AddEntity(int prefabID, int id, Vector3 position, Quaternion rotation)
     {
-        GameObject gameObject = Instantiate(prefab, position, rotation);
+        GameObject gameObject = Instantiate(prefabs[prefabID], position, rotation);
         SceneManager.MoveGameObjectToScene(gameObject, targetScene);
 
-        entities.Add(new Entity(id, gameObject));
+        entities.Add(new Entity(id, prefabID, gameObject));
 
         return id;
     }
@@ -55,6 +57,15 @@ public class EntityManager : MonoBehaviour
 
     public void SetEntityState(EntityState state)
     {
+        if(state.created || !entities.Exists(x => x.GetID() == state.id))
+        {
+            // Todo:
+            // Handle prefab types?
+
+            Vector3 rot = state.rotation.GetValue();
+            AddEntity(state.prefabID, state.id, state.position.GetValue(), Quaternion.Euler(rot.x, rot.y, rot.z));
+        }
+
         Entity entity = entities.Find(x => x.GetID() == state.id);
 
         Rigidbody rb = entity.GetGameObject().GetComponent<Rigidbody>();
@@ -86,7 +97,7 @@ public class EntityManager : MonoBehaviour
     public EntityState GetEntityState(Entity entity)
     {
         Rigidbody rb = entity.GetGameObject().GetComponent<Rigidbody>();
-        EntityState entityState = new EntityState(entity.GetID(), rb.velocity, rb.position, rb.angularVelocity, rb.rotation.eulerAngles);
+        EntityState entityState = new EntityState(entity.GetID(), entity.GetPrefabID(), rb.velocity, rb.position, rb.angularVelocity, rb.rotation.eulerAngles);
 
         return entityState;
     }
@@ -110,6 +121,13 @@ public class EntityManager : MonoBehaviour
             SetEntityState(state);
         }
     }
+
+    public Entity GetEntity(int id)
+    {
+        Entity entity = entities.Find(x => x.GetID() == id);
+
+        return entity;
+    }
 }
 
 
@@ -117,17 +135,24 @@ public class EntityManager : MonoBehaviour
 public class Entity
 {
     private int id;
+    private int prefabID;
     private GameObject gameObject;
 
-    public Entity(int id, GameObject gameObject)
+    public Entity(int id, int prefabID, GameObject gameObject)
     {
         this.id = id;
+        this.prefabID = prefabID;
         this.gameObject = gameObject;
     }
 
     public int GetID()
     {
         return id;
+    }
+
+    public int GetPrefabID()
+    {
+        return prefabID;
     }
 
     public GameObject GetGameObject()
@@ -141,6 +166,7 @@ public class Entity
 public class EntityState
 {
     public int id;
+    public int prefabID;
     public SVector3 velocity;
     public SVector3 position;
     public SVector3 angularVelocity;
@@ -148,9 +174,10 @@ public class EntityState
     public bool set;
     public bool created;
 
-    public EntityState(int networkID, Vector3 velocity, Vector3 position, Vector3 angularVelocity, Vector3 rotation)
+    public EntityState(int id, int prefabID, Vector3 velocity, Vector3 position, Vector3 angularVelocity, Vector3 rotation)
     {
-        this.id = networkID;
+        this.id = id;
+        this.prefabID = prefabID;
         this.velocity = new SVector3(velocity);
         this.position = new SVector3(position);
         this.angularVelocity = new SVector3(angularVelocity);
