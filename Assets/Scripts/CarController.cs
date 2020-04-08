@@ -80,7 +80,6 @@ public class CarController : MonoBehaviour
 
     void Reset()
     {
-        Debug.Log("Request to reset");
         resetInput = true;
     }
 

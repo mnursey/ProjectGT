@@ -115,7 +115,7 @@ public class RaceController : MonoBehaviour
 
         if (raceControllerMode == RaceControllerMode.CLIENT && cc.state == ClientState.CONNECTED)
         {
-            input = GetUserInputs();
+            input = GetUserInputs(frame);
             UpdateGameState(incomingGameState);
 
             if(cameraController.targetObject == null && networkID > -1)
@@ -139,10 +139,8 @@ public class RaceController : MonoBehaviour
         {
             InputState state = new InputState();
 
-            // Todo...
-            // Fix this to support multi users... aka dequeue everything and only use the latest input for all players
-
-            if (incomingInputStates.TryDequeue(out state))
+            // Fix this.. what if we just keep getting updates.. then we'll never stop...
+            while (incomingInputStates.TryDequeue(out state))
             {
                 UpdateUserInputs(state);
             }
@@ -157,8 +155,6 @@ public class RaceController : MonoBehaviour
 
         if (raceControllerMode == RaceControllerMode.SERVER && sc.ServerActive())
         {
-            frame++;
-
             if(serverSendFrq < 1)
             {
                 serverSendFrq = 1;
@@ -169,6 +165,8 @@ public class RaceController : MonoBehaviour
                 sc.SendGameState(GetGameState());
             }
         }
+
+        frame++;
     }
 
     void RunSinglePhysicsFrame()
@@ -189,9 +187,7 @@ public class RaceController : MonoBehaviour
     {
         if (raceControllerMode == RaceControllerMode.CLIENT)
         {
-            InputState s = GetUserInputs();
-            s.spawnCar = true;
-            cc.SendInput(s);
+            spawnCar = true;
         }
     }
 
@@ -259,7 +255,7 @@ public class RaceController : MonoBehaviour
         em.SetAllStates(state.entities);
     }
 
-    public InputState GetUserInputs()
+    public InputState GetUserInputs(int frame)
     {
         if (players.Exists(x => x.networkID == networkID))
         {
@@ -269,16 +265,20 @@ public class RaceController : MonoBehaviour
 
             if (car == null)
             {
-                return new InputState(networkID);
+                InputState s = new InputState(networkID, spawnCar);
+                spawnCar = false;
+                return s;
             }
             else
             {
-                return new InputState(networkID, car.steeringInput, car.accelerationInput, car.brakingInput, car.resetInput);
+                InputState s = new InputState(networkID, frame, car.steeringInput, car.accelerationInput, car.brakingInput, car.resetInput, spawnCar);
+                spawnCar = false;
+                return s;
             }
         }
         else
         {
-            return new InputState(networkID);
+            return new InputState(networkID, false);
         }
     }
 
@@ -293,22 +293,25 @@ public class RaceController : MonoBehaviour
             
         }
 
-        CarController car = GetCarControllerFromID(p.carID);
-
-        if (car == null)
+        if(inputState.frameID >= p.frame)
         {
-            if (inputState.spawnCar)
+            CarController car = GetCarControllerFromID(p.carID);
+
+            if (car == null)
             {
-                SpawnCar(p);
+                if (inputState.spawnCar)
+                {
+                    SpawnCar(p);
+                }
+            }
+            else
+            {
+                car.steeringInput = inputState.steeringInput;
+                car.accelerationInput = inputState.accelerationInput;
+                car.brakingInput = inputState.brakingInput;
+                car.resetInput = (inputState.resetInput || car.resetInput);
             }
         }
-        else
-        {
-            car.steeringInput = inputState.steeringInput;
-            car.accelerationInput = inputState.accelerationInput;
-            car.brakingInput = inputState.brakingInput;
-            car.resetInput = (inputState.resetInput || car.resetInput);
-        }  
     }
 }
 
@@ -316,6 +319,7 @@ public class RaceController : MonoBehaviour
 public class PlayerEntity
 {
     public int carID = -1;
+    public int frame;
     public int networkID;
 
     public PlayerEntity(int networkID, int carID)
@@ -352,6 +356,7 @@ public class GameState
 public class InputState
 {
     public int networkID;
+    public int frameID;
     public float steeringInput = 0.0f;
     public float accelerationInput = 0.0f;
     public float brakingInput = 0.0f;
@@ -363,23 +368,26 @@ public class InputState
 
     }
 
-    public InputState(int networkID)
+    public InputState(int networkID, bool spawnCar)
     {
         this.networkID = networkID;
+        this.spawnCar = spawnCar;
     }
 
-    public InputState(int networkID, float steeringInput, float accelerationInput, float brakingInput, bool resetInput)
+    public InputState(int networkID, int frameID, float steeringInput, float accelerationInput, float brakingInput, bool resetInput)
     {
         this.networkID = networkID;
+        this.frameID = frameID;
         this.steeringInput = steeringInput;
         this.accelerationInput = accelerationInput;
         this.brakingInput = brakingInput;
         this.resetInput = resetInput;
     }
 
-    public InputState(int networkID, float steeringInput, float accelerationInput, float brakingInput, bool resetInput, bool spawnCar)
+    public InputState(int networkID, int frameID, float steeringInput, float accelerationInput, float brakingInput, bool resetInput, bool spawnCar)
     {
         this.networkID = networkID;
+        this.frameID = frameID;
         this.steeringInput = steeringInput;
         this.accelerationInput = accelerationInput;
         this.brakingInput = brakingInput;
