@@ -39,6 +39,8 @@ public class CarController : MonoBehaviour
     public float visualSteeringAngleMax = 5.0f;
     public float visualSteeringAngleSpeed = 5.0f;
 
+    public ExhaustManager exhaust = new ExhaustManager();
+
     public Vector3 previousFramePosition = new Vector3();
     public float previousFrameLocalZVelocity = 0.0f;
     
@@ -92,6 +94,7 @@ public class CarController : MonoBehaviour
 
         UpdateVisualRoll();
         UpdateWheelVisual();
+        exhaust.Update(rb.velocity);
     }
 
     void FixedUpdate()
@@ -522,4 +525,30 @@ public class Axle
     public static int FRONT_AXLE_INDEX = 0;
 
     public static int REAR_AXLE_INDEX = 1;
+}
+
+[Serializable]
+public class ExhaustManager
+{
+    public ParticleSystem smoke;
+    public ParticleSystem orangeSmoke;
+
+    public float idleSmokeLifetime;
+    public float drivingSmokeLifetime;
+
+    public float velocityLowerClamp;
+    public float velocityUpperClamp;
+
+    public void Update(Vector3 velocity)
+    {
+        float lifetime = Mathf.Lerp(idleSmokeLifetime, drivingSmokeLifetime, Mathf.Clamp(velocity.magnitude, velocityLowerClamp, velocityUpperClamp));
+
+        var s = smoke.main;
+
+        s.startLifetime = lifetime;
+
+        s = orangeSmoke.main;
+
+        s.startLifetime = lifetime;
+    }
 }

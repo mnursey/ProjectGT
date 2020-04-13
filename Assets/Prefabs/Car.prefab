@@ -627,6 +627,13 @@ MonoBehaviour:
   visualSteeringAngle: 0
   visualSteeringAngleMax: 25
   visualSteeringAngleSpeed: 200
+  exhaust:
+    smoke: {fileID: 7074568694146226275}
+    orangeSmoke: {fileID: 7074568694977822952}
+    idleSmokeLifetime: 5
+    drivingSmokeLifetime: 0.85
+    velocityLowerClamp: 0.05
+    velocityUpperClamp: 5
   previousFramePosition: {x: 0, y: 0, z: 0}
   previousFrameLocalZVelocity: 0
   carVisual: {fileID: 4261872026429938361}
@@ -742,6 +749,18 @@ Transform:
     type: 3}
   m_PrefabInstance: {fileID: 2909061949457679652}
   m_PrefabAsset: {fileID: 0}
+--- !u!198 &7074568694977822952 stripped
+ParticleSystem:
+  m_CorrespondingSourceObject: {fileID: 5364625880839046604, guid: bac273f8cd914f247b96c529732ecc55,
+    type: 3}
+  m_PrefabInstance: {fileID: 2909061949457679652}
+  m_PrefabAsset: {fileID: 0}
+--- !u!198 &7074568694146226275 stripped
+ParticleSystem:
+  m_CorrespondingSourceObject: {fileID: 5364625880610544967, guid: bac273f8cd914f247b96c529732ecc55,
+    type: 3}
+  m_PrefabInstance: {fileID: 2909061949457679652}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &4261872027079490045
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -811,24 +830,9 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -4216859302048453862, guid: b08bec34a430fc8498e45a4112877d52,
         type: 3}
-      propertyPath: m_LocalScale.y
-      value: 100
-      objectReference: {fileID: 0}
-    - target: {fileID: -4216859302048453862, guid: b08bec34a430fc8498e45a4112877d52,
-        type: 3}
       propertyPath: m_LocalScale.z
       value: 100.00002
       objectReference: {fileID: 0}
-    - target: {fileID: -1504981713932161579, guid: b08bec34a430fc8498e45a4112877d52,
-        type: 3}
-      propertyPath: m_Materials.Array.size
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: -1504981713932161579, guid: b08bec34a430fc8498e45a4112877d52,
-        type: 3}
-      propertyPath: m_Materials.Array.data[0]
-      value: 
-      objectReference: {fileID: 2100000, guid: c658c1b803301be4091a363e7d912a32, type: 2}
     - target: {fileID: -1504981713932161579, guid: b08bec34a430fc8498e45a4112877d52,
         type: 3}
       propertyPath: m_CastShadows
@@ -836,7 +840,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -1504981713932161579, guid: b08bec34a430fc8498e45a4112877d52,
         type: 3}
-      propertyPath: m_Materials.Array.data[1]
+      propertyPath: m_Materials.Array.data[0]
       value: 
       objectReference: {fileID: 2100000, guid: c658c1b803301be4091a363e7d912a32, type: 2}
     - target: {fileID: -927199367670048503, guid: b08bec34a430fc8498e45a4112877d52,
