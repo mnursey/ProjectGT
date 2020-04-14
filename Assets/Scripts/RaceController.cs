@@ -4,6 +4,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using TMPro;
 
 public enum RaceControllerState { IDLE , PRACTICE, RACE };
 public enum RaceControllerMode { CLIENT, SERVER };
@@ -17,6 +18,10 @@ public class RaceController : MonoBehaviour
     public List<PlayerEntity> players = new List<PlayerEntity>();
 
     public RaceTrack currentTrack;
+
+    public int targetNumberOfLaps = 0;
+
+    public GameUI gameUI = new GameUI();
 
     public RaceControllerState raceControllerState = RaceControllerState.IDLE;
     public RaceControllerMode raceControllerMode = RaceControllerMode.CLIENT;
@@ -39,8 +44,6 @@ public class RaceController : MonoBehaviour
 
     private int frame = 0;
     public int serverSendFrq = 30;
-
-    public float rotDiff = 2.0f;
 
     CarController GetCarControllerFromID(int id)
     {
@@ -71,6 +74,22 @@ public class RaceController : MonoBehaviour
         foreach(PlayerEntity player in players)
         {
             GetCarControllerFromID(player.carID).physicsScene = targetPhysicsScene;
+        }
+
+        if(raceControllerMode == RaceControllerMode.SERVER)
+        {
+            GameObject track = currentTrack.gameObject;
+            MeshRenderer[] meshRenders = track.GetComponentsInChildren<MeshRenderer>();
+            foreach (MeshRenderer mr in meshRenders)
+            {
+                mr.enabled = false;
+            }
+
+            ParticleSystem[] particleSystems = track.GetComponentsInChildren<ParticleSystem>();
+            foreach (ParticleSystem ps in particleSystems)
+            {
+                ps.Stop();
+            }
         }
 
         em.SetTargetScene(targetScene);
@@ -181,6 +200,51 @@ public class RaceController : MonoBehaviour
         }
 
         targetPhysicsScene.Simulate(Time.fixedDeltaTime);
+
+        if(raceControllerMode == RaceControllerMode.SERVER)
+        {
+            UpdateCarProgress();
+        }
+
+        if(raceControllerMode == RaceControllerMode.CLIENT)
+        {
+            if (players.Exists(x => x.networkID == networkID))
+            {
+                PlayerEntity pe = players.Find(x => x.networkID == networkID);
+                gameUI.UpdateLap(pe.lap.ToString(), targetNumberOfLaps.ToString());
+            }
+        }
+    }
+
+    void UpdateCarProgress()
+    {
+        foreach(PlayerEntity pe in players)
+        {
+            CarController c = GetCarControllerFromID(pe.carID);
+
+            if(c != null)
+            {
+                // Check if at next checkpoint...
+                int nextCheckPointID = (pe.checkpoint + 1) % currentTrack.checkPoints.Count;
+                CheckPoint nextCheckPoint = currentTrack.checkPoints[nextCheckPointID];
+                if(Vector3.Distance(c.transform.position, nextCheckPoint.t.position) < nextCheckPoint.raduis)
+                {
+                    pe.checkpoint = nextCheckPointID;
+                    if(nextCheckPointID == 0)
+                    {
+                        pe.lap++;
+                    }
+                }
+
+                // check if lap messed up....
+                CheckPoint startCheckpoint = currentTrack.checkPoints[0];
+
+                if (Vector3.Distance(c.transform.position, startCheckpoint.t.position) < startCheckpoint.raduis && pe.checkpoint != 0 )
+                {
+                    pe.checkpoint = 0;
+                }
+            }
+        }
     }
 
     public void RequestToSpawnCar()
@@ -223,6 +287,12 @@ public class RaceController : MonoBehaviour
             foreach(MeshRenderer mr in meshRenders)
             {
                 mr.enabled = false;
+            }
+
+            ParticleSystem[] particleSystems = c.GetComponentsInChildren<ParticleSystem>();
+            foreach (ParticleSystem ps in particleSystems)
+            {
+                ps.Stop();
             }
         }
 
@@ -319,6 +389,8 @@ public class RaceController : MonoBehaviour
 public class PlayerEntity
 {
     public int carID = -1;
+    public int lap = 0;
+    public int checkpoint = 0;
     public int frame;
     public int networkID;
 
@@ -331,6 +403,12 @@ public class PlayerEntity
     public PlayerEntity (int networkID)
     {
         this.networkID = networkID;
+    }
+
+    public void SetLapState(int lap, int checkpoint)
+    {
+        this.lap = lap;
+        this.checkpoint = checkpoint;
     }
 }
 
@@ -393,5 +471,25 @@ public class InputState
         this.brakingInput = brakingInput;
         this.resetInput = resetInput;
         this.spawnCar = spawnCar;
+    }
+}
+
+[Serializable]
+public class GameUI
+{
+    public TextMeshProUGUI currentLapText;
+    public TextMeshProUGUI targetLapText;
+
+    public void UpdateLap(string currentLap, string targetLap)
+    {
+        if(currentLapText != null)
+        {
+            currentLapText.SetText(currentLap);
+        }
+
+        if(targetLapText != null)
+        {
+            targetLapText.SetText(targetLap);
+        }
     }
 }
