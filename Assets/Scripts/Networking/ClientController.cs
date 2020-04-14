@@ -70,7 +70,7 @@ public class ClientController : MonoBehaviour
         serverEndPoint = null;
     }
 
-    void ConnectToServer()
+    public void ConnectToServer()
     {
         Reset();
 
