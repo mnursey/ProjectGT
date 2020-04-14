@@ -108,7 +108,9 @@ public class CarController : MonoBehaviour
         {
             rb.velocity = new Vector3();
             rb.angularVelocity = new Vector3();
-            transform.localEulerAngles = new Vector3(transform.localEulerAngles.x, transform.localEulerAngles.y, 0.0f);
+
+            transform.localEulerAngles = new Vector3(0.0f, transform.localEulerAngles.y, 0.0f);
+
             resetInput = false;
         }
 

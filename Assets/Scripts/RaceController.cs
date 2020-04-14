@@ -266,6 +266,7 @@ public class RaceController : MonoBehaviour
     {
         if(cameraController != null)
         {
+            cameraController.mode = CameraModeEnum.SafeCamera;
             cameraController.targetObject = t;
         }
     }
