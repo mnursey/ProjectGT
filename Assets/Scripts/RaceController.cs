@@ -149,6 +149,7 @@ public class RaceController : MonoBehaviour
                     {
                         c.EnableControls();
                         AttachCamera(c.transform);
+                        em.useMOEEntities.Add(pe.carID);
                     }
                 }
             }

@@ -15,6 +15,8 @@ public class EntityManager : MonoBehaviour
 
     private int entityIDTracker = 0;
 
+    public List<int> useMOEEntities = new List<int>();
+
     private Scene targetScene;
 
     public void SetTargetScene(Scene targetScene)
@@ -75,6 +77,8 @@ public class EntityManager : MonoBehaviour
 
         if(rb != null)
         {
+            bool useMOE = useMOEEntities.Exists(x => x == state.id);
+
             Vector3 desiredValue = Vector3.zero;
 
             desiredValue = state.velocity.GetValue();
@@ -82,7 +86,7 @@ public class EntityManager : MonoBehaviour
           
             desiredValue = state.position.GetValue();
 
-            if((desiredValue - rb.position).magnitude > posMarginOfError)
+            if(!useMOE || (desiredValue - rb.position).magnitude > posMarginOfError)
             {
                 rb.position = desiredValue;
             }
