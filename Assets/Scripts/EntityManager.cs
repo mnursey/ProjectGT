@@ -10,6 +10,9 @@ public class EntityManager : MonoBehaviour
 
     public List<Entity> entities = new List<Entity>();
 
+    public float posMarginOfError = 0.001f;
+    public float rotMarginOfError = 10.0f;
+
     private int entityIDTracker = 0;
 
     private Scene targetScene;
@@ -72,15 +75,25 @@ public class EntityManager : MonoBehaviour
 
         if(rb != null)
         {
-            rb.velocity = state.velocity.GetValue();
-            rb.position = state.position.GetValue();
-            rb.angularVelocity = state.angularVelocity.GetValue();
+            Vector3 desiredValue = Vector3.zero;
 
-            // Todo Fix this... we should not do this here
+            desiredValue = state.velocity.GetValue();
+            rb.velocity = desiredValue;
+          
+            desiredValue = state.position.GetValue();
+
+            if((desiredValue - rb.position).magnitude > posMarginOfError)
+            {
+                rb.position = desiredValue;
+            }
+
+            desiredValue = state.angularVelocity.GetValue();
+            rb.angularVelocity = desiredValue;
+
             Vector3 rotE = state.rotation.GetValue();
             Quaternion rot = Quaternion.Euler(rotE.x, rotE.y, rotE.z);
 
-            if (Quaternion.Angle(rb.rotation, rot) > 10.0f)
+            if (Quaternion.Angle(rb.rotation, rot) > rotMarginOfError)
             {
                 rb.rotation = rot;
             }

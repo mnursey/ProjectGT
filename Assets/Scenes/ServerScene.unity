@@ -1132,6 +1132,10 @@ MonoBehaviour:
   cameraController: {fileID: 0}
   players: []
   currentTrack: {fileID: 1038047096}
+  targetNumberOfLaps: 0
+  gameUI:
+    currentLapText: {fileID: 0}
+    targetLapText: {fileID: 0}
   raceControllerState: 0
   raceControllerMode: 1
   carPrefab: {fileID: 4261872027723047873, guid: 79fcae859fdeebe45ad20a44f9403132,
@@ -1143,7 +1147,6 @@ MonoBehaviour:
   sc: {fileID: 1375969245}
   spawnCar: 0
   serverSendFrq: 1
-  rotDiff: 2
 --- !u!4 &368693197
 Transform:
   m_ObjectHideFlags: 0
@@ -4797,6 +4800,8 @@ MonoBehaviour:
   prefabs:
   - {fileID: 4261872027723047873, guid: 79fcae859fdeebe45ad20a44f9403132, type: 3}
   entities: []
+  posMarginOfError: 0
+  rotMarginOfError: 0
 --- !u!4 &1521271725
 Transform:
   m_ObjectHideFlags: 0
