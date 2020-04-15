@@ -87,7 +87,7 @@ public class ServerController : MonoBehaviour
 
     public void SendGameState(GameState gameState)
     {
-        foreach (ServerConnection sc in clients)
+        foreach (ServerConnection sc in clients.ToArray())
         {
             string s = NetworkingMessageTranslator.GenerateGameStateMessage(gameState, sc.clientID);
             sc.BeginSend(s);

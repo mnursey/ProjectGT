@@ -158,7 +158,7 @@ public class ClientController : MonoBehaviour
         if (bytesRead > 0)
         {
             data = Encoding.UTF8.GetString(receiveObject.buffer, 0, bytesRead);
-            Debug.Log("Client Received:" + data + " From " + receiveObject.sender.ToString());
+            //Debug.Log("Client Received:" + data + " From " + receiveObject.sender.ToString());
             NetworkingMessage msg = NetworkingMessageTranslator.ParseMessage(data);
 
             // Check if connection request was accepted...

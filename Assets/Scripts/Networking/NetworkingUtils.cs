@@ -10,7 +10,9 @@ public delegate void OnSent();
 
 public class MessageObject
 {
-    public byte[] buffer = new byte[1024];
+    // Todo:
+    // multi by 10 was quick fix... this is hacky... slow to send / receive large packets.
+    public byte[] buffer = new byte[1024 * 10];
     public EndPoint sender;
     public IPPacketInformation packetInformation;
     public OnSent onSent;
