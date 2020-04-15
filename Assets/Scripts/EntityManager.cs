@@ -29,6 +29,20 @@ public class EntityManager : MonoBehaviour
         return ++entityIDTracker;
     }
 
+    public void Reset()
+    {
+
+        foreach(Entity e in entities)
+        {
+            Destroy(e.GetGameObject());
+        }
+
+        entities = new List<Entity>();
+
+        entityIDTracker = 0;
+        useMOEEntities = new List<int>();
+    }
+
     public int AddEntity(int prefabID, Vector3 position, Quaternion rotation)
     {
         int id = GetNextEntityID();

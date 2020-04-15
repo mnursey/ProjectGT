@@ -95,6 +95,18 @@ public class RaceController : MonoBehaviour
         em.SetTargetScene(targetScene);
     }
 
+    public void Reset()
+    {
+        targetNumberOfLaps = 0;
+        networkID = -1;
+        players = new List<PlayerEntity>();
+        incomingGameState = new GameState();
+        cameraController.targetObject = null;
+        frame = 0;
+
+        em.Reset();
+    }
+
     // Start is called before the first frame update
     void Start()
     {

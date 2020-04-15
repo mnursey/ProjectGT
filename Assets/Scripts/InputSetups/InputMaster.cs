@@ -49,6 +49,14 @@ public class @InputMaster : IInputActionCollection, IDisposable
                     ""expectedControlType"": """",
                     ""processors"": """",
                     ""interactions"": """"
+                },
+                {
+                    ""name"": ""ShowMenu"",
+                    ""type"": ""Button"",
+                    ""id"": ""3861c24d-884a-4115-8e73-98bdddc75dbf"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """"
                 }
             ],
             ""bindings"": [
@@ -161,6 +169,28 @@ public class @InputMaster : IInputActionCollection, IDisposable
                     ""action"": ""Brake"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""5fe9a6a3-26d0-4784-af17-f1cd077c6104"",
+                    ""path"": ""<Keyboard>/escape"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": ""Keyboard"",
+                    ""action"": ""ShowMenu"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""bc5c207b-74aa-4da2-a652-d4fbb8182668"",
+                    ""path"": ""<Keyboard>/rightCtrl"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": ""Keyboard"",
+                    ""action"": ""ShowMenu"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
                 }
             ]
         }
@@ -195,6 +225,7 @@ public class @InputMaster : IInputActionCollection, IDisposable
         m_CarControls_Steering = m_CarControls.FindAction("Steering", throwIfNotFound: true);
         m_CarControls_Reset = m_CarControls.FindAction("Reset", throwIfNotFound: true);
         m_CarControls_Brake = m_CarControls.FindAction("Brake", throwIfNotFound: true);
+        m_CarControls_ShowMenu = m_CarControls.FindAction("ShowMenu", throwIfNotFound: true);
     }
 
     public void Dispose()
@@ -248,6 +279,7 @@ public class @InputMaster : IInputActionCollection, IDisposable
     private readonly InputAction m_CarControls_Steering;
     private readonly InputAction m_CarControls_Reset;
     private readonly InputAction m_CarControls_Brake;
+    private readonly InputAction m_CarControls_ShowMenu;
     public struct CarControlsActions
     {
         private @InputMaster m_Wrapper;
@@ -256,6 +288,7 @@ public class @InputMaster : IInputActionCollection, IDisposable
         public InputAction @Steering => m_Wrapper.m_CarControls_Steering;
         public InputAction @Reset => m_Wrapper.m_CarControls_Reset;
         public InputAction @Brake => m_Wrapper.m_CarControls_Brake;
+        public InputAction @ShowMenu => m_Wrapper.m_CarControls_ShowMenu;
         public InputActionMap Get() { return m_Wrapper.m_CarControls; }
         public void Enable() { Get().Enable(); }
         public void Disable() { Get().Disable(); }
@@ -277,6 +310,9 @@ public class @InputMaster : IInputActionCollection, IDisposable
                 @Brake.started -= m_Wrapper.m_CarControlsActionsCallbackInterface.OnBrake;
                 @Brake.performed -= m_Wrapper.m_CarControlsActionsCallbackInterface.OnBrake;
                 @Brake.canceled -= m_Wrapper.m_CarControlsActionsCallbackInterface.OnBrake;
+                @ShowMenu.started -= m_Wrapper.m_CarControlsActionsCallbackInterface.OnShowMenu;
+                @ShowMenu.performed -= m_Wrapper.m_CarControlsActionsCallbackInterface.OnShowMenu;
+                @ShowMenu.canceled -= m_Wrapper.m_CarControlsActionsCallbackInterface.OnShowMenu;
             }
             m_Wrapper.m_CarControlsActionsCallbackInterface = instance;
             if (instance != null)
@@ -293,6 +329,9 @@ public class @InputMaster : IInputActionCollection, IDisposable
                 @Brake.started += instance.OnBrake;
                 @Brake.performed += instance.OnBrake;
                 @Brake.canceled += instance.OnBrake;
+                @ShowMenu.started += instance.OnShowMenu;
+                @ShowMenu.performed += instance.OnShowMenu;
+                @ShowMenu.canceled += instance.OnShowMenu;
             }
         }
     }
@@ -321,5 +360,6 @@ public class @InputMaster : IInputActionCollection, IDisposable
         void OnSteering(InputAction.CallbackContext context);
         void OnReset(InputAction.CallbackContext context);
         void OnBrake(InputAction.CallbackContext context);
+        void OnShowMenu(InputAction.CallbackContext context);
     }
 }

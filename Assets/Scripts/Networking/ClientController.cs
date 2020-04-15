@@ -12,6 +12,8 @@ public enum ClientState { IDLE, CONNECTING, CONNECTED, DISCONNECTING, ERROR };
 
 public class ClientController : MonoBehaviour
 {
+    public string address = "";
+
     public bool startClient = false;
     public int clientID = -1;
     public string serverIP;
@@ -79,6 +81,8 @@ public class ClientController : MonoBehaviour
         socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
 
         socket.Bind(new IPEndPoint(IPAddress.Any, 0));
+
+        address = socket.LocalEndPoint.ToString();
 
         IPAddress serverAddress = IPAddress.Parse(serverIP);
         serverEndPoint = new IPEndPoint(serverAddress, serverport);
@@ -154,7 +158,7 @@ public class ClientController : MonoBehaviour
         if (bytesRead > 0)
         {
             data = Encoding.UTF8.GetString(receiveObject.buffer, 0, bytesRead);
-            //Debug.Log("Client Received:" + data + " From " + receiveObject.sender.ToString());
+            Debug.Log("Client Received:" + data + " From " + receiveObject.sender.ToString());
             NetworkingMessage msg = NetworkingMessageTranslator.ParseMessage(data);
 
             // Check if connection request was accepted...
