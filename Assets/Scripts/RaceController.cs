@@ -39,6 +39,7 @@ public class RaceController : MonoBehaviour
     public bool spawnCar;
 
     private ConcurrentQueue<InputState> incomingInputStates = new ConcurrentQueue<InputState>();
+    private ConcurrentQueue<int> playersToRemove = new ConcurrentQueue<int>();
 
     GameState incomingGameState = new GameState();
 
@@ -118,6 +119,11 @@ public class RaceController : MonoBehaviour
         incomingInputStates.Enqueue(inputState);
     }
 
+    public void QueueRemovePlayer(int networkID)
+    {
+        playersToRemove.Enqueue(networkID);
+    }
+
     public void QueueGameState(GameState gameState)
     {
         incomingGameState = gameState;
@@ -178,6 +184,13 @@ public class RaceController : MonoBehaviour
             while (incomingInputStates.TryDequeue(out state))
             {
                 UpdateUserInputs(state);
+            }
+
+            int leavingPlayerNetworkID = 0;
+
+            while (playersToRemove.TryDequeue(out leavingPlayerNetworkID))
+            {
+                RemovePlayer(leavingPlayerNetworkID);
             }
         }
 
@@ -318,7 +331,17 @@ public class RaceController : MonoBehaviour
         return pe.carID;
     }
 
-    void RemovePlayer(PlayerEntity pe)
+    public void RemovePlayer(int networkID)
+    {
+        if (players.Exists(x => x.networkID == networkID))
+        {
+            PlayerEntity pe = players.Find(x => x.networkID == networkID);
+
+            RemovePlayer(pe);
+        }
+    }
+
+    public void RemovePlayer(PlayerEntity pe)
     {
         RemoveCar(pe);
         players.Remove(pe);
@@ -331,7 +354,7 @@ public class RaceController : MonoBehaviour
 
     public GameState GetGameState()
     {
-        GameState state = new GameState(em.GetAllStates(), players);
+        GameState state = new GameState(em.GetAllStates(), players, em.removedEntities);
 
         return state;
     }
@@ -339,6 +362,7 @@ public class RaceController : MonoBehaviour
     public void UpdateGameState(GameState state)
     {
         players = state.playerEntities;
+        em.removedEntities = state.removedEntities;
         em.SetAllStates(state.entities);
     }
 
@@ -434,16 +458,18 @@ public class GameState
 {
     public List<EntityState> entities = new List<EntityState>();
     public List<PlayerEntity> playerEntities = new List<PlayerEntity>();
+    public List<int> removedEntities = new List<int>();
 
     public GameState()
     {
 
     }
 
-    public GameState(List<EntityState> entities, List<PlayerEntity> playerEntities)
+    public GameState(List<EntityState> entities, List<PlayerEntity> playerEntities, List<int> removedEntities)
     {
         this.entities = entities;
         this.playerEntities = playerEntities;
+        this.removedEntities = removedEntities;
     }
 }
 

@@ -165,6 +165,8 @@ public class ServerController : MonoBehaviour
 
                             Debug.Log("Client " + serverConnection.clientID + " disconnected...");
 
+                            rc.QueueRemovePlayer(serverConnection.clientID);
+
                             break;
 
                         case NetworkingMessageType.GAME_STATE:

@@ -9,6 +9,7 @@ public class EntityManager : MonoBehaviour
     public List<GameObject> prefabs = new List<GameObject>();
 
     public List<Entity> entities = new List<Entity>();
+    public List<int> removedEntities = new List<int>();
 
     public float posMarginOfError = 0.001f;
     public float rotMarginOfError = 10.0f;
@@ -41,6 +42,7 @@ public class EntityManager : MonoBehaviour
 
         entityIDTracker = 0;
         useMOEEntities = new List<int>();
+        removedEntities = new List<int>();
     }
 
     public int AddEntity(int prefabID, Vector3 position, Quaternion rotation)
@@ -72,6 +74,11 @@ public class EntityManager : MonoBehaviour
         entities.Remove(entity);
 
         Destroy(entity.GetGameObject());
+
+        if (!removedEntities.Exists(x => x == entity.GetID()))
+        {
+            removedEntities.Add(id);
+        }
     }
 
     public void SetEntityState(EntityState state)
@@ -128,6 +135,11 @@ public class EntityManager : MonoBehaviour
 
                 cc.SetWheelCompressionValues(state.extraValues);
             }
+        }
+
+        if(removedEntities.Exists(x => x == entity.GetID()))
+        {
+            RemoveEntity(entity.GetID());
         }
     }
 
