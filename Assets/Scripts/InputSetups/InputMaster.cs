@@ -43,6 +43,14 @@ public class @InputMaster : IInputActionCollection, IDisposable
                     ""interactions"": """"
                 },
                 {
+                    ""name"": ""ResetToCheckpoint"",
+                    ""type"": ""Button"",
+                    ""id"": ""54c674ff-9642-4ed8-a76a-79fd89518853"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """"
+                },
+                {
                     ""name"": ""Brake"",
                     ""type"": ""Button"",
                     ""id"": ""781c6b96-2e0b-473c-9ad3-305a79788c8d"",
@@ -191,6 +199,17 @@ public class @InputMaster : IInputActionCollection, IDisposable
                     ""action"": ""ShowMenu"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""bc8a480d-bc0e-4023-88d5-2956664bb650"",
+                    ""path"": ""<Keyboard>/f"",
+                    ""interactions"": ""Hold"",
+                    ""processors"": """",
+                    ""groups"": ""Keyboard"",
+                    ""action"": ""ResetToCheckpoint"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
                 }
             ]
         }
@@ -224,6 +243,7 @@ public class @InputMaster : IInputActionCollection, IDisposable
         m_CarControls_Throttle = m_CarControls.FindAction("Throttle", throwIfNotFound: true);
         m_CarControls_Steering = m_CarControls.FindAction("Steering", throwIfNotFound: true);
         m_CarControls_Reset = m_CarControls.FindAction("Reset", throwIfNotFound: true);
+        m_CarControls_ResetToCheckpoint = m_CarControls.FindAction("ResetToCheckpoint", throwIfNotFound: true);
         m_CarControls_Brake = m_CarControls.FindAction("Brake", throwIfNotFound: true);
         m_CarControls_ShowMenu = m_CarControls.FindAction("ShowMenu", throwIfNotFound: true);
     }
@@ -278,6 +298,7 @@ public class @InputMaster : IInputActionCollection, IDisposable
     private readonly InputAction m_CarControls_Throttle;
     private readonly InputAction m_CarControls_Steering;
     private readonly InputAction m_CarControls_Reset;
+    private readonly InputAction m_CarControls_ResetToCheckpoint;
     private readonly InputAction m_CarControls_Brake;
     private readonly InputAction m_CarControls_ShowMenu;
     public struct CarControlsActions
@@ -287,6 +308,7 @@ public class @InputMaster : IInputActionCollection, IDisposable
         public InputAction @Throttle => m_Wrapper.m_CarControls_Throttle;
         public InputAction @Steering => m_Wrapper.m_CarControls_Steering;
         public InputAction @Reset => m_Wrapper.m_CarControls_Reset;
+        public InputAction @ResetToCheckpoint => m_Wrapper.m_CarControls_ResetToCheckpoint;
         public InputAction @Brake => m_Wrapper.m_CarControls_Brake;
         public InputAction @ShowMenu => m_Wrapper.m_CarControls_ShowMenu;
         public InputActionMap Get() { return m_Wrapper.m_CarControls; }
@@ -307,6 +329,9 @@ public class @InputMaster : IInputActionCollection, IDisposable
                 @Reset.started -= m_Wrapper.m_CarControlsActionsCallbackInterface.OnReset;
                 @Reset.performed -= m_Wrapper.m_CarControlsActionsCallbackInterface.OnReset;
                 @Reset.canceled -= m_Wrapper.m_CarControlsActionsCallbackInterface.OnReset;
+                @ResetToCheckpoint.started -= m_Wrapper.m_CarControlsActionsCallbackInterface.OnResetToCheckpoint;
+                @ResetToCheckpoint.performed -= m_Wrapper.m_CarControlsActionsCallbackInterface.OnResetToCheckpoint;
+                @ResetToCheckpoint.canceled -= m_Wrapper.m_CarControlsActionsCallbackInterface.OnResetToCheckpoint;
                 @Brake.started -= m_Wrapper.m_CarControlsActionsCallbackInterface.OnBrake;
                 @Brake.performed -= m_Wrapper.m_CarControlsActionsCallbackInterface.OnBrake;
                 @Brake.canceled -= m_Wrapper.m_CarControlsActionsCallbackInterface.OnBrake;
@@ -326,6 +351,9 @@ public class @InputMaster : IInputActionCollection, IDisposable
                 @Reset.started += instance.OnReset;
                 @Reset.performed += instance.OnReset;
                 @Reset.canceled += instance.OnReset;
+                @ResetToCheckpoint.started += instance.OnResetToCheckpoint;
+                @ResetToCheckpoint.performed += instance.OnResetToCheckpoint;
+                @ResetToCheckpoint.canceled += instance.OnResetToCheckpoint;
                 @Brake.started += instance.OnBrake;
                 @Brake.performed += instance.OnBrake;
                 @Brake.canceled += instance.OnBrake;
@@ -359,6 +387,7 @@ public class @InputMaster : IInputActionCollection, IDisposable
         void OnThrottle(InputAction.CallbackContext context);
         void OnSteering(InputAction.CallbackContext context);
         void OnReset(InputAction.CallbackContext context);
+        void OnResetToCheckpoint(InputAction.CallbackContext context);
         void OnBrake(InputAction.CallbackContext context);
         void OnShowMenu(InputAction.CallbackContext context);
     }

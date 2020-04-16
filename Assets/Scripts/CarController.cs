@@ -21,6 +21,9 @@ public class CarController : MonoBehaviour
     public float accelerationInput = 0.0f;
     public float brakingInput = 0.0f;
     public bool resetInput = false;
+    public bool resetToCheckpointInput = false;
+
+    public CheckPoint resetCheckpoint;
 
     public float enginePower = 100.0f;
     public float steeringPower = 100.0f;
@@ -72,6 +75,7 @@ public class CarController : MonoBehaviour
         controls.CarControls.Steering.performed += context => steeringInput = context.ReadValue<float>();
 
         controls.CarControls.Reset.performed += context => Reset();
+        controls.CarControls.ResetToCheckpoint.performed += context => ResetToCheckpoint();
     }
 
     void Start()
@@ -83,6 +87,11 @@ public class CarController : MonoBehaviour
     void Reset()
     {
         resetInput = true;
+    }
+
+    void ResetToCheckpoint()
+    {
+        resetToCheckpointInput = true;
     }
 
     void Update()
@@ -112,6 +121,17 @@ public class CarController : MonoBehaviour
             transform.localEulerAngles = new Vector3(0.0f, transform.localEulerAngles.y, 0.0f);
 
             resetInput = false;
+        }
+
+        if(resetToCheckpointInput)
+        {
+            rb.velocity = new Vector3();
+            rb.angularVelocity = new Vector3();
+
+            transform.rotation = resetCheckpoint.t.rotation;
+            transform.position = resetCheckpoint.t.position;
+
+            resetToCheckpointInput = false;
         }
 
         SuspensionForce();

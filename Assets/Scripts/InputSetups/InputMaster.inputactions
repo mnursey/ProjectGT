@@ -30,6 +30,14 @@
                     "interactions": ""
                 },
                 {
+                    "name": "ResetToCheckpoint",
+                    "type": "Button",
+                    "id": "54c674ff-9642-4ed8-a76a-79fd89518853",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": ""
+                },
+                {
                     "name": "Brake",
                     "type": "Button",
                     "id": "781c6b96-2e0b-473c-9ad3-305a79788c8d",
@@ -176,6 +184,17 @@
                     "processors": "",
                     "groups": "Keyboard",
                     "action": "ShowMenu",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "bc8a480d-bc0e-4023-88d5-2956664bb650",
+                    "path": "<Keyboard>/f",
+                    "interactions": "Hold",
+                    "processors": "",
+                    "groups": "Keyboard",
+                    "action": "ResetToCheckpoint",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }

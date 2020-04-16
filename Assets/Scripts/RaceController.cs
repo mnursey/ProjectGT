@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using TMPro;
+using System.Linq;
 
 public enum RaceControllerState { IDLE , PRACTICE, RACE };
 public enum RaceControllerMode { CLIENT, SERVER };
@@ -230,10 +231,7 @@ public class RaceController : MonoBehaviour
 
         targetPhysicsScene.Simulate(Time.fixedDeltaTime);
 
-        if(raceControllerMode == RaceControllerMode.SERVER)
-        {
-            UpdateCarProgress();
-        }
+        UpdateCarProgress();
 
         if(raceControllerMode == RaceControllerMode.CLIENT)
         {
@@ -241,6 +239,10 @@ public class RaceController : MonoBehaviour
             {
                 PlayerEntity pe = players.Find(x => x.networkID == networkID);
                 gameUI.UpdateLap(pe.lap.ToString(), targetNumberOfLaps.ToString());
+
+                List<PlayerEntity> sortedByLapScore = GetPlayersByLapScore();
+                int playerPos = sortedByLapScore.FindIndex(x => x.networkID == networkID) + 1;
+                gameUI.UpdatePosition(playerPos.ToString(), sortedByLapScore.Count.ToString());
             }
         }
     }
@@ -253,6 +255,8 @@ public class RaceController : MonoBehaviour
 
             if(c != null)
             {
+                c.resetCheckpoint = GetCurrentCheckpoint(pe);
+
                 // Check if at next checkpoint...
                 int nextCheckPointID = (pe.checkpoint + 1) % currentTrack.checkPoints.Count;
                 CheckPoint nextCheckPoint = currentTrack.checkPoints[nextCheckPointID];
@@ -272,8 +276,44 @@ public class RaceController : MonoBehaviour
                 {
                     pe.checkpoint = 0;
                 }
+
+                pe.lapScore = GetPlayerLapScore(pe);
             }
         }
+    }
+
+    public List<PlayerEntity> GetPlayersByLapScore()
+    {
+        List<PlayerEntity> p = players.OrderBy(o => o.lapScore).ToList();
+        p.Reverse();
+
+        return p;
+    }
+
+    public float GetPlayerLapScore(PlayerEntity pe)
+    {
+        float score = 0;
+
+        int l = Math.Max(targetNumberOfLaps, 1);
+        int lHat = pe.lap;
+
+        int c = currentTrack.checkPoints.Count;
+        int cHat = pe.checkpoint;
+
+        CheckPoint current =  GetCurrentCheckpoint(pe);
+        CheckPoint nextCheckPoint = currentTrack.checkPoints[(pe.checkpoint + 1) % currentTrack.checkPoints.Count];
+
+        float d = Vector3.Distance(current.t.position, nextCheckPoint.t.position);
+        float dHat = Vector3.Distance(GetCarControllerFromID(pe.carID).transform.position, nextCheckPoint.t.position);
+
+        score = (((((d - dHat) / d) + cHat) / c) + lHat) / l;
+
+        return score;
+    }
+
+    CheckPoint GetCurrentCheckpoint(PlayerEntity pe)
+    {
+        return currentTrack.checkPoints[pe.checkpoint];
     }
 
     public void RequestToSpawnCar()
@@ -382,7 +422,7 @@ public class RaceController : MonoBehaviour
             }
             else
             {
-                InputState s = new InputState(networkID, frame, car.steeringInput, car.accelerationInput, car.brakingInput, car.resetInput, spawnCar);
+                InputState s = new InputState(networkID, frame, car.steeringInput, car.accelerationInput, car.brakingInput, car.resetInput, car.resetToCheckpointInput, spawnCar);
                 spawnCar = false;
                 return s;
             }
@@ -421,6 +461,7 @@ public class RaceController : MonoBehaviour
                 car.accelerationInput = inputState.accelerationInput;
                 car.brakingInput = inputState.brakingInput;
                 car.resetInput = (inputState.resetInput || car.resetInput);
+                car.resetToCheckpointInput = (inputState.resetToCheckpointInput || car.resetToCheckpointInput);
             }
         }
     }
@@ -434,6 +475,7 @@ public class PlayerEntity
     public int checkpoint = 0;
     public int frame;
     public int networkID;
+    public float lapScore = 0.0f;
 
     public PlayerEntity(int networkID, int carID)
     {
@@ -483,6 +525,7 @@ public class InputState
     public float brakingInput = 0.0f;
     public bool spawnCar = false;
     public bool resetInput = false;
+    public bool resetToCheckpointInput = false;
 
     public InputState()
     {
@@ -495,7 +538,7 @@ public class InputState
         this.spawnCar = spawnCar;
     }
 
-    public InputState(int networkID, int frameID, float steeringInput, float accelerationInput, float brakingInput, bool resetInput)
+    public InputState(int networkID, int frameID, float steeringInput, float accelerationInput, float brakingInput, bool resetInput, bool resetToCheckpointInput)
     {
         this.networkID = networkID;
         this.frameID = frameID;
@@ -503,9 +546,10 @@ public class InputState
         this.accelerationInput = accelerationInput;
         this.brakingInput = brakingInput;
         this.resetInput = resetInput;
+        this.resetToCheckpointInput = resetToCheckpointInput;
     }
 
-    public InputState(int networkID, int frameID, float steeringInput, float accelerationInput, float brakingInput, bool resetInput, bool spawnCar)
+    public InputState(int networkID, int frameID, float steeringInput, float accelerationInput, float brakingInput, bool resetInput, bool resetToCheckpointInput, bool spawnCar)
     {
         this.networkID = networkID;
         this.frameID = frameID;
@@ -513,6 +557,7 @@ public class InputState
         this.accelerationInput = accelerationInput;
         this.brakingInput = brakingInput;
         this.resetInput = resetInput;
+        this.resetToCheckpointInput = resetToCheckpointInput;
         this.spawnCar = spawnCar;
     }
 }
@@ -522,6 +567,9 @@ public class GameUI
 {
     public TextMeshProUGUI currentLapText;
     public TextMeshProUGUI targetLapText;
+
+    public TextMeshProUGUI currentPositionText;
+    public TextMeshProUGUI maxPositionText;
 
     public void UpdateLap(string currentLap, string targetLap)
     {
@@ -533,6 +581,19 @@ public class GameUI
         if(targetLapText != null)
         {
             targetLapText.SetText(targetLap);
+        }
+    }
+
+    public void UpdatePosition(string currentPosition, string maxPosition)
+    {
+        if (currentPositionText != null)
+        {
+            currentPositionText.SetText(currentPosition);
+        }
+
+        if (maxPositionText != null)
+        {
+            maxPositionText.SetText(maxPosition);
         }
     }
 }
