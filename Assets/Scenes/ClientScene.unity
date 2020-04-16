@@ -13489,6 +13489,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9f40f0a9c396b824293767681d0f98cf, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  address: 
   startClient: 0
   clientID: -1
   serverIP: 192.168.1.100
@@ -16706,8 +16707,8 @@ MonoBehaviour:
   prefabs:
   - {fileID: 4261872027723047873, guid: 79fcae859fdeebe45ad20a44f9403132, type: 3}
   entities: []
-  posMarginOfError: 2
-  rotMarginOfError: 15
+  posMarginOfError: 0
+  rotMarginOfError: 0
   useMOEEntities: 
 --- !u!4 &2083604271
 Transform:

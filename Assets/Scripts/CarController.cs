@@ -473,6 +473,50 @@ public class CarController : MonoBehaviour
         return point;
     }
 
+    // Order of index
+    // 0   1
+    // 2   3
+    // FL FR
+    // RL RR
+    public List<float> GetWheelCompressionValues()
+    {
+        List<float> compressionValues = new List<float> {
+            // Compression
+            axles[Axle.FRONT_AXLE_INDEX].leftWheel.compression,
+            axles[Axle.FRONT_AXLE_INDEX].rightWheel.compression,
+            axles[Axle.REAR_AXLE_INDEX].leftWheel.compression,
+            axles[Axle.REAR_AXLE_INDEX].rightWheel.compression,
+
+            // Prev Compression
+            axles[Axle.FRONT_AXLE_INDEX].leftWheel.compressionPrev,
+            axles[Axle.FRONT_AXLE_INDEX].rightWheel.compressionPrev,
+            axles[Axle.REAR_AXLE_INDEX].leftWheel.compressionPrev,
+            axles[Axle.REAR_AXLE_INDEX].rightWheel.compressionPrev,
+        };
+
+        return compressionValues;
+    }
+
+    // Order of index
+    // 0   1
+    // 2   3
+    // FL FR
+    // RL RR
+    public void SetWheelCompressionValues(List<float> compressionValues)
+    {
+        // Compression
+        axles[Axle.FRONT_AXLE_INDEX].leftWheel.compression = compressionValues[0];
+        axles[Axle.FRONT_AXLE_INDEX].rightWheel.compression = compressionValues[1];
+        axles[Axle.REAR_AXLE_INDEX].leftWheel.compression = compressionValues[2];
+        axles[Axle.REAR_AXLE_INDEX].rightWheel.compression = compressionValues[3];
+
+        // Prev Compression
+        axles[Axle.FRONT_AXLE_INDEX].leftWheel.compressionPrev = compressionValues[4];
+        axles[Axle.FRONT_AXLE_INDEX].rightWheel.compressionPrev = compressionValues[5];
+        axles[Axle.REAR_AXLE_INDEX].leftWheel.compressionPrev = compressionValues[6];
+        axles[Axle.REAR_AXLE_INDEX].rightWheel.compressionPrev = compressionValues[7];
+    }
+
     private void OnEnable()
     {
         controls.Enable();

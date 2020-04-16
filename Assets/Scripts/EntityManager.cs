@@ -111,11 +111,24 @@ public class EntityManager : MonoBehaviour
             Vector3 rotE = state.rotation.GetValue();
             Quaternion rot = Quaternion.Euler(rotE.x, rotE.y, rotE.z);
 
-            if (Quaternion.Angle(rb.rotation, rot) > rotMarginOfError)
+            if (!useMOE || Quaternion.Angle(rb.rotation, rot) > rotMarginOfError)
             {
                 rb.rotation = rot;
             }
-        } 
+
+            // Check if entity is car... if so add wheel vectors
+
+            // TODO
+            // REFACTOR THIS
+            // Using prefab ID is terrible
+
+            if(entity.GetPrefabID() == 0)
+            {
+                CarController cc = entity.GetGameObject().GetComponent<CarController>();
+
+                cc.SetWheelCompressionValues(state.extraValues);
+            }
+        }
     }
 
     public EntityState GetEntityState(int id)
@@ -128,7 +141,26 @@ public class EntityManager : MonoBehaviour
     public EntityState GetEntityState(Entity entity)
     {
         Rigidbody rb = entity.GetGameObject().GetComponent<Rigidbody>();
-        EntityState entityState = new EntityState(entity.GetID(), entity.GetPrefabID(), rb.velocity, rb.position, rb.angularVelocity, rb.rotation.eulerAngles);
+
+
+        // Check if entity is car... if so add wheel vectors
+
+        // TODO
+        // REFACTOR THIS
+        // Using prefab idea ID terrible
+
+        EntityState entityState;
+
+        if (entity.GetPrefabID() == 0)
+        {
+            CarController cc = entity.GetGameObject().GetComponent<CarController>();
+            entityState = new EntityState(entity.GetID(), entity.GetPrefabID(), rb.velocity, rb.position, rb.angularVelocity, rb.rotation.eulerAngles, cc.GetWheelCompressionValues());
+        }
+        else
+        {
+            entityState = new EntityState(entity.GetID(), entity.GetPrefabID(), rb.velocity, rb.position, rb.angularVelocity, rb.rotation.eulerAngles);
+        }
+
 
         return entityState;
     }
@@ -205,6 +237,8 @@ public class EntityState
     public bool set;
     public bool created;
 
+    public List<float> extraValues = new List<float>();
+
     public EntityState(int id, int prefabID, Vector3 velocity, Vector3 position, Vector3 angularVelocity, Vector3 rotation)
     {
         this.id = id;
@@ -213,5 +247,16 @@ public class EntityState
         this.position = new SVector3(position);
         this.angularVelocity = new SVector3(angularVelocity);
         this.rotation = new SVector3(rotation);
+    }
+
+    public EntityState(int id, int prefabID, Vector3 velocity, Vector3 position, Vector3 angularVelocity, Vector3 rotation, List<float> extraValues)
+    {
+        this.id = id;
+        this.prefabID = prefabID;
+        this.velocity = new SVector3(velocity);
+        this.position = new SVector3(position);
+        this.angularVelocity = new SVector3(angularVelocity);
+        this.rotation = new SVector3(rotation);
+        this.extraValues = extraValues;
     }
 }
