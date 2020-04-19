@@ -104,6 +104,8 @@ public class MenuController : MonoBehaviour
 
     public void GameMenuLeave()
     {
+        controls.CarControls.ShowMenu.performed -= context => ShowGameMenu();
+
         rc.Reset();
         cc.Disconnect();
         BackMenu();
