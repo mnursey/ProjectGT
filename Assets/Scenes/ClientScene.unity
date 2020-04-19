@@ -2992,9 +2992,12 @@ MonoBehaviour:
   currentMenu: {fileID: 0}
   mainMenu: {fileID: 1531373311}
   gameMenu: {fileID: 985484692}
+  gameMenuPlay: {fileID: 1358385041}
   optionsMenu: {fileID: 1323718091}
   gameUI: {fileID: 909278510}
   enableMainMenuOnStart: 1
+  gameMenuPlaySpawnText: Join Race
+  gameMenuPlayResumeText: Resume
 --- !u!4 &420268547
 Transform:
   m_ObjectHideFlags: 0

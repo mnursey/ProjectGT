@@ -23,6 +23,8 @@ public class MenuController : MonoBehaviour
 
     public GameObject mainMenu;
     public GameObject gameMenu;
+    public TextMeshProUGUI gameMenuPlay;
+
     public GameObject optionsMenu;
     public GameObject gameUI;
 
@@ -31,6 +33,10 @@ public class MenuController : MonoBehaviour
     [Header("Misc")]
 
     public bool enableMainMenuOnStart = true;
+
+    [Header("Text Updates")]
+    public string gameMenuPlaySpawnText = "Join Race";
+    public string gameMenuPlayResumeText = "Resume";
 
     InputMaster controls;
 
@@ -72,6 +78,8 @@ public class MenuController : MonoBehaviour
 
         cc.ConnectToServer(username);
 
+        gameMenuPlay.text = gameMenuPlaySpawnText;
+
         ForwardMenu(gameMenu);
     }
 
@@ -80,6 +88,8 @@ public class MenuController : MonoBehaviour
         currentMenu.SetActive(false);
         EnableGameUI();
         rc.RequestToSpawnCar();
+
+        gameMenuPlay.text = gameMenuPlayResumeText;
 
         controls.CarControls.ShowMenu.performed += context => ShowGameMenu();
     }
