@@ -71,13 +71,19 @@ public class EntityManager : MonoBehaviour
     {
         Entity entity = entities.Find(x => x.GetID() == id);
 
-        entities.Remove(entity);
-
-        Destroy(entity.GetGameObject());
-
-        if (!removedEntities.Exists(x => x == entity.GetID()))
+        if(entity != null)
         {
-            removedEntities.Add(id);
+            if (entity.GetGameObject() != null)
+            {
+                Destroy(entity.GetGameObject());
+            }
+
+            entities.Remove(entity);
+
+            if (!removedEntities.Exists(x => x == entity.GetID()))
+            {
+                removedEntities.Add(id);
+            }
         }
     }
 
@@ -136,11 +142,6 @@ public class EntityManager : MonoBehaviour
                 cc.SetWheelCompressionValues(state.extraValues);
             }
         }
-
-        if(removedEntities.Exists(x => x == entity.GetID()))
-        {
-            RemoveEntity(entity.GetID());
-        }
     }
 
     public EntityState GetEntityState(int id)
@@ -194,6 +195,14 @@ public class EntityManager : MonoBehaviour
         foreach(EntityState state in states)
         {
             SetEntityState(state);
+        }
+
+        foreach(Entity entity in entities.ToArray())
+        {
+            if (removedEntities.Exists(x => x == entity.GetID()))
+            {
+                RemoveEntity(entity.GetID());
+            }
         }
     }
 

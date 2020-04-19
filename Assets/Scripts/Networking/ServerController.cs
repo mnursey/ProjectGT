@@ -23,6 +23,8 @@ public class ServerController : MonoBehaviour
 
     public RaceController rc;
 
+    public int maxPlayers = 20;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -127,8 +129,12 @@ public class ServerController : MonoBehaviour
                 {
                     Debug.Log("Server Allowed connection!");
 
+                    JoinRequest jr = NetworkingMessageTranslator.ParseJoinRequest(msg.content);
+                    
                     // Add new server connection
                     clients.Add(newConnection);
+
+                    rc.um.AddUser(jr.username, newConnection.clientID);
 
                     // Send Accept Connect msg
                     newConnection.BeginSend(NetworkingMessageTranslator.GenerateServerJoinResponseMessage(newConnection.clientID));
@@ -202,7 +208,12 @@ public class ServerController : MonoBehaviour
 
     public bool AcceptingNewClients()
     {
-        return acceptingClients;
+        if(rc.players.Count <= maxPlayers)
+        {
+            return true;
+        }
+
+        return false;
     }
 
     public bool ServerActive()

@@ -26,9 +26,10 @@ public static class NetworkingMessageTranslator
         return JsonUtility.ToJson(obj);
     }
 
-    public static string GenerateClientJoinMessage()
+    public static string GenerateClientJoinMessage(JoinRequest joinRequest)
     {
         NetworkingMessage msg = new NetworkingMessage(NetworkingMessageType.CLIENT_JOIN, -1);
+        msg.content = ToJson(joinRequest);
         return ToJson(msg);
     }
 
@@ -79,6 +80,11 @@ public static class NetworkingMessageTranslator
     public static GameState ParseGameState(string json)
     {
         return JsonUtility.FromJson<GameState>(json);
+    }
+
+    public static JoinRequest ParseJoinRequest(string json)
+    {
+        return JsonUtility.FromJson<JoinRequest>(json);
     }
 
     public static InputState ParseInputState(string json)

@@ -43,7 +43,7 @@ public class ClientController : MonoBehaviour
     {
         if(startClient)
         {
-            ConnectToServer();
+            ConnectToServer("player");
 
             startClient = false;
         } 
@@ -72,7 +72,7 @@ public class ClientController : MonoBehaviour
         serverEndPoint = null;
     }
 
-    public void ConnectToServer()
+    public void ConnectToServer(string username)
     {
         Reset();
 
@@ -89,7 +89,7 @@ public class ClientController : MonoBehaviour
 
         BeginReceive();
 
-        BeginSend(NetworkingMessageTranslator.GenerateClientJoinMessage());
+        BeginSend(NetworkingMessageTranslator.GenerateClientJoinMessage(new JoinRequest(username)));
     }
 
     public void Disconnect()

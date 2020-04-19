@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using System;
 using UnityEngine.SceneManagement;
+using TMPro;
 
 public class CarController : MonoBehaviour
 {
@@ -17,6 +18,8 @@ public class CarController : MonoBehaviour
 
     public bool debugDraw = true;
 
+    [Header("Car Inputs")]
+
     public float steeringInput = 0.0f;
     public float accelerationInput = 0.0f;
     public float brakingInput = 0.0f;
@@ -25,9 +28,13 @@ public class CarController : MonoBehaviour
 
     public CheckPoint resetCheckpoint;
 
+    [Header("Car Performance")]
+
     public float enginePower = 100.0f;
     public float steeringPower = 100.0f;
     public float brakingPower = 100.0f;
+
+    [Header("Visual Variables")]
 
     public float carVisualZRoll = 0.0f;
     public float carVisualZRollMaxDegrees = 15.0f;
@@ -46,7 +53,9 @@ public class CarController : MonoBehaviour
 
     public Vector3 previousFramePosition = new Vector3();
     public float previousFrameLocalZVelocity = 0.0f;
-    
+
+    [Header("Visual Transforms")]
+
     public Transform carVisual;
     public Transform frontLeftWheelHolder;
     public Transform frontRightWheelHolder;
@@ -55,6 +64,10 @@ public class CarController : MonoBehaviour
 
     public Transform frontLeftWheelVisual;
     public Transform frontRightWheelVisual;
+
+    [Header("UI")]
+
+    public TextMeshProUGUI usernameText;
 
     InputMaster controls;
 
@@ -109,6 +122,16 @@ public class CarController : MonoBehaviour
     void FixedUpdate()
     {
         
+    }
+
+    public void SetUsernameText(string username)
+    {
+        usernameText.text = username;
+    }
+
+    public void DisableUsernameText()
+    {
+        usernameText.enabled = false;
     }
 
     public void UpdatePhysics()

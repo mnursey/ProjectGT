@@ -12,24 +12,16 @@ public enum RaceControllerMode { CLIENT, SERVER };
 
 public class RaceController : MonoBehaviour
 {
+    public int networkID;
+
+    [Header("References")]
+
     public EntityManager em;
-
+    public UserManager um;
     public CameraController cameraController;
-
-    public List<PlayerEntity> players = new List<PlayerEntity>();
-
     public RaceTrack currentTrack;
 
-    public int targetNumberOfLaps = 0;
-
-    public GameUI gameUI = new GameUI();
-
-    public RaceControllerState raceControllerState = RaceControllerState.IDLE;
-    public RaceControllerMode raceControllerMode = RaceControllerMode.CLIENT;
-
-    public GameObject carPrefab;
-
-    public int networkID;
+    public List<PlayerEntity> players = new List<PlayerEntity>();
 
     public Scene targetScene;
     public PhysicsScene targetPhysicsScene;
@@ -37,15 +29,31 @@ public class RaceController : MonoBehaviour
     public ClientController cc;
     public ServerController sc;
 
+    [Header("UI")]
+
+    public GameUI gameUI = new GameUI();
+
+    [Header("Settings")]
+
+    public RaceControllerState raceControllerState = RaceControllerState.IDLE;
+    public RaceControllerMode raceControllerMode = RaceControllerMode.CLIENT;
+    public int targetNumberOfLaps = 0;
+
+    public GameObject carPrefab;
+
+    [Header("Misc")]
+
     public bool spawnCar;
+
+    private int frame = 0;
+    public int serverSendFrq = 30;
+
+    public float idleTime = 5.0f;
 
     private ConcurrentQueue<InputState> incomingInputStates = new ConcurrentQueue<InputState>();
     private ConcurrentQueue<int> playersToRemove = new ConcurrentQueue<int>();
 
     GameState incomingGameState = new GameState();
-
-    private int frame = 0;
-    public int serverSendFrq = 30;
 
     CarController GetCarControllerFromID(int id)
     {
@@ -144,6 +152,22 @@ public class RaceController : MonoBehaviour
         }
     }
 
+    void UpdateCarGameUI()
+    {
+        // TODO
+        // Refactor this so it is only set once per player...
+
+        foreach (PlayerEntity pe in players)
+        {
+            CarController c = GetCarControllerFromID(pe.carID);
+
+            if(c != null)
+            {
+                c.SetUsernameText(pe.networkID.ToString());
+            }
+        }
+    }
+
     void FixedUpdate()
     {
         // Todo:
@@ -156,7 +180,9 @@ public class RaceController : MonoBehaviour
             input = GetUserInputs(frame);
             UpdateGameState(incomingGameState);
 
-            if(cameraController.targetObject == null && networkID > -1)
+            UpdateCarGameUI();
+
+            if (cameraController.targetObject == null && networkID > -1)
             {
                 PlayerEntity pe = players.Find(x => x.networkID == networkID);
 
@@ -168,6 +194,7 @@ public class RaceController : MonoBehaviour
                     {
                         c.EnableControls();
                         AttachCamera(c.transform);
+                        c.DisableUsernameText();
 
                         // TODO
                         // Figure out to use MOE or not...
@@ -186,6 +213,8 @@ public class RaceController : MonoBehaviour
             {
                 UpdateUserInputs(state);
             }
+
+            RemoveIdlePlayers();
 
             int leavingPlayerNetworkID = 0;
 
@@ -218,6 +247,17 @@ public class RaceController : MonoBehaviour
         frame++;
     }
 
+    void RemoveIdlePlayers()
+    {
+        foreach (PlayerEntity player in players)
+        {
+            if(Time.time - player.GetLastInputReceivedFrom() > idleTime)
+            {
+                QueueRemovePlayer(player.networkID);
+            }
+        }
+    }
+
     void RunSinglePhysicsFrame()
     {
         foreach (PlayerEntity player in players)
@@ -239,10 +279,7 @@ public class RaceController : MonoBehaviour
             {
                 PlayerEntity pe = players.Find(x => x.networkID == networkID);
                 gameUI.UpdateLap(pe.lap.ToString(), targetNumberOfLaps.ToString());
-
-                List<PlayerEntity> sortedByLapScore = GetPlayersByLapScore();
-                int playerPos = sortedByLapScore.FindIndex(x => x.networkID == networkID) + 1;
-                gameUI.UpdatePosition(playerPos.ToString(), sortedByLapScore.Count.ToString());
+                gameUI.UpdatePosition(pe.position.ToString(), players.Count.ToString());
             }
         }
     }
@@ -255,6 +292,9 @@ public class RaceController : MonoBehaviour
 
             if(c != null)
             {
+                pe.elapsedTime += Time.fixedDeltaTime;
+                pe.currentLapTime += Time.fixedDeltaTime;
+
                 c.resetCheckpoint = GetCurrentCheckpoint(pe);
 
                 // Check if at next checkpoint...
@@ -266,6 +306,13 @@ public class RaceController : MonoBehaviour
                     if(nextCheckPointID == 0)
                     {
                         pe.lap++;
+
+                        if(pe.currentLapTime < pe.fastestLapTime)
+                        {
+                            pe.fastestLapTime = pe.currentLapTime;
+                        }
+
+                        pe.currentLapTime = 0.0f;
                     }
                 }
 
@@ -279,6 +326,13 @@ public class RaceController : MonoBehaviour
 
                 pe.lapScore = GetPlayerLapScore(pe);
             }
+        }
+
+        List<PlayerEntity> sortedByLapScore = GetPlayersByLapScore();
+        
+        for(int i = 0; i < sortedByLapScore.Count; ++i)
+        {
+            sortedByLapScore[i].position = (i + 1);
         }
     }
 
@@ -352,6 +406,7 @@ public class RaceController : MonoBehaviour
         {
             CarController c = GetCarControllerFromID(carID);
             c.controllable = false;
+            c.DisableUsernameText();
 
             MeshRenderer[] meshRenders = c.GetComponentsInChildren<MeshRenderer>();
             foreach(MeshRenderer mr in meshRenders)
@@ -444,7 +499,9 @@ public class RaceController : MonoBehaviour
             
         }
 
-        if(inputState.frameID >= p.frame)
+        p.UpdateLastInputReceivedFrom();
+
+        if (inputState.frameID >= p.frame)
         {
             CarController car = GetCarControllerFromID(p.carID);
 
@@ -475,7 +532,16 @@ public class PlayerEntity
     public int checkpoint = 0;
     public int frame;
     public int networkID;
+
+    public int position = 0;
+
     public float lapScore = 0.0f;
+
+    public float currentLapTime = 0.0f;
+    public float fastestLapTime = float.MaxValue;
+    public float elapsedTime = 0.0f;
+
+    private float lastInputReceivedFrom = 0.0f;
 
     public PlayerEntity(int networkID, int carID)
     {
@@ -492,6 +558,16 @@ public class PlayerEntity
     {
         this.lap = lap;
         this.checkpoint = checkpoint;
+    }
+
+    public void UpdateLastInputReceivedFrom()
+    {
+        lastInputReceivedFrom = Time.time;
+    }
+
+    public float GetLastInputReceivedFrom()
+    {
+        return lastInputReceivedFrom;
     }
 }
 
@@ -559,6 +635,17 @@ public class InputState
         this.resetInput = resetInput;
         this.resetToCheckpointInput = resetToCheckpointInput;
         this.spawnCar = spawnCar;
+    }
+}
+
+[Serializable]
+public class JoinRequest
+{
+    public string username;
+
+    public JoinRequest(string username)
+    {
+        this.username = username;
     }
 }
 

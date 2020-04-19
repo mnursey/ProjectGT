@@ -2,21 +2,33 @@
 using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
+using System;
 
 public class MenuController : MonoBehaviour
 {
+    [Header("Options")]
+
+    public TMP_InputField serverIP;
+    public TMP_InputField usernameOption;
+
+    [Header("References")]
+
+    public ClientController cc;
+    public RaceController rc;
+    public LeaderboardManager lm;
+
+    public GameObject currentMenu;
+
+    [Header("Menu GameObjects")]
+
     public GameObject mainMenu;
     public GameObject gameMenu;
     public GameObject optionsMenu;
     public GameObject gameUI;
 
-    public GameObject currentMenu;
-
-    public TMP_InputField serverIP;
-    public ClientController cc;
-    public RaceController rc;
-
     private List<GameObject> menuStack = new List<GameObject>();
+
+    [Header("Misc")]
 
     public bool enableMainMenuOnStart = true;
 
@@ -35,6 +47,20 @@ public class MenuController : MonoBehaviour
         }
     }
 
+    void Update()
+    {
+        if(lm != null)
+        {
+            if(rc != null)
+            {
+                if(rc.players != null)
+                {
+                    lm.UpdateLeaderboard(rc.players);
+                }
+            }
+        }
+    }
+
     public void MainMenuPlay()
     {
         if(serverIP.text != "")
@@ -42,7 +68,9 @@ public class MenuController : MonoBehaviour
             cc.serverIP = serverIP.text;
         }
 
-        cc.ConnectToServer();
+        string username = usernameOption.text;
+
+        cc.ConnectToServer(username);
 
         ForwardMenu(gameMenu);
     }

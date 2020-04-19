@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.18028378, g: 0.22571412, b: 0.30692285, a: 1}
+  m_IndirectSpecularColor: {r: 0.12731749, g: 0.13414757, b: 0.1210787, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -1109,6 +1109,7 @@ GameObject:
   m_Component:
   - component: {fileID: 368693197}
   - component: {fileID: 368693196}
+  - component: {fileID: 368693198}
   m_Layer: 0
   m_Name: GameControllerServer
   m_TagString: Untagged
@@ -1128,25 +1129,29 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3a6210d8c4a052e4cb9a3d0abd5d1ce0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  em: {fileID: 1521271724}
-  cameraController: {fileID: 0}
-  players: []
-  currentTrack: {fileID: 1038047096}
-  targetNumberOfLaps: 0
-  gameUI:
-    currentLapText: {fileID: 0}
-    targetLapText: {fileID: 0}
-  raceControllerState: 0
-  raceControllerMode: 1
-  carPrefab: {fileID: 4261872027723047873, guid: 79fcae859fdeebe45ad20a44f9403132,
-    type: 3}
   networkID: -1
+  em: {fileID: 1521271724}
+  um: {fileID: 368693198}
+  cameraController: {fileID: 0}
+  currentTrack: {fileID: 1038047096}
+  players: []
   targetScene:
     m_Handle: 0
   cc: {fileID: 0}
   sc: {fileID: 1375969245}
+  gameUI:
+    currentLapText: {fileID: 0}
+    targetLapText: {fileID: 0}
+    currentPositionText: {fileID: 0}
+    maxPositionText: {fileID: 0}
+  raceControllerState: 0
+  raceControllerMode: 1
+  targetNumberOfLaps: 0
+  carPrefab: {fileID: 4261872027723047873, guid: 79fcae859fdeebe45ad20a44f9403132,
+    type: 3}
   spawnCar: 0
   serverSendFrq: 1
+  idleTime: 5
 --- !u!4 &368693197
 Transform:
   m_ObjectHideFlags: 0
@@ -1161,6 +1166,19 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &368693198
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 368693195}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a34a87cd3acf3f147a0472f9e5bf67ee, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  users: []
 --- !u!43 &527530053
 Mesh:
   m_ObjectHideFlags: 0
@@ -3790,6 +3808,7 @@ MonoBehaviour:
   testSend: 0
   clients: []
   rc: {fileID: 368693196}
+  maxPlayers: 20
 --- !u!43 &1464734513
 Mesh:
   m_ObjectHideFlags: 0
@@ -4800,8 +4819,10 @@ MonoBehaviour:
   prefabs:
   - {fileID: 4261872027723047873, guid: 79fcae859fdeebe45ad20a44f9403132, type: 3}
   entities: []
+  removedEntities: 
   posMarginOfError: 0
   rotMarginOfError: 0
+  useMOEEntities: 
 --- !u!4 &1521271725
 Transform:
   m_ObjectHideFlags: 0
