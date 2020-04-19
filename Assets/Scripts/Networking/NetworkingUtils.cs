@@ -65,6 +65,13 @@ public static class NetworkingMessageTranslator
         return ToJson(msg);
     }
 
+    public static string GenerateUserManagerStateMessage(UserManagerState userManagerState, int clientID)
+    {
+        NetworkingMessage msg = new NetworkingMessage(NetworkingMessageType.USER_MANAGER_STATE, clientID);
+        msg.content = ToJson(userManagerState);
+        return ToJson(msg);
+    }
+
     public static string GenerateInputMessage(InputState inputState, int clientID)
     {
         NetworkingMessage msg = new NetworkingMessage(NetworkingMessageType.INPUT_STATE, clientID);
@@ -82,6 +89,11 @@ public static class NetworkingMessageTranslator
         return JsonUtility.FromJson<GameState>(json);
     }
 
+    public static UserManagerState ParseUserManagerState(string json)
+    {
+        return JsonUtility.FromJson<UserManagerState>(json);
+    }
+
     public static JoinRequest ParseJoinRequest(string json)
     {
         return JsonUtility.FromJson<JoinRequest>(json);
@@ -94,7 +106,7 @@ public static class NetworkingMessageTranslator
 }
 
 [Serializable]
-public enum NetworkingMessageType { CLIENT_JOIN, SERVER_JOIN_RESPONSE, DISCONNECT, PING, PING_RESPONSE, GAME_STATE, INPUT_STATE };
+public enum NetworkingMessageType { CLIENT_JOIN, SERVER_JOIN_RESPONSE, DISCONNECT, PING, PING_RESPONSE, GAME_STATE, INPUT_STATE, USER_MANAGER_STATE };
 
 [Serializable]
 public class NetworkingMessage

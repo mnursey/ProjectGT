@@ -55,7 +55,7 @@ public class MenuController : MonoBehaviour
             {
                 if(rc.players != null)
                 {
-                    lm.UpdateLeaderboard(rc.players);
+                    lm.UpdateLeaderboard(rc.players, rc.um);
                 }
             }
         }

@@ -28,6 +28,11 @@ public class UserManager : MonoBehaviour
     {
         return new UserManagerState(users);
     }
+
+    public void SetState(UserManagerState ums)
+    {
+        users = ums.users;
+    }
 }
 
 [Serializable]

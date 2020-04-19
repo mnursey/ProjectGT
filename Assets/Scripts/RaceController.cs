@@ -163,7 +163,12 @@ public class RaceController : MonoBehaviour
 
             if(c != null)
             {
-                c.SetUsernameText(pe.networkID.ToString());
+                UserReference ur = um.GetUserFromNetworkID(pe.networkID);
+
+                if(ur != null)
+                {
+                    c.SetUsernameText(ur.username);
+                }
             }
         }
     }

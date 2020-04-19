@@ -42,7 +42,7 @@ public class LeaderboardManager : MonoBehaviour
         }
     }
 
-    public void UpdateLeaderboard(List<PlayerEntity> players)
+    public void UpdateLeaderboard(List<PlayerEntity> players, UserManager um)
     {
         foreach (PlayerEntity pe in players)
         {
@@ -51,7 +51,14 @@ public class LeaderboardManager : MonoBehaviour
 
             if (!entries.Exists(x => x.networkID == pe.networkID))
             {
-                AddEntry(pe.networkID, pe.networkID.ToString());
+
+                UserReference ur = um.GetUserFromNetworkID(pe.networkID);
+
+                if(ur != null)
+                {
+                    AddEntry(pe.networkID, ur.username);
+
+                }
             }
 
             // Update leaderboard entry

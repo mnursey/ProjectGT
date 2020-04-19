@@ -96,6 +96,15 @@ public class ServerController : MonoBehaviour
         }
     }
 
+    public void SendUserManagerState()
+    {
+        foreach (ServerConnection sc in clients.ToArray())
+        {
+            string s = NetworkingMessageTranslator.GenerateUserManagerStateMessage(rc.um.GetState(), sc.clientID);
+            sc.BeginSend(s);
+        }
+    }
+
     void BeginReceive()
     {
         MessageObject receiveObject = new MessageObject();
@@ -137,7 +146,7 @@ public class ServerController : MonoBehaviour
                     rc.um.AddUser(jr.username, newConnection.clientID);
 
                     // Send Accept Connect msg
-                    newConnection.BeginSend(NetworkingMessageTranslator.GenerateServerJoinResponseMessage(newConnection.clientID));
+                    newConnection.BeginSend(NetworkingMessageTranslator.GenerateServerJoinResponseMessage(newConnection.clientID), SendUserManagerState);
                 } else
                 {
                     Debug.Log("Server Disallowed connection!");

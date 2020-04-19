@@ -206,6 +206,14 @@ public class ClientController : MonoBehaviour
 
                         break;
 
+                    case NetworkingMessageType.USER_MANAGER_STATE:
+
+                        UserManagerState ums = NetworkingMessageTranslator.ParseUserManagerState(msg.content);
+
+                        rc.um.SetState(ums);
+
+                        break;
+
                     default:
                         break;
                 }
