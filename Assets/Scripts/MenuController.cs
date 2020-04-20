@@ -116,6 +116,31 @@ public class MenuController : MonoBehaviour
         Application.Quit();
     }
 
+    public void OnScreenModeChange(TMP_Dropdown dropdown)
+    {
+        int value = dropdown.value;
+
+        // TODO:
+        // REFACTOR TO OPTIONS CONTROLLER
+
+        switch(value)
+        {
+            case 0:
+                Screen.fullScreenMode = FullScreenMode.FullScreenWindow;
+                Screen.fullScreen = true;
+                break;
+
+            case 1:
+                Screen.fullScreenMode = FullScreenMode.Windowed;
+                Screen.fullScreen = false;
+                break;
+
+            default:
+                Debug.LogWarning("Unknown OnScreenModeChange value... " + value);
+                break;
+        }
+    }
+
 
     public void EnableGameUI()
     {
