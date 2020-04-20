@@ -86,7 +86,10 @@ public class RaceController : MonoBehaviour
             GetCarControllerFromID(player.carID).physicsScene = targetPhysicsScene;
         }
 
-        if(raceControllerMode == RaceControllerMode.SERVER)
+        em.SetTargetScene(targetScene);
+        em.AddTrackNetworkEntities(currentTrack.trackNetworkEntities);
+
+        if (raceControllerMode == RaceControllerMode.SERVER)
         {
             GameObject track = currentTrack.gameObject;
             MeshRenderer[] meshRenders = track.GetComponentsInChildren<MeshRenderer>();
@@ -101,8 +104,6 @@ public class RaceController : MonoBehaviour
                 ps.Stop();
             }
         }
-
-        em.SetTargetScene(targetScene);
     }
 
     public void Reset()

@@ -11,6 +11,8 @@ public class RaceTrack : MonoBehaviour
     public List<CheckPoint> checkPoints = new List<CheckPoint>();
     public bool debugCheckPoints = false;
 
+    public List<TrackNetworkEntity> trackNetworkEntities = new List<TrackNetworkEntity>();
+
     // Start is called before the first frame update
     void Start()
     {
@@ -42,3 +44,11 @@ public class CheckPoint
     public Transform t;
     public float raduis;
 }
+
+[Serializable]
+public class TrackNetworkEntity
+{
+    public GameObject gameobject;
+    public int prefabID;
+}
+

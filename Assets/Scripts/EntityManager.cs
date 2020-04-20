@@ -7,7 +7,6 @@ using UnityEngine.SceneManagement;
 public class EntityManager : MonoBehaviour
 {
     public List<GameObject> prefabs = new List<GameObject>();
-
     public List<Entity> entities = new List<Entity>();
     public List<int> removedEntities = new List<int>();
 
@@ -30,6 +29,17 @@ public class EntityManager : MonoBehaviour
         return ++entityIDTracker;
     }
 
+    void Awake()
+    {
+        foreach(Entity e in entities)
+        {
+            if(e.GetID() > entityIDTracker)
+            {
+                entityIDTracker = e.GetID();
+            }
+        }
+    }
+
     public void Reset()
     {
 
@@ -43,6 +53,16 @@ public class EntityManager : MonoBehaviour
         entityIDTracker = 0;
         useMOEEntities = new List<int>();
         removedEntities = new List<int>();
+    }
+
+    public void AddTrackNetworkEntities(List<TrackNetworkEntity> trackNetworkEntities)
+    {
+        foreach(TrackNetworkEntity tne in trackNetworkEntities)
+        {
+            int id = GetNextEntityID();
+
+            entities.Add(new Entity(id, tne.prefabID, tne.gameobject));
+        }
     }
 
     public int AddEntity(int prefabID, Vector3 position, Quaternion rotation)
@@ -218,8 +238,11 @@ public class EntityManager : MonoBehaviour
 [Serializable]
 public class Entity
 {
+    [SerializeField]
     private int id;
+    [SerializeField]
     private int prefabID;
+    [SerializeField]
     private GameObject gameObject;
 
     public Entity(int id, int prefabID, GameObject gameObject)

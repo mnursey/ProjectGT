@@ -76,6 +76,8 @@ public class MenuController : MonoBehaviour
 
         string username = usernameOption.text;
 
+        rc.Reset();
+
         cc.ConnectToServer(username);
 
         gameMenuPlay.text = gameMenuPlaySpawnText;
