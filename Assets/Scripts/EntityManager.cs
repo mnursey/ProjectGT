@@ -155,11 +155,26 @@ public class EntityManager : MonoBehaviour
             // REFACTOR THIS
             // Using prefab ID is terrible
 
+            // Car
             if(entity.GetPrefabID() == 0)
             {
                 CarController cc = entity.GetGameObject().GetComponent<CarController>();
 
                 cc.SetWheelCompressionValues(state.extraValues);
+            }
+
+            // Boulder
+            if(entity.GetPrefabID() == 2)
+            {
+                MeshCollider mc = entity.GetGameObject().GetComponentInChildren<MeshCollider>();
+                
+                if(state.extraValues[0] > 0.5f)
+                {
+                    mc.enabled = true;
+                } else
+                {
+                    mc.enabled = false;
+                }
             }
         }
     }
@@ -186,8 +201,24 @@ public class EntityManager : MonoBehaviour
 
         if (entity.GetPrefabID() == 0)
         {
+            // Car
             CarController cc = entity.GetGameObject().GetComponent<CarController>();
             entityState = new EntityState(entity.GetID(), entity.GetPrefabID(), rb.velocity, rb.position, rb.angularVelocity, rb.rotation.eulerAngles, cc.GetWheelCompressionValues());
+        }
+        else if (entity.GetPrefabID() == 2)
+        {
+            // Boulder
+            MeshCollider mc = entity.GetGameObject().GetComponentInChildren<MeshCollider>();
+
+            float enabledValue = 0.0f;
+
+            if(mc.enabled == true)
+            {
+                enabledValue = 1.0f;
+            }
+
+            List<float> values = new List<float> { enabledValue };
+            entityState = new EntityState(entity.GetID(), entity.GetPrefabID(), rb.velocity, rb.position, rb.angularVelocity, rb.rotation.eulerAngles, values);
         }
         else
         {
