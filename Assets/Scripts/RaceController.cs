@@ -53,6 +53,9 @@ public class RaceController : MonoBehaviour
     private ConcurrentQueue<InputState> incomingInputStates = new ConcurrentQueue<InputState>();
     private ConcurrentQueue<int> playersToRemove = new ConcurrentQueue<int>();
 
+    // Inputs of local client being stored
+    private List<InputState> storedInputs = new List<InputState>();
+
     GameState incomingGameState = new GameState();
 
     CarController GetCarControllerFromID(int id)
@@ -178,6 +181,75 @@ public class RaceController : MonoBehaviour
         }
     }
 
+    void ClientSetOwnInputState(InputState inputState)
+    {
+        PlayerEntity pe = players.Find(x => x.networkID == networkID);
+
+        if (pe != null)
+        {
+            CarController car = GetCarControllerFromID(pe.carID);
+                
+            if (car != null)
+            {
+                car.steeringInput = inputState.steeringInput;
+                car.accelerationInput = inputState.accelerationInput;
+                car.brakingInput = inputState.brakingInput;
+                car.resetInput = inputState.resetInput;
+                car.resetToCheckpointInput = inputState.resetToCheckpointInput;
+            }
+        }
+    }
+
+    void ClientHandleInitialCarSpawn()
+    {
+        if (cameraController.targetObject == null && networkID > -1)
+        {
+            PlayerEntity pe = players.Find(x => x.networkID == networkID);
+
+            if (pe != null)
+            {
+                CarController c = GetCarControllerFromID(pe.carID);
+
+                if (c != null)
+                {
+                    c.EnableControls();
+                    AttachCamera(c.transform);
+                    c.DisableUsernameText();
+
+                    // TODO
+                    // Figure out to use MOE or not...
+                    //em.useMOEEntities.Add(pe.carID);
+                }
+            }
+        }
+    }
+
+    void ClientHandleIncomingGameState()
+    {
+        if(incomingGameState.frame > frame)
+        {
+            UpdateGameState(incomingGameState);
+            frame = incomingGameState.frame;
+        } else
+        {
+            UpdateGameState(incomingGameState);
+
+            foreach(InputState s in storedInputs.ToArray())
+            {
+                if(s.frameID < incomingGameState.frame)
+                {
+                    storedInputs.Remove(s);
+                }
+
+                if(s.frameID > incomingGameState.frame)
+                {
+                    ClientSetOwnInputState(s);
+                    RunSinglePhysicsFrame();
+                }
+            }
+        }
+    }
+
     void FixedUpdate()
     {
         // Todo:
@@ -188,30 +260,16 @@ public class RaceController : MonoBehaviour
         if (raceControllerMode == RaceControllerMode.CLIENT && cc.state == ClientState.CONNECTED)
         {
             input = GetUserInputs(frame);
-            UpdateGameState(incomingGameState);
+
+            storedInputs.Add(input);
+
+            ClientHandleIncomingGameState();
 
             UpdateCarGameUI();
 
-            if (cameraController.targetObject == null && networkID > -1)
-            {
-                PlayerEntity pe = players.Find(x => x.networkID == networkID);
+            ClientHandleInitialCarSpawn();
 
-                if(pe != null)
-                {
-                    CarController c = GetCarControllerFromID(pe.carID);
-
-                    if (c != null)
-                    {
-                        c.EnableControls();
-                        AttachCamera(c.transform);
-                        c.DisableUsernameText();
-
-                        // TODO
-                        // Figure out to use MOE or not...
-                        //em.useMOEEntities.Add(pe.carID);
-                    }
-                }
-            }
+            ClientSetOwnInputState(input);
         }
 
         if (raceControllerMode == RaceControllerMode.SERVER && sc.ServerActive())
@@ -459,7 +517,7 @@ public class RaceController : MonoBehaviour
 
     public GameState GetGameState()
     {
-        GameState state = new GameState(em.GetAllStates(), players, em.removedEntities);
+        GameState state = new GameState(frame, em.GetAllStates(), players, em.removedEntities);
 
         return state;
     }
@@ -481,7 +539,7 @@ public class RaceController : MonoBehaviour
 
             if (car == null)
             {
-                InputState s = new InputState(networkID, spawnCar);
+                InputState s = new InputState(networkID, frame, spawnCar);
                 spawnCar = false;
                 return s;
             }
@@ -494,7 +552,7 @@ public class RaceController : MonoBehaviour
         }
         else
         {
-            return new InputState(networkID, false);
+            return new InputState(networkID, frame, false);
         }
     }
 
@@ -587,17 +645,19 @@ public class GameState
     public List<EntityState> entities = new List<EntityState>();
     public List<PlayerEntity> playerEntities = new List<PlayerEntity>();
     public List<int> removedEntities = new List<int>();
+    public int frame;
 
     public GameState()
     {
 
     }
 
-    public GameState(List<EntityState> entities, List<PlayerEntity> playerEntities, List<int> removedEntities)
+    public GameState(int frame, List<EntityState> entities, List<PlayerEntity> playerEntities, List<int> removedEntities)
     {
         this.entities = entities;
         this.playerEntities = playerEntities;
         this.removedEntities = removedEntities;
+        this.frame = frame;
     }
 }
 
@@ -618,10 +678,11 @@ public class InputState
 
     }
 
-    public InputState(int networkID, bool spawnCar)
+    public InputState(int networkID, int frameID, bool spawnCar)
     {
         this.networkID = networkID;
         this.spawnCar = spawnCar;
+        this.frameID = frameID;
     }
 
     public InputState(int networkID, int frameID, float steeringInput, float accelerationInput, float brakingInput, bool resetInput, bool resetToCheckpointInput)
