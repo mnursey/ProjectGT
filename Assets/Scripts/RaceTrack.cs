@@ -6,6 +6,7 @@ using System;
 public class RaceTrack : MonoBehaviour
 {
     public GameObject track;
+    public GameObject serverObjects;
     public List<Transform> carStarts = new List<Transform>();
 
     public List<CheckPoint> checkPoints = new List<CheckPoint>();

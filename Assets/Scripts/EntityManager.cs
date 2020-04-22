@@ -6,6 +6,7 @@ using UnityEngine.SceneManagement;
 
 public class EntityManager : MonoBehaviour
 {
+    public RaceControllerMode mode = RaceControllerMode.CLIENT;
     public List<GameObject> prefabs = new List<GameObject>();
     public List<Entity> entities = new List<Entity>();
     public List<int> removedEntities = new List<int>();
@@ -65,12 +66,30 @@ public class EntityManager : MonoBehaviour
         }
     }
 
+    // TODO:
+    // Refactor following two functions...
+
     public int AddEntity(int prefabID, Vector3 position, Quaternion rotation)
     {
         int id = GetNextEntityID();
 
         GameObject gameObject = Instantiate(prefabs[prefabID], position, rotation);
         SceneManager.MoveGameObjectToScene(gameObject, targetScene);
+
+        if(mode == RaceControllerMode.SERVER)
+        {
+            MeshRenderer[] meshRenders = gameObject.GetComponentsInChildren<MeshRenderer>();
+            foreach (MeshRenderer mr in meshRenders)
+            {
+                mr.enabled = false;
+            }
+
+            ParticleSystem[] particleSystems = gameObject.GetComponentsInChildren<ParticleSystem>();
+            foreach (ParticleSystem ps in particleSystems)
+            {
+                ps.Stop();
+            }
+        }
 
         entities.Add(new Entity(id, prefabID, gameObject));
 
@@ -81,6 +100,21 @@ public class EntityManager : MonoBehaviour
     {
         GameObject gameObject = Instantiate(prefabs[prefabID], position, rotation);
         SceneManager.MoveGameObjectToScene(gameObject, targetScene);
+
+        if (mode == RaceControllerMode.SERVER)
+        {
+            MeshRenderer[] meshRenders = gameObject.GetComponentsInChildren<MeshRenderer>();
+            foreach (MeshRenderer mr in meshRenders)
+            {
+                mr.enabled = false;
+            }
+
+            ParticleSystem[] particleSystems = gameObject.GetComponentsInChildren<ParticleSystem>();
+            foreach (ParticleSystem ps in particleSystems)
+            {
+                ps.Stop();
+            }
+        }
 
         entities.Add(new Entity(id, prefabID, gameObject));
 

@@ -69,14 +69,18 @@ public class RaceController : MonoBehaviour
     {
         Physics.autoSimulation = false;
 
-        if(raceControllerMode == RaceControllerMode.CLIENT)
+        em.mode = raceControllerMode;
+
+        if (raceControllerMode == RaceControllerMode.CLIENT)
         {
             targetScene = SceneManager.GetSceneByName("ClientScene");
+            currentTrack.serverObjects.SetActive(false);
         }
         
         if(raceControllerMode == RaceControllerMode.SERVER)
         {
             targetScene = SceneManager.GetSceneByName("ServerScene");
+            currentTrack.serverObjects.SetActive(true);
         }
 
         targetPhysicsScene = targetScene.GetPhysicsScene();
