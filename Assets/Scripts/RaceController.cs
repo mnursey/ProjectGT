@@ -54,6 +54,7 @@ public class RaceController : MonoBehaviour
     private ConcurrentQueue<int> playersToRemove = new ConcurrentQueue<int>();
 
     // Inputs of local client being stored
+    [SerializeField]
     private List<InputState> storedInputs = new List<InputState>();
 
     GameState incomingGameState = new GameState();
@@ -143,7 +144,10 @@ public class RaceController : MonoBehaviour
 
     public void QueueGameState(GameState gameState)
     {
-        incomingGameState = gameState;
+        if(gameState.frame > incomingGameState.frame)
+        {
+            incomingGameState = gameState;
+        }
     }
 
     // Update is called once per frame
