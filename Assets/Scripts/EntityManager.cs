@@ -17,6 +17,7 @@ public class EntityManager : MonoBehaviour
     private int entityIDTracker = 0;
 
     public List<int> useMOEEntities = new List<int>();
+    public List<int> ignoreUpdates = new List<int>();
 
     private Scene targetScene;
 
@@ -159,55 +160,60 @@ public class EntityManager : MonoBehaviour
         if(rb != null)
         {
             bool useMOE = useMOEEntities.Exists(x => x == state.id);
+            bool ignoreUpdate = ignoreUpdates.Exists(x => x == state.id);
 
-            Vector3 desiredValue = Vector3.zero;
-
-            desiredValue = state.velocity.GetValue();
-            rb.velocity = desiredValue;
-          
-            desiredValue = state.position.GetValue();
-
-            if(!useMOE || (desiredValue - rb.position).magnitude > posMarginOfError)
+            if(!ignoreUpdate)
             {
-                rb.position = desiredValue;
-            }
+                Vector3 desiredValue = Vector3.zero;
 
-            desiredValue = state.angularVelocity.GetValue();
-            rb.angularVelocity = desiredValue;
+                desiredValue = state.velocity.GetValue();
+                rb.velocity = desiredValue;
 
-            Vector3 rotE = state.rotation.GetValue();
-            Quaternion rot = Quaternion.Euler(rotE.x, rotE.y, rotE.z);
+                desiredValue = state.position.GetValue();
 
-            if (!useMOE || Quaternion.Angle(rb.rotation, rot) > rotMarginOfError)
-            {
-                rb.rotation = rot;
-            }
-
-            // Check if entity is car... if so add wheel vectors
-
-            // TODO
-            // REFACTOR THIS
-            // Using prefab ID is terrible
-
-            // Car
-            if(entity.GetPrefabID() == 0)
-            {
-                CarController cc = entity.GetGameObject().GetComponent<CarController>();
-
-                cc.SetWheelCompressionValues(state.extraValues);
-            }
-
-            // Boulder
-            if(entity.GetPrefabID() == 2)
-            {
-                MeshCollider mc = entity.GetGameObject().GetComponentInChildren<MeshCollider>();
-                
-                if(state.extraValues[0] > 0.5f)
+                if (!useMOE || (desiredValue - rb.position).magnitude > posMarginOfError)
                 {
-                    mc.enabled = true;
-                } else
+                    rb.position = desiredValue;
+                }
+
+                desiredValue = state.angularVelocity.GetValue();
+                rb.angularVelocity = desiredValue;
+
+                Vector3 rotE = state.rotation.GetValue();
+                Quaternion rot = Quaternion.Euler(rotE.x, rotE.y, rotE.z);
+
+                if (!useMOE || Quaternion.Angle(rb.rotation, rot) > rotMarginOfError)
                 {
-                    mc.enabled = false;
+                    rb.rotation = rot;
+                }
+
+                // Check if entity is car... if so add wheel vectors
+
+                // TODO
+                // REFACTOR THIS
+                // Using prefab ID is terrible
+
+                // Car
+                if (entity.GetPrefabID() == 0)
+                {
+                    CarController cc = entity.GetGameObject().GetComponent<CarController>();
+
+                    cc.SetWheelCompressionValues(state.extraValues);
+                }
+
+                // Boulder
+                if (entity.GetPrefabID() == 2)
+                {
+                    MeshCollider mc = entity.GetGameObject().GetComponentInChildren<MeshCollider>();
+
+                    if (state.extraValues[0] > 0.5f)
+                    {
+                        mc.enabled = true;
+                    }
+                    else
+                    {
+                        mc.enabled = false;
+                    }
                 }
             }
         }
@@ -337,7 +343,7 @@ public class Entity
 [Serializable]
 public class EntityState
 {
-    public int id;
+    public int id = -1;
     public int prefabID;
     public SVector3 velocity;
     public SVector3 position;
@@ -347,6 +353,11 @@ public class EntityState
     public bool created;
 
     public List<float> extraValues = new List<float>();
+
+    public EntityState(int id)
+    {
+        this.id = id;
+    }
 
     public EntityState(int id, int prefabID, Vector3 velocity, Vector3 position, Vector3 angularVelocity, Vector3 rotation)
     {

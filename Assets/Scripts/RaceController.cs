@@ -53,10 +53,6 @@ public class RaceController : MonoBehaviour
     private ConcurrentQueue<InputState> incomingInputStates = new ConcurrentQueue<InputState>();
     private ConcurrentQueue<int> playersToRemove = new ConcurrentQueue<int>();
 
-    // Inputs of local client being stored
-    [SerializeField]
-    private List<InputState> storedInputs = new List<InputState>();
-
     GameState incomingGameState = new GameState();
 
     CarController GetCarControllerFromID(int id)
@@ -223,6 +219,8 @@ public class RaceController : MonoBehaviour
                     // TODO
                     // Figure out to use MOE or not...
                     //em.useMOEEntities.Add(pe.carID);
+
+                    em.ignoreUpdates.Add(pe.carID);
                 }
             }
         }
@@ -237,20 +235,6 @@ public class RaceController : MonoBehaviour
         } else
         {
             UpdateGameState(incomingGameState);
-
-            foreach(InputState s in storedInputs.ToArray())
-            {
-                if(s.frameID < incomingGameState.frame)
-                {
-                    storedInputs.Remove(s);
-                }
-
-                if(s.frameID > incomingGameState.frame)
-                {
-                    ClientSetOwnInputState(s);
-                    RunSinglePhysicsFrame();
-                }
-            }
         }
     }
 
@@ -265,15 +249,11 @@ public class RaceController : MonoBehaviour
         {
             input = GetUserInputs(frame);
 
-            storedInputs.Add(input);
-
             ClientHandleIncomingGameState();
 
             UpdateCarGameUI();
 
             ClientHandleInitialCarSpawn();
-
-            ClientSetOwnInputState(input);
         }
 
         if (raceControllerMode == RaceControllerMode.SERVER && sc.ServerActive())
@@ -288,15 +268,13 @@ public class RaceController : MonoBehaviour
 
             RemoveIdlePlayers();
 
-            int leavingPlayerNetworkID = 0;
+            int leavingPlayerNetworkID = -1;
 
             while (playersToRemove.TryDequeue(out leavingPlayerNetworkID))
             {
                 RemovePlayer(leavingPlayerNetworkID);
             }
         }
-
-        RunSinglePhysicsFrame();
 
         if(raceControllerMode == RaceControllerMode.CLIENT && cc.state == ClientState.CONNECTED)
         {
@@ -315,6 +293,8 @@ public class RaceController : MonoBehaviour
                 sc.SendGameState(GetGameState());
             }
         }
+
+        RunSinglePhysicsFrame();
 
         frame++;
     }
@@ -549,7 +529,7 @@ public class RaceController : MonoBehaviour
             }
             else
             {
-                InputState s = new InputState(networkID, frame, car.steeringInput, car.accelerationInput, car.brakingInput, car.resetInput, car.resetToCheckpointInput, spawnCar);
+                InputState s = new InputState(networkID, frame, car.steeringInput, car.accelerationInput, car.brakingInput, car.resetInput, car.resetToCheckpointInput, spawnCar, em.GetEntityState(pe.carID));
                 spawnCar = false;
                 return s;
             }
@@ -591,6 +571,11 @@ public class RaceController : MonoBehaviour
                 car.brakingInput = inputState.brakingInput;
                 car.resetInput = (inputState.resetInput || car.resetInput);
                 car.resetToCheckpointInput = (inputState.resetToCheckpointInput || car.resetToCheckpointInput);
+
+                if(inputState.currentState.id > -1)
+                {
+                    em.SetEntityState(inputState.currentState);
+                }
             }
         }
     }
@@ -677,6 +662,8 @@ public class InputState
     public bool resetInput = false;
     public bool resetToCheckpointInput = false;
 
+    public EntityState currentState = new EntityState(-1);
+
     public InputState()
     {
 
@@ -689,7 +676,7 @@ public class InputState
         this.frameID = frameID;
     }
 
-    public InputState(int networkID, int frameID, float steeringInput, float accelerationInput, float brakingInput, bool resetInput, bool resetToCheckpointInput)
+    public InputState(int networkID, int frameID, float steeringInput, float accelerationInput, float brakingInput, bool resetInput, bool resetToCheckpointInput, EntityState currentState)
     {
         this.networkID = networkID;
         this.frameID = frameID;
@@ -698,9 +685,10 @@ public class InputState
         this.brakingInput = brakingInput;
         this.resetInput = resetInput;
         this.resetToCheckpointInput = resetToCheckpointInput;
+        this.currentState = currentState;
     }
 
-    public InputState(int networkID, int frameID, float steeringInput, float accelerationInput, float brakingInput, bool resetInput, bool resetToCheckpointInput, bool spawnCar)
+    public InputState(int networkID, int frameID, float steeringInput, float accelerationInput, float brakingInput, bool resetInput, bool resetToCheckpointInput, bool spawnCar, EntityState currentState)
     {
         this.networkID = networkID;
         this.frameID = frameID;
@@ -710,6 +698,7 @@ public class InputState
         this.resetInput = resetInput;
         this.resetToCheckpointInput = resetToCheckpointInput;
         this.spawnCar = spawnCar;
+        this.currentState = currentState;
     }
 }
 

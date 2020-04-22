@@ -150,7 +150,6 @@ public class SVector3
     public Vector3 GetValue()
     {
         string[] vals = valueS.Split(new Char[] { '|' });
-
         return new Vector3(float.Parse(vals[0]), float.Parse(vals[1]), float.Parse(vals[2]));
     }
 }
