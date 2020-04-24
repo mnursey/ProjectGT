@@ -11,6 +11,8 @@ public class MenuController : MonoBehaviour
     public TMP_InputField serverIP;
     public TMP_InputField usernameOption;
 
+    public TMP_Dropdown resolutionDropdown;
+
     [Header("References")]
 
     public ClientController cc;
@@ -38,11 +40,16 @@ public class MenuController : MonoBehaviour
     public string gameMenuPlaySpawnText = "Join Race";
     public string gameMenuPlayResumeText = "Resume";
 
+    [Header("Resolution Settings")]
+
+    Resolution[] resolutions;
+
     InputMaster controls;
 
     public void Awake()
     {
         controls = new InputMaster();
+        UpdateResolutionOptions();
     }
 
     public void Start()
@@ -65,6 +72,21 @@ public class MenuController : MonoBehaviour
                 }
             }
         }
+    }
+
+    void UpdateResolutionOptions()
+    {
+        resolutions = Screen.resolutions;
+
+        List<string> resOptions = new List<string>();
+
+        foreach (Resolution r in resolutions)
+        {
+            resOptions.Add(r.width + " by " + r.height);
+        }
+
+        resolutionDropdown.ClearOptions();
+        resolutionDropdown.AddOptions(resOptions);
     }
 
     public void MainMenuPlay()
@@ -141,6 +163,17 @@ public class MenuController : MonoBehaviour
                 Debug.LogWarning("Unknown OnScreenModeChange value... " + value);
                 break;
         }
+
+        //UpdateResolutionOptions();
+    }
+
+    public void OnResolutionOptionChange(TMP_Dropdown dropdown)
+    {
+        int value = dropdown.value;
+
+        Screen.SetResolution(resolutions[value].width, resolutions[value].height, Screen.fullScreenMode);
+
+        //UpdateResolutionOptions();
     }
 
 

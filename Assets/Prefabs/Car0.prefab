@@ -442,7 +442,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   exhaustSource: {fileID: 7771810063907213200}
   exhaustPitchIdle: 0.6
-  exhaustPitchRedline: 2
+  exhaustPitchRedline: 1.5
   exhaustVolumeIdle: 0.4
   exhaustVolumeRedline: 1.5
   rpmPercent: 0
@@ -1098,6 +1098,8 @@ MonoBehaviour:
   carSoundManager: {fileID: 6984771429677259523}
   idleVelocity: 0.75
   redlineVelocity: 45
+  rpmPercent: 0
+  rpmPercentChange: 0.35
   usernameText: {fileID: 1749351673}
 --- !u!1 &4261872027879443404
 GameObject:

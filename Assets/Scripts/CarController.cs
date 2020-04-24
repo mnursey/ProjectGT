@@ -74,6 +74,11 @@ public class CarController : MonoBehaviour
     [Range(0.0f, 100.0f)]
     public float redlineVelocity;
 
+    [Range(0.0f, 1.0f)]
+    public float rpmPercent = 0.0f;
+    [Range(0.0f, 1.0f)]
+    public float rpmPercentChange = 0.5f;
+
     [Header("UI")]
 
     public TextMeshProUGUI usernameText;
@@ -182,11 +187,22 @@ public class CarController : MonoBehaviour
 
         float velocityMagnitude = rb.velocity.magnitude;
 
-        float vHat = Mathf.Clamp(velocityMagnitude, idleVelocity, redlineVelocity) - idleVelocity;
 
-        vHat /= (redlineVelocity - idleVelocity);
+        bool rearWheelsGrounded = axles[Axle.REAR_AXLE_INDEX].leftWheel.isGrounded || axles[Axle.REAR_AXLE_INDEX].rightWheel.isGrounded;
 
-        carSoundManager.rpmPercent = vHat;
+        if(rearWheelsGrounded)
+        {
+            float vHat = Mathf.Clamp(velocityMagnitude, idleVelocity, redlineVelocity) - idleVelocity;
+            vHat /= (redlineVelocity - idleVelocity);
+
+            rpmPercent = rpmPercent + (rpmPercentChange * (vHat - rpmPercent));
+        }
+        else
+        {
+            rpmPercent = rpmPercent + (rpmPercentChange * (accelerationInput - rpmPercent));
+        }
+
+        carSoundManager.rpmPercent = rpmPercent;
 
         // END REFACTOR
 
