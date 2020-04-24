@@ -10,6 +10,9 @@ public class CarSoundManager : MonoBehaviour
     public float exhaustPitchIdle = 0.1f;
     public float exhaustPitchRedline = 1.5f;
 
+    public float exhaustVolumeIdle = 0.1f;
+    public float exhaustVolumeRedline = 1.5f;
+
     [Range(0.0f, 1.0f)]
     public float rpmPercent;
 
@@ -17,6 +20,7 @@ public class CarSoundManager : MonoBehaviour
     {
         exhaustSource.loop = true;
         exhaustSource.Play();
+        exhaustSource.velocityUpdateMode = AudioVelocityUpdateMode.Dynamic;
     }
 
     // Update is called once per frame
@@ -28,6 +32,7 @@ public class CarSoundManager : MonoBehaviour
     void calculateExhuast(float rpmPercent)
     {
         exhaustSource.pitch = Mathf.Lerp(exhaustPitchIdle, exhaustPitchRedline, rpmPercent);
+        exhaustSource.volume = Mathf.Lerp(exhaustVolumeIdle, exhaustVolumeRedline, rpmPercent);
     }
 
     public void DisableSounds()

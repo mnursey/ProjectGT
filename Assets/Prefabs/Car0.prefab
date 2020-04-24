@@ -441,8 +441,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   exhaustSource: {fileID: 7771810063907213200}
-  exhaustPitchIdle: 0.8
+  exhaustPitchIdle: 0.6
   exhaustPitchRedline: 2
+  exhaustVolumeIdle: 0.4
+  exhaustVolumeRedline: 1.5
   rpmPercent: 0
 --- !u!1 &4261872026347272262
 GameObject:
