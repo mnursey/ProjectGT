@@ -4,6 +4,7 @@ using UnityEngine;
 using TMPro;
 using System;
 using System.Linq;
+using UnityEngine.UI;
 
 public class MenuController : MonoBehaviour
 {
@@ -186,6 +187,13 @@ public class MenuController : MonoBehaviour
         int value = dropdown.value;
 
         QualitySettings.SetQualityLevel(value, true);
+    }
+
+    public void OnMasterAudioOptionChange(Slider s)
+    {
+        float value = s.value;
+
+        AudioListener.volume = value;
     }
 
 
