@@ -320,7 +320,7 @@ AudioSource:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 3731613118741467240}
-  m_Enabled: 1
+  m_Enabled: 0
   serializedVersion: 4
   OutputAudioMixerGroup: {fileID: 24300002, guid: b962e84140c6128429ace3a5a3926125,
     type: 2}
@@ -445,6 +445,8 @@ MonoBehaviour:
   exhaustPitchRedline: 1.5
   exhaustVolumeIdle: 0.4
   exhaustVolumeRedline: 1.5
+  exhaustFadeInSpeed: 0.002
+  exhaustFadeOutSpeed: 0.005
   rpmPercent: 0
 --- !u!1 &4261872026347272262
 GameObject:

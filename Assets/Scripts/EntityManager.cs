@@ -45,9 +45,9 @@ public class EntityManager : MonoBehaviour
     public void Reset()
     {
 
-        foreach(Entity e in entities)
+        foreach(Entity e in entities.ToArray())
         {
-            Destroy(e.GetGameObject());
+            RemoveEntity(e.GetID());
         }
 
         entities = new List<Entity>();
@@ -130,6 +130,14 @@ public class EntityManager : MonoBehaviour
         {
             if (entity.GetGameObject() != null)
             {
+                // TODO
+                // Refactor this
+                if(entity.GetPrefabID() == 0)
+                {
+                    // Car
+                    entity.GetGameObject().GetComponent<CarController>().carSoundManager.CleanUpCarSound();
+                }
+
                 Destroy(entity.GetGameObject());
             }
 
