@@ -1,0 +1,15 @@
+<?xml version="1.0" standalone="no" ?>
+<!DOCTYPE project PUBLIC "-//audacityproject-1.3.0//DTD//EN" "http://audacity.sourceforge.net/xml/audacityproject-1.3.0.dtd" >
+<project xmlns="http://audacity.sourceforge.net/xml/" projname="Idle5_data" version="1.3.0" audacityversion="2.3.3" sel0="3.5892573246" sel1="3.5892573246" vpos="0" h="0.0000000000" zoom="296.1615464854" rate="44100.0" snapto="off" selectionformat="hh:mm:ss + milliseconds" frequencyformat="Hz" bandwidthformat="octaves">
+	<tags/>
+	<wavetrack name="Idle4" isSelected="1" height="594" minimized="0" channel="2" linked="0" mute="0" solo="1" rate="44100" gain="3.981072" pan="0.0" colorindex="0">
+		<waveclip offset="0.00000000" colorindex="0">
+			<sequence maxsamples="262144" sampleformat="262159" numsamples="89004">
+				<waveblock start="0">
+					<simpleblockfile filename="e0808ae6.au" len="89004" min="-0.126806" max="0.098036" rms="0.032093"/>
+				</waveblock>
+			</sequence>
+			<envelope numpoints="0"/>
+		</waveclip>
+	</wavetrack>
+</project>

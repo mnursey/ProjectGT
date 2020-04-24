@@ -65,6 +65,15 @@ public class CarController : MonoBehaviour
     public Transform frontLeftWheelVisual;
     public Transform frontRightWheelVisual;
 
+    [Header("Audio References")]
+
+    public CarSoundManager carSoundManager;
+
+    [Range(0.0f, 100.0f)]
+    public float idleVelocity;
+    [Range(0.0f, 100.0f)]
+    public float redlineVelocity;
+
     [Header("UI")]
 
     public TextMeshProUGUI usernameText;
@@ -134,6 +143,11 @@ public class CarController : MonoBehaviour
         usernameText.enabled = false;
     }
 
+    public void DisableCarSounds()
+    {
+        carSoundManager.DisableSounds();
+    }
+
     public void UpdatePhysics()
     {
         if(resetInput)
@@ -162,6 +176,19 @@ public class CarController : MonoBehaviour
         SteeringForce();
         DownForce();
         BrakingForce();
+
+        // REFACTOR THIS...
+        // Put in own function...
+
+        float velocityMagnitude = rb.velocity.magnitude;
+
+        float vHat = Mathf.Clamp(velocityMagnitude, idleVelocity, redlineVelocity) - idleVelocity;
+
+        vHat /= (redlineVelocity - idleVelocity);
+
+        carSoundManager.rpmPercent = vHat;
+
+        // END REFACTOR
 
         previousFramePosition = transform.position;
     }

@@ -459,6 +459,7 @@ public class RaceController : MonoBehaviour
             CarController c = GetCarControllerFromID(carID);
             c.controllable = false;
             c.DisableUsernameText();
+            c.DisableCarSounds();
 
             MeshRenderer[] meshRenders = c.GetComponentsInChildren<MeshRenderer>();
             foreach(MeshRenderer mr in meshRenders)
