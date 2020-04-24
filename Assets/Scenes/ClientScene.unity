@@ -2704,6 +2704,7 @@ MonoBehaviour:
   serverIP: {fileID: 688429464}
   usernameOption: {fileID: 814552146}
   resolutionDropdown: {fileID: 71640076}
+  qualityDropdown: {fileID: 1342479112}
   cc: {fileID: 1639248994}
   rc: {fileID: 1893463311}
   lm: {fileID: 420268548}
@@ -10201,7 +10202,18 @@ MonoBehaviour:
       m_Image: {fileID: 0}
   m_OnValueChanged:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 420268546}
+        m_MethodName: OnQualityOptionChange
+        m_Mode: 2
+        m_Arguments:
+          m_ObjectArgument: {fileID: 1342479112}
+          m_ObjectArgumentAssemblyTypeName: TMPro.TMP_Dropdown, Unity.TextMeshPro
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
   m_AlphaFadeSpeed: 0.15
 --- !u!114 &1342479113
 MonoBehaviour:

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
 using System;
+using System.Linq;
 
 public class MenuController : MonoBehaviour
 {
@@ -12,6 +13,7 @@ public class MenuController : MonoBehaviour
     public TMP_InputField usernameOption;
 
     public TMP_Dropdown resolutionDropdown;
+    public TMP_Dropdown qualityDropdown;
 
     [Header("References")]
 
@@ -50,6 +52,7 @@ public class MenuController : MonoBehaviour
     {
         controls = new InputMaster();
         UpdateResolutionOptions();
+        UpdateQualityOptions();
     }
 
     public void Start()
@@ -87,6 +90,12 @@ public class MenuController : MonoBehaviour
 
         resolutionDropdown.ClearOptions();
         resolutionDropdown.AddOptions(resOptions);
+    }
+
+    void UpdateQualityOptions()
+    {
+        qualityDropdown.ClearOptions();
+        qualityDropdown.AddOptions(QualitySettings.names.ToList());
     }
 
     public void MainMenuPlay()
@@ -163,8 +172,6 @@ public class MenuController : MonoBehaviour
                 Debug.LogWarning("Unknown OnScreenModeChange value... " + value);
                 break;
         }
-
-        //UpdateResolutionOptions();
     }
 
     public void OnResolutionOptionChange(TMP_Dropdown dropdown)
@@ -172,8 +179,13 @@ public class MenuController : MonoBehaviour
         int value = dropdown.value;
 
         Screen.SetResolution(resolutions[value].width, resolutions[value].height, Screen.fullScreenMode);
+    }
 
-        //UpdateResolutionOptions();
+    public void OnQualityOptionChange(TMP_Dropdown dropdown)
+    {
+        int value = dropdown.value;
+
+        QualitySettings.SetQualityLevel(value, true);
     }
 
 
