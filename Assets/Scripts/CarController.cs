@@ -93,6 +93,8 @@ public class CarController : MonoBehaviour
         {
             EnableControls();
         }
+
+        carSoundManagers[0].onAudioPlay = exhaust.Puff;
     }
 
     public void EnableControls()
@@ -693,6 +695,10 @@ public class ExhaustManager
     public float velocityLowerClamp;
     public float velocityUpperClamp;
 
+    public float burstTimeOffset = 0.0f;
+    public short burstCountUpper = 10;
+    public short burstCountLower = 50;
+
     public void Update(Vector3 velocity)
     {
         float lifetime = Mathf.Lerp(idleSmokeLifetime, drivingSmokeLifetime, Mathf.Clamp(velocity.magnitude, velocityLowerClamp, velocityUpperClamp));
@@ -704,5 +710,16 @@ public class ExhaustManager
         s = orangeSmoke.main;
 
         s.startLifetime = lifetime;
+    }
+
+    public void Puff()
+    {
+        smoke.emission.SetBursts(new ParticleSystem.Burst[] {
+            new ParticleSystem.Burst(smoke.time + burstTimeOffset, burstCountLower, burstCountUpper)
+        });
+
+        orangeSmoke.emission.SetBursts(new ParticleSystem.Burst[] {
+            new ParticleSystem.Burst(smoke.time + burstTimeOffset, burstCountLower, burstCountUpper)
+        });
     }
 }

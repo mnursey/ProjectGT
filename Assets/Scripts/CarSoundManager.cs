@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Audio;
 
+public delegate void OnAudioPlay();
+
 public class CarSoundManager : MonoBehaviour
 {
     public AudioSource exhaustSource;
@@ -32,16 +34,28 @@ public class CarSoundManager : MonoBehaviour
     [Range(0.0f, 1.0f)]
     public float rpmPercent;
 
+    [Header("Misc")]
+
+    public OnAudioPlay onAudioPlay;
+
     private bool fadeout = false;
     private bool destroyOnFadeout = false;
 
     private float nextPlay = 0.0f;
 
+    void Play()
+    {
+        exhaustSource.Play();
+        onAudioPlay?.Invoke();
+    }
+
     public void PlayExhaustSound()
     {
         exhaustSource.enabled = true;
         exhaustSource.volume = 0.0f;
-        exhaustSource.Play();
+
+        Play();
+
         nextPlay = Time.time + exhaustFrequencyVariation + exhaustFrequencyIdle;
         exhaustSource.velocityUpdateMode = AudioVelocityUpdateMode.Dynamic;
     }
@@ -66,7 +80,7 @@ public class CarSoundManager : MonoBehaviour
         
         if(nextPlay < Time.time && exhaustSource.isPlaying == false)
         {
-            exhaustSource.Play();
+            Play();
             nextPlay = Time.time + Mathf.Lerp(exhaustFrequencyIdle, exhaustFrequencyRedline, rpmPercent) + Random.Range(-exhaustFrequencyVariation, exhaustFrequencyVariation);
         }
 

@@ -1089,10 +1089,13 @@ MonoBehaviour:
   exhaust:
     smoke: {fileID: 7074568694146226275}
     orangeSmoke: {fileID: 7074568694977822952}
-    idleSmokeLifetime: 5
+    idleSmokeLifetime: 0.5
     drivingSmokeLifetime: 0.85
     velocityLowerClamp: 0.05
     velocityUpperClamp: 5
+    burstTimeOffset: 0
+    burstCountUpper: 5
+    burstCountLower: 20
   previousFramePosition: {x: 0, y: 0, z: 0}
   previousFrameLocalZVelocity: 0
   carVisual: {fileID: 4261872026429938361}
@@ -1319,6 +1322,31 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 4261872027723047866}
     m_Modifications:
+    - target: {fileID: 5364625880610544967, guid: bac273f8cd914f247b96c529732ecc55,
+        type: 3}
+      propertyPath: EmissionModule.rateOverTime.scalar
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5364625880610544967, guid: bac273f8cd914f247b96c529732ecc55,
+        type: 3}
+      propertyPath: EmissionModule.rateOverDistance.scalar
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5364625880839046602, guid: bac273f8cd914f247b96c529732ecc55,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5364625880839046604, guid: bac273f8cd914f247b96c529732ecc55,
+        type: 3}
+      propertyPath: EmissionModule.rateOverDistance.scalar
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5364625880839046604, guid: bac273f8cd914f247b96c529732ecc55,
+        type: 3}
+      propertyPath: EmissionModule.rateOverTime.scalar
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 5364625881562304948, guid: bac273f8cd914f247b96c529732ecc55,
         type: 3}
       propertyPath: m_LocalPosition.x
