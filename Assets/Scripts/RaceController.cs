@@ -331,9 +331,24 @@ public class RaceController : MonoBehaviour
             {
                 PlayerEntity pe = players.Find(x => x.networkID == networkID);
                 gameUI.UpdateLap(pe.lap.ToString(), targetNumberOfLaps.ToString());
-                gameUI.UpdatePosition(pe.position.ToString(), players.Count.ToString());
+                gameUI.UpdatePosition(pe.position.ToString(), GetRacingPlayers().Count.ToString());
             }
         }
+    }
+
+    List<PlayerEntity> GetRacingPlayers()
+    {
+        List<PlayerEntity> racers = new List<PlayerEntity>();
+
+        foreach(PlayerEntity pe in players)
+        {
+            if(pe.carID > -1)
+            {
+                racers.Add(pe);
+            }
+        }
+
+        return racers;
     }
 
     void UpdateCarProgress()
@@ -375,9 +390,9 @@ public class RaceController : MonoBehaviour
                 {
                     pe.checkpoint = 0;
                 }
-
-                pe.lapScore = GetPlayerLapScore(pe);
             }
+
+            pe.lapScore = GetPlayerLapScore(pe);
         }
 
         List<PlayerEntity> sortedByLapScore = GetPlayersByLapScore();
@@ -399,6 +414,13 @@ public class RaceController : MonoBehaviour
     public float GetPlayerLapScore(PlayerEntity pe)
     {
         float score = 0;
+
+        // Worst score for players who haven't started yet...
+
+        if (pe.carID < 0)
+        {
+            return float.MinValue + 1.0f;
+        }
 
         int l = Math.Max(targetNumberOfLaps, 1);
         int lHat = pe.lap;

@@ -63,7 +63,14 @@ public class LeaderboardManager : MonoBehaviour
 
             // Update leaderboard entry
 
-            UpdateEntry(pe.networkID, pe.lap.ToString(), pe.position.ToString());
+            string positionString = pe.position.ToString();
+
+            if(pe.carID < 0)
+            {
+                positionString = "Prepairing";
+            }
+
+            UpdateEntry(pe.networkID, pe.lap.ToString(), positionString);
         }
 
         // If player does not exist for leaderboard entry remove entry...
