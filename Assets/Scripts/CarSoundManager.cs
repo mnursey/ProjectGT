@@ -7,11 +7,24 @@ public class CarSoundManager : MonoBehaviour
 {
     public AudioSource exhaustSource;
 
+    [Header("Pitch")]
+
     public float exhaustPitchIdle = 0.1f;
     public float exhaustPitchRedline = 1.5f;
+    public float exhaustPitchVariation = 0.05f;
+
+    [Header("Frequency")]
+
+    public float exhaustFrequencyIdle = 1.0f;
+    public float exhaustFrequencyRedline = 0.5f;
+    public float exhaustFrequencyVariation = 0.2f;
+
+    [Header("Volume")]
 
     public float exhaustVolumeIdle = 0.1f;
     public float exhaustVolumeRedline = 1.5f;
+
+    [Header("Fade")]
 
     public float exhaustFadeInSpeed = 0.05f;
     public float exhaustFadeOutSpeed = 0.05f;
@@ -22,12 +35,14 @@ public class CarSoundManager : MonoBehaviour
     private bool fadeout = false;
     private bool destroyOnFadeout = false;
 
+    private float nextPlay = 0.0f;
+
     public void PlayExhaustSound()
     {
         exhaustSource.enabled = true;
-        exhaustSource.loop = true;
         exhaustSource.volume = 0.0f;
         exhaustSource.Play();
+        nextPlay = Time.time + exhaustFrequencyVariation + exhaustFrequencyIdle;
         exhaustSource.velocityUpdateMode = AudioVelocityUpdateMode.Dynamic;
     }
 
@@ -47,9 +62,15 @@ public class CarSoundManager : MonoBehaviour
 
     void calculateExhuast(float rpmPercent)
     {
-        exhaustSource.pitch = Mathf.Lerp(exhaustPitchIdle, exhaustPitchRedline, rpmPercent);
+        exhaustSource.pitch = Mathf.Lerp(exhaustPitchIdle, exhaustPitchRedline, rpmPercent) + Random.Range(-exhaustPitchVariation, exhaustPitchVariation);
         
-        if(!fadeout)
+        if(nextPlay < Time.time && exhaustSource.isPlaying == false)
+        {
+            exhaustSource.Play();
+            nextPlay = Time.time + Mathf.Lerp(exhaustFrequencyIdle, exhaustFrequencyRedline, rpmPercent) + Random.Range(-exhaustFrequencyVariation, exhaustFrequencyVariation);
+        }
+
+        if (!fadeout)
         {
             if (exhaustSource.volume < exhaustVolumeIdle)
             {

@@ -135,7 +135,7 @@ public class EntityManager : MonoBehaviour
                 if(entity.GetPrefabID() == 0)
                 {
                     // Car
-                    entity.GetGameObject().GetComponent<CarController>().carSoundManager.CleanUpCarSound();
+                    entity.GetGameObject().GetComponent<CarController>().CleanUpSounds();
                 }
 
                 Destroy(entity.GetGameObject());

@@ -67,7 +67,7 @@ public class CarController : MonoBehaviour
 
     [Header("Audio References")]
 
-    public CarSoundManager carSoundManager;
+    public List<CarSoundManager> carSoundManagers = new List<CarSoundManager>();
 
     [Range(0.0f, 100.0f)]
     public float idleVelocity;
@@ -148,9 +148,28 @@ public class CarController : MonoBehaviour
         usernameText.enabled = false;
     }
 
+    public void CleanUpSounds()
+    {
+        foreach (CarSoundManager csm in carSoundManagers)
+        {
+            csm.CleanUpCarSound();
+        }
+    }
+
+    public void PlayCarSounds()
+    {
+        foreach (CarSoundManager csm in carSoundManagers)
+        {
+            csm.PlayExhaustSound();
+        }
+    }
+
     public void DisableCarSounds()
     {
-        carSoundManager.DisableSounds();
+        foreach(CarSoundManager csm in carSoundManagers)
+        {
+            csm.DisableSounds();
+        }
     }
 
     public void UpdatePhysics()
@@ -202,7 +221,10 @@ public class CarController : MonoBehaviour
             rpmPercent = rpmPercent + (rpmPercentChange * (accelerationInput - rpmPercent));
         }
 
-        carSoundManager.rpmPercent = rpmPercent;
+        foreach (CarSoundManager csm in carSoundManagers)
+        {
+            csm.rpmPercent = rpmPercent;
+        }
 
         // END REFACTOR
 

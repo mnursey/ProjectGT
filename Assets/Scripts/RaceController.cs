@@ -215,7 +215,7 @@ public class RaceController : MonoBehaviour
                     c.EnableControls();
                     AttachCamera(c.transform);
                     c.DisableUsernameText();
-                    c.carSoundManager.PlayExhaustSound();
+                    c.PlayCarSounds();
                     // TODO
                     // Figure out to use MOE or not...
                     //em.useMOEEntities.Add(pe.carID);
