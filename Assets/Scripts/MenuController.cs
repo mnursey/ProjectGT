@@ -16,6 +16,8 @@ public class MenuController : MonoBehaviour
     public TMP_Dropdown resolutionDropdown;
     public TMP_Dropdown qualityDropdown;
 
+    public OptionsController optionsController;
+
     [Header("References")]
 
     public ClientController cc;
@@ -42,10 +44,6 @@ public class MenuController : MonoBehaviour
     [Header("Text Updates")]
     public string gameMenuPlaySpawnText = "Join Race";
     public string gameMenuPlayResumeText = "Resume";
-
-    [Header("Resolution Settings")]
-
-    Resolution[] resolutions;
 
     InputMaster controls;
 
@@ -80,23 +78,14 @@ public class MenuController : MonoBehaviour
 
     void UpdateResolutionOptions()
     {
-        resolutions = Screen.resolutions;
-
-        List<string> resOptions = new List<string>();
-
-        foreach (Resolution r in resolutions)
-        {
-            resOptions.Add(r.width + " by " + r.height);
-        }
-
         resolutionDropdown.ClearOptions();
-        resolutionDropdown.AddOptions(resOptions);
+        resolutionDropdown.AddOptions(optionsController.GetResolutionOptions());
     }
 
     void UpdateQualityOptions()
     {
         qualityDropdown.ClearOptions();
-        qualityDropdown.AddOptions(QualitySettings.names.ToList());
+        qualityDropdown.AddOptions(optionsController.GetQualityOptions());
     }
 
     public void MainMenuPlay()
@@ -152,50 +141,23 @@ public class MenuController : MonoBehaviour
 
     public void OnScreenModeChange(TMP_Dropdown dropdown)
     {
-        int value = dropdown.value;
-
-        // TODO:
-        // REFACTOR TO OPTIONS CONTROLLER
-
-        switch(value)
-        {
-            case 0:
-                Screen.fullScreenMode = FullScreenMode.FullScreenWindow;
-                Screen.fullScreen = true;
-                break;
-
-            case 1:
-                Screen.fullScreenMode = FullScreenMode.Windowed;
-                Screen.fullScreen = false;
-                break;
-
-            default:
-                Debug.LogWarning("Unknown OnScreenModeChange value... " + value);
-                break;
-        }
+        optionsController.SetScreenMode(dropdown.value);
     }
 
     public void OnResolutionOptionChange(TMP_Dropdown dropdown)
     {
-        int value = dropdown.value;
-
-        Screen.SetResolution(resolutions[value].width, resolutions[value].height, Screen.fullScreenMode);
+        optionsController.SetResolution(dropdown.value);
     }
 
     public void OnQualityOptionChange(TMP_Dropdown dropdown)
     {
-        int value = dropdown.value;
-
-        QualitySettings.SetQualityLevel(value, true);
+        optionsController.SetQuality(dropdown.value);
     }
 
     public void OnMasterAudioOptionChange(Slider s)
     {
-        float value = s.value;
-
-        AudioListener.volume = value;
+        optionsController.SetMasterAudio(s.value);
     }
-
 
     public void EnableGameUI()
     {

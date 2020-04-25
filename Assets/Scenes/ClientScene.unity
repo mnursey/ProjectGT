@@ -2682,6 +2682,7 @@ GameObject:
   - component: {fileID: 420268547}
   - component: {fileID: 420268546}
   - component: {fileID: 420268548}
+  - component: {fileID: 420268549}
   m_Layer: 0
   m_Name: MenuController
   m_TagString: Untagged
@@ -2705,6 +2706,7 @@ MonoBehaviour:
   usernameOption: {fileID: 814552146}
   resolutionDropdown: {fileID: 71640076}
   qualityDropdown: {fileID: 1342479112}
+  optionsController: {fileID: 420268549}
   cc: {fileID: 1639248994}
   rc: {fileID: 1893463311}
   lm: {fileID: 420268548}
@@ -2746,6 +2748,18 @@ MonoBehaviour:
   leaderboardMenu: {fileID: 582212969}
   leaderboardEntryPrefab: {fileID: 8589608285915366475, guid: 8906b86a45ca1834e981f00f8689728f,
     type: 3}
+--- !u!114 &420268549
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 420268545}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6779a5f616209754c8ad860e23abebbf, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &453444070
 GameObject:
   m_ObjectHideFlags: 0
@@ -10447,10 +10461,10 @@ RectTransform:
   m_Father: {fileID: 1531373315}
   m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0.5}
-  m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 380.2001, y: -0.00082779}
-  m_SizeDelta: {x: 1159.6, y: 761.47}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
+  m_AnchoredPosition: {x: 380.20007, y: 62.9}
+  m_SizeDelta: {x: -760.4, y: -564.1}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &1365743204
 GameObject:
@@ -11868,18 +11882,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1519184273}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 420268546}
-        m_MethodName: MainMenuQuit
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
+      m_Calls: []
 --- !u!114 &1519184273
 MonoBehaviour:
   m_ObjectHideFlags: 0
