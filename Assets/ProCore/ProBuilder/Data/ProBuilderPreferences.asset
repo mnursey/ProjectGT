@@ -22,6 +22,7 @@ MonoBehaviour:
   - pbShowDetail
   - pbCollapseVertexToFirst
   - pbDragSelectWholeElement
+  - pbFillHoleSelectsEntirePath
   m_Int_keys:
   - pbDefaultEditLevel
   - pbDefaultSelectionMode
@@ -36,13 +37,13 @@ MonoBehaviour:
   - pbCurrentMaterialPalette
   m_Color_keys: []
   m_Material_keys: []
-  m_Bool_values: 000001010101010100
+  m_Bool_values: 00000101010101010001
   m_Int_values: 01000000020000000000000001000000
   m_Float_values:
   - 0
   - 0
   - 0.439
-  - 0.3664
+  - 1
   m_String_values:
   - Assets/ProCore/ProBuilder/Data/Default Material Palette.asset
   m_Color_values: []
