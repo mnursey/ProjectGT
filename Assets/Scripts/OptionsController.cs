@@ -9,6 +9,42 @@ public class OptionsController : MonoBehaviour
 
     Resolution[] resolutions;
 
+    void Awake()
+    {
+        GetResolutionOptions();
+        GetQualityOptions();
+
+        SetResolution(LoadIntSetting("resolution", 0));
+        SetQuality(LoadIntSetting("quality", GetQualityOptions().Count - 1));
+        SetScreenMode(LoadIntSetting("screen_mode", 0));
+        SetMasterAudio(LoadFloatSetting("master_audio", 1.0f));
+    }
+
+    void SaveSetting(string name, int value)
+    {
+        PlayerPrefs.SetInt(name, value);
+    }
+
+    void SaveSetting(string name, float value)
+    {
+        PlayerPrefs.SetFloat(name, value);
+    }
+
+    int LoadIntSetting(string name, int defaultValue)
+    {
+        return PlayerPrefs.GetInt(name, defaultValue);
+    }
+
+    float LoadFloatSetting(string name, float defaultValue)
+    {
+        return PlayerPrefs.GetFloat(name, defaultValue);
+    }
+
+    void SaveSettings()
+    {
+        PlayerPrefs.Save();
+    }
+
     public List<string> GetResolutionOptions()
     {
         resolutions = Screen.resolutions;
@@ -31,6 +67,9 @@ public class OptionsController : MonoBehaviour
     public void SetResolution(int value)
     {
         Screen.SetResolution(resolutions[value].width, resolutions[value].height, Screen.fullScreenMode);
+
+        SaveSetting("resolution", value);
+        SaveSettings();
     }
 
     public void SetScreenMode(int value)
@@ -51,15 +90,24 @@ public class OptionsController : MonoBehaviour
                 Debug.LogWarning("Unknown OnScreenModeChange value... " + value);
                 break;
         }
+
+        SaveSetting("screen_mode", value);
+        SaveSettings();
     }
 
     public void SetQuality(int value)
     {
         QualitySettings.SetQualityLevel(value, true);
+
+        SaveSetting("quality", value);
+        SaveSettings();
     }
 
     public void SetMasterAudio(float value)
     {
         AudioListener.volume = value;
+
+        SaveSetting("master_audio", value);
+        SaveSettings();
     }
 }
