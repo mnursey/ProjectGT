@@ -1,7 +1,7 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!65 &925078286
-BoxCollider:
+--- !u!64 &-601679343399476757
+MeshCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -10,9 +10,10 @@ BoxCollider:
   m_Material: {fileID: 0}
   m_IsTrigger: 0
   m_Enabled: 1
-  serializedVersion: 2
-  m_Size: {x: 0.020485967, y: 0.019376853, z: 0.020795088}
-  m_Center: {x: 0.00054363726, y: -0.00080377335, z: -0.00069692254}
+  serializedVersion: 4
+  m_Convex: 0
+  m_CookingOptions: 30
+  m_Mesh: {fileID: 7532208146132050318, guid: 333bff38c4b12e145aac2f829fece7ca, type: 3}
 --- !u!1001 &4781727681701560588
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -78,7 +79,7 @@ PrefabInstance:
     - target: {fileID: -927199367670048503, guid: 333bff38c4b12e145aac2f829fece7ca,
         type: 3}
       propertyPath: m_Name
-      value: rock_2
+      value: rock_2 Variant
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 333bff38c4b12e145aac2f829fece7ca, type: 3}
