@@ -40,7 +40,7 @@ Rigidbody:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 3664397140262431157}
   serializedVersion: 2
-  m_Mass: 4000
+  m_Mass: 2000
   m_Drag: 0
   m_AngularDrag: 0.05
   m_UseGravity: 1
@@ -57,11 +57,24 @@ MeshCollider:
   m_GameObject: {fileID: 4754500340387609246}
   m_Material: {fileID: 0}
   m_IsTrigger: 0
-  m_Enabled: 1
+  m_Enabled: 0
   serializedVersion: 4
   m_Convex: 1
   m_CookingOptions: 30
   m_Mesh: {fileID: 289301614986012343, guid: b3e511aa390a52d4da0cc2b70b1b597f, type: 3}
+--- !u!135 &7459961220433321605
+SphereCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4754500340387609246}
+  m_Material: {fileID: 13400000, guid: e1754afd4df94f54e9851c5f4487d814, type: 2}
+  m_IsTrigger: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Radius: 0.01
+  m_Center: {x: 0, y: 0, z: 0}
 --- !u!1001 &3664397140966876055
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -127,17 +140,17 @@ PrefabInstance:
     - target: {fileID: -4216859302048453862, guid: b3e511aa390a52d4da0cc2b70b1b597f,
         type: 3}
       propertyPath: m_LocalScale.x
-      value: 300
+      value: 150
       objectReference: {fileID: 0}
     - target: {fileID: -4216859302048453862, guid: b3e511aa390a52d4da0cc2b70b1b597f,
         type: 3}
       propertyPath: m_LocalScale.y
-      value: 300
+      value: 150
       objectReference: {fileID: 0}
     - target: {fileID: -4216859302048453862, guid: b3e511aa390a52d4da0cc2b70b1b597f,
         type: 3}
       propertyPath: m_LocalScale.z
-      value: 300
+      value: 150
       objectReference: {fileID: 0}
     - target: {fileID: -1504981713932161579, guid: b3e511aa390a52d4da0cc2b70b1b597f,
         type: 3}
