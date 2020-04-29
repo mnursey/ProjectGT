@@ -42,7 +42,7 @@ public class NetworkEntitySpawner : MonoBehaviour
                     Entity nextE = em.GetEntity(spawnedEntities[(entityPlacedCounter + 1) % spawnedEntities.Count]);
                     GameObject nextGO = nextE.GetGameObject();
 
-                    nextGO.GetComponentInChildren<MeshCollider>().enabled = false;
+                    nextGO.GetComponentInChildren<SphereCollider>().enabled = false;
                 }
 
                 entityPlacedCounter++;
@@ -58,12 +58,12 @@ public class NetworkEntitySpawner : MonoBehaviour
 
                     if(popoutEffect)
                     {
-                        go.GetComponentInChildren<MeshCollider>().enabled = true;
+                        go.GetComponentInChildren<SphereCollider>().enabled = true;
 
                         Entity nextE = em.GetEntity(spawnedEntities[(entityPlacedCounter + 1) % spawnedEntities.Count]);
                         GameObject nextGO = nextE.GetGameObject();
 
-                        nextGO.GetComponentInChildren<MeshCollider>().enabled = false;
+                        nextGO.GetComponentInChildren<SphereCollider>().enabled = false;
                     }
 
                     go.transform.position = transform.position;
