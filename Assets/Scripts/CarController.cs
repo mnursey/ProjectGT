@@ -69,6 +69,8 @@ public class CarController : MonoBehaviour
 
     public List<CarSoundManager> carSoundManagers = new List<CarSoundManager>();
     public HitSoundManager splashSound;
+    public HitSoundManager hitSound;
+    public float hitSoundMaxImpulse = 10.0f;
 
     [Range(0.0f, 100.0f)]
     public float idleVelocity;
@@ -141,6 +143,22 @@ public class CarController : MonoBehaviour
         if(other.gameObject.tag == "Water")
         {
             splashSound.Play();
+        } else
+        {
+
+        }
+    }
+
+    void OnCollisionEnter(Collision other)
+    {
+        if (other.gameObject.tag == "Water")
+        {
+
+        }
+        else
+        {
+            hitSound.Play(other.impulse.magnitude / hitSoundMaxImpulse);
+            
         }
     }
 
@@ -167,6 +185,7 @@ public class CarController : MonoBehaviour
         }
 
         splashSound.CleanUpSound();
+        hitSound.CleanUpSound();
     }
 
     public void PlayCarSounds()
@@ -185,6 +204,7 @@ public class CarController : MonoBehaviour
         }
 
         splashSound.DisableSounds();
+        hitSound.DisableSounds();
     }
 
     public void UpdatePhysics()

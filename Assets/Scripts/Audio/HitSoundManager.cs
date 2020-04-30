@@ -26,6 +26,16 @@ public class HitSoundManager : MonoBehaviour
         }
     }
 
+    public void Play(float volume)
+    {
+        if (!hitSound.isPlaying)
+        {
+            hitSound.volume = volume;
+            hitSound.Play();
+            onAudioPlay?.Invoke();
+        }
+    }
+
     // Update is called once per frame
     void Update()
     {
