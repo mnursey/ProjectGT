@@ -67,6 +67,15 @@ public class RaceController : MonoBehaviour
 
     void Awake()
     {
+
+        if(currentTrack == null)
+        {
+            // TODO
+            // FIX THIS TO BE MORE DYNAMIC
+            RaceTrack[] tracks = FindObjectsOfType<RaceTrack>();
+            currentTrack = tracks[tracks.Length - 1];
+        }
+
         Physics.autoSimulation = false;
 
         em.mode = raceControllerMode;

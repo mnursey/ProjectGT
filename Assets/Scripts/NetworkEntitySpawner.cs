@@ -14,6 +14,18 @@ public class NetworkEntitySpawner : MonoBehaviour
 
     List<int> spawnedEntities = new List<int>();
     int entityPlacedCounter = 0;
+
+    void Awake()
+    {
+        if(em == null)
+        {
+            // TODO
+            // FIX THIS TO BE MORE DYNAMIC
+            EntityManager[] ems = FindObjectsOfType<EntityManager>();
+            em = ems[ems.Length - 1];
+        }
+    }
+
     // Start is called before the first frame update
     void Start()
     {

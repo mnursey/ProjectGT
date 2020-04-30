@@ -86,8 +86,8 @@ ParticleSystem:
   useRigidbodyForVelocity: 1
   startDelay:
     serializedVersion: 2
-    minMaxState: 0
-    scalar: 0
+    minMaxState: 3
+    scalar: 15
     minScalar: 0
     maxCurve:
       serializedVersion: 2
