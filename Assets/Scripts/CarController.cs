@@ -68,6 +68,7 @@ public class CarController : MonoBehaviour
     [Header("Audio References")]
 
     public List<CarSoundManager> carSoundManagers = new List<CarSoundManager>();
+    public HitSoundManager splashSound;
 
     [Range(0.0f, 100.0f)]
     public float idleVelocity;
@@ -135,6 +136,14 @@ public class CarController : MonoBehaviour
         exhaust.Update(rb.velocity);
     }
 
+    void OnTriggerEnter(Collider other)
+    {
+        if(other.gameObject.tag == "Water")
+        {
+            splashSound.Play();
+        }
+    }
+
     void FixedUpdate()
     {
         
@@ -156,6 +165,8 @@ public class CarController : MonoBehaviour
         {
             csm.CleanUpCarSound();
         }
+
+        splashSound.CleanUpSound();
     }
 
     public void PlayCarSounds()
@@ -172,6 +183,8 @@ public class CarController : MonoBehaviour
         {
             csm.DisableSounds();
         }
+
+        splashSound.DisableSounds();
     }
 
     public void UpdatePhysics()
@@ -311,7 +324,7 @@ public class CarController : MonoBehaviour
 
         RaycastHit hit;
 
-        int layerMask = ~LayerMask.GetMask("Cars");
+        int layerMask = ~LayerMask.GetMask("Cars", "Water");
         bool hitSomething = physicsScene.Raycast(compressedWheelPos, -transform.up, out hit, axle.suspensionHeight, layerMask);
 
         Debug.DrawLine(compressedWheelPos, compressedWheelPos - (transform.up * axle.suspensionHeight), Color.green);
