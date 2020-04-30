@@ -1143,7 +1143,7 @@ MonoBehaviour:
   - {fileID: 9109205002862958989}
   splashSound: {fileID: 8415015038952335529}
   hitSound: {fileID: 1066730928709080190}
-  hitSoundMaxImpulse: 50000
+  hitSoundMaxImpulse: 5000
   idleVelocity: 0.75
   redlineVelocity: 45
   rpmPercent: 0
