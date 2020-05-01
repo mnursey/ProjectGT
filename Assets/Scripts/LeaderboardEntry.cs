@@ -10,6 +10,7 @@ public class LeaderboardEntry : MonoBehaviour
     public TextMeshProUGUI usernameField;
     public TextMeshProUGUI lapField;
     public TextMeshProUGUI positionField;
+    public TextMeshProUGUI bestTimeField;
 
     public LeaderboardEntry(int networkID)
     {

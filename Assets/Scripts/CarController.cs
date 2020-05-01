@@ -54,6 +54,8 @@ public class CarController : MonoBehaviour
     public Vector3 previousFramePosition = new Vector3();
     public float previousFrameLocalZVelocity = 0.0f;
 
+    public GameObject splashEffectPrefab;
+
     [Header("Visual Transforms")]
 
     public Transform carVisual;
@@ -143,6 +145,9 @@ public class CarController : MonoBehaviour
         if(other.gameObject.tag == "Water")
         {
             splashSound.Play();
+
+            Instantiate(splashEffectPrefab, other.ClosestPoint(transform.position), splashEffectPrefab.transform.rotation);
+
         } else
         {
 

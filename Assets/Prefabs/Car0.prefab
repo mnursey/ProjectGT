@@ -1131,6 +1131,8 @@ MonoBehaviour:
     burstCountLower: 20
   previousFramePosition: {x: 0, y: 0, z: 0}
   previousFrameLocalZVelocity: 0
+  splashEffectPrefab: {fileID: 6531683359447698413, guid: 74d75b4c18d23834384ea3628b52b724,
+    type: 3}
   carVisual: {fileID: 4261872026429938361}
   frontLeftWheelHolder: {fileID: 4261872027620638025}
   frontRightWheelHolder: {fileID: 4261872027879443405}

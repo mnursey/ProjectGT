@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -31,7 +32,7 @@ public class LeaderboardManager : MonoBehaviour
         Destroy(le.gameObject);
     }
 
-    void UpdateEntry(int networkID, string lap, string position)
+    void UpdateEntry(int networkID, string lap, string position, string bestTime)
     {
         if (entries.Exists(x => x.networkID == networkID))
         {
@@ -39,6 +40,7 @@ public class LeaderboardManager : MonoBehaviour
 
             le.lapField.text = lap;
             le.positionField.text = position;
+            le.bestTimeField.text = bestTime;
         }
     }
 
@@ -70,7 +72,14 @@ public class LeaderboardManager : MonoBehaviour
                 positionString = "Prepairing";
             }
 
-            UpdateEntry(pe.networkID, pe.lap.ToString(), positionString);
+            string fastestLapTimeText = String.Format("{0:0.0#}", pe.fastestLapTime) + "s";
+
+            if (pe.lap  == 0)
+            {
+                fastestLapTimeText = "-";
+            }
+
+            UpdateEntry(pe.networkID, pe.lap.ToString(), positionString, fastestLapTimeText);
         }
 
         // If player does not exist for leaderboard entry remove entry...
