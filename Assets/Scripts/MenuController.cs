@@ -40,6 +40,7 @@ public class MenuController : MonoBehaviour
     [Header("Misc")]
 
     public bool enableMainMenuOnStart = true;
+    public AudioSource clickSoundEffect;
 
     [Header("Text Updates")]
     public string gameMenuPlaySpawnText = "Join Race";
@@ -52,13 +53,18 @@ public class MenuController : MonoBehaviour
         controls = new InputMaster();
         UpdateResolutionOptions();
         UpdateQualityOptions();
+
+        if(clickSoundEffect == null)
+        {
+            clickSoundEffect = GetComponent<AudioSource>();
+        }
     }
 
     public void Start()
     {
         if(enableMainMenuOnStart)
         {
-            ForwardMenu(mainMenu);
+            ForwardMenu(mainMenu, false);
         }
     }
 
@@ -157,6 +163,7 @@ public class MenuController : MonoBehaviour
     public void OnMasterAudioOptionChange(Slider s)
     {
         optionsController.SetMasterAudio(s.value);
+        clickSoundEffect.Play();
     }
 
     public void EnableGameUI()
@@ -185,6 +192,11 @@ public class MenuController : MonoBehaviour
 
     public void ForwardMenu(GameObject g)
     {
+        ForwardMenu(g, true);
+    }
+
+    public void ForwardMenu(GameObject g, bool playSound)
+    {
         g.SetActive(true);
 
         if(currentMenu != null)
@@ -194,6 +206,9 @@ public class MenuController : MonoBehaviour
         }
 
         currentMenu = g;
+        
+        if (playSound)
+            clickSoundEffect.Play();
     }
 
     public void BackMenu()
@@ -207,6 +222,8 @@ public class MenuController : MonoBehaviour
 
         currentMenu.SetActive(false);
         currentMenu = g;
+
+        clickSoundEffect.Play();
     }
 
     private void OnEnable()

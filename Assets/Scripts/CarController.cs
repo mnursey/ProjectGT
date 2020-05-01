@@ -758,12 +758,15 @@ public class ExhaustManager
 
     public void Puff()
     {
-        smoke.emission.SetBursts(new ParticleSystem.Burst[] {
+        if(smoke != null)
+        {
+            smoke.emission.SetBursts(new ParticleSystem.Burst[] {
             new ParticleSystem.Burst(smoke.time + burstTimeOffset, burstCountLower, burstCountUpper)
         });
 
-        orangeSmoke.emission.SetBursts(new ParticleSystem.Burst[] {
+            orangeSmoke.emission.SetBursts(new ParticleSystem.Burst[] {
             new ParticleSystem.Burst(smoke.time + burstTimeOffset, burstCountLower, burstCountUpper)
         });
+        }
     }
 }
