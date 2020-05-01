@@ -33,6 +33,12 @@ public class RaceController : MonoBehaviour
 
     public GameUI gameUI = new GameUI();
 
+    [Header("ObjectiveUI")]
+
+    public Animator objectiveAnimator;
+    public TextMeshProUGUI objectTitle;
+    public TextMeshProUGUI objectValue;
+
     [Header("Settings")]
 
     public RaceControllerState raceControllerState = RaceControllerState.IDLE;
@@ -44,6 +50,7 @@ public class RaceController : MonoBehaviour
     [Header("Audio")]
 
     public AudioSource fastestLaptimeSound;
+
 
     [Header("Misc")]
 
@@ -322,8 +329,9 @@ public class RaceController : MonoBehaviour
             {
                 fastestLaptimeSound.Play();
 
-                // TODO
-                // show ui visual
+                objectTitle.text = "Personal Best Lap";
+                objectValue.text = String.Format("{0:0.0#}", clientFastestLapTime) + "s";
+                objectiveAnimator.SetTrigger("Display");
             }
         }
 
