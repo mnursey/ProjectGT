@@ -41,6 +41,10 @@ public class RaceController : MonoBehaviour
 
     public GameObject carPrefab;
 
+    [Header("Audio")]
+
+    public AudioSource fastestLaptimeSound;
+
     [Header("Misc")]
 
     public bool spawnCar;
@@ -49,6 +53,8 @@ public class RaceController : MonoBehaviour
     public int serverSendFrq = 30;
 
     public float idleTime = 5.0f;
+
+    public float clientFastestLapTime = float.MaxValue;
 
     private ConcurrentQueue<InputState> incomingInputStates = new ConcurrentQueue<InputState>();
     private ConcurrentQueue<int> playersToRemove = new ConcurrentQueue<int>();
@@ -134,7 +140,7 @@ public class RaceController : MonoBehaviour
         incomingGameState = new GameState();
         cameraController.targetObject = null;
         frame = 0;
-
+        clientFastestLapTime = float.MaxValue;
         em.Reset();
     }
 
@@ -195,6 +201,22 @@ public class RaceController : MonoBehaviour
                 }
             }
         }
+    }
+
+    bool ClientCheckIfBeatPrevRecord()
+    {
+        PlayerEntity pe = players.Find(x => x.networkID == networkID);
+
+        if (pe != null)
+        {
+            if (pe.fastestLapTime < clientFastestLapTime)
+            {
+                clientFastestLapTime = pe.fastestLapTime;
+                return true;
+            }
+        }
+
+        return false;
     }
 
     void ClientSetOwnInputState(InputState inputState)
@@ -295,6 +317,14 @@ public class RaceController : MonoBehaviour
         if(raceControllerMode == RaceControllerMode.CLIENT && cc.state == ClientState.CONNECTED)
         {
             cc.SendInput(input);
+
+            if(ClientCheckIfBeatPrevRecord())
+            {
+                fastestLaptimeSound.Play();
+
+                // TODO
+                // show ui visual
+            }
         }
 
         if (raceControllerMode == RaceControllerMode.SERVER && sc.ServerActive())
