@@ -116,6 +116,13 @@ public class RaceController : MonoBehaviour
             {
                 ps.Stop();
             }
+
+            AudioSource[] audioSources = track.GetComponentsInChildren<AudioSource>();
+            foreach (AudioSource ass in audioSources)
+            {
+                ass.Stop();
+                ass.enabled = false;
+            }
         }
     }
 
