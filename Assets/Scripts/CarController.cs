@@ -55,6 +55,8 @@ public class CarController : MonoBehaviour
     public float previousFrameLocalZVelocity = 0.0f;
 
     public GameObject splashEffectPrefab;
+    public GameObject hitEffectPrefab;
+    public float maxParticlesToEmmit = 25.0f;
 
     [Header("Visual Transforms")]
 
@@ -163,7 +165,11 @@ public class CarController : MonoBehaviour
         else
         {
             hitSound.Play(other.impulse.magnitude / hitSoundMaxImpulse);
-            
+
+            GameObject go = Instantiate(hitEffectPrefab, other.GetContact(0).point, hitEffectPrefab.transform.rotation);
+            go.GetComponent<ParticleSystem>().emission.SetBursts(new ParticleSystem.Burst[] {
+                new ParticleSystem.Burst(0.0f, Mathf.RoundToInt(maxParticlesToEmmit * other.impulse.magnitude / hitSoundMaxImpulse))
+            });
         }
     }
 
