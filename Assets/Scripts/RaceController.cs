@@ -391,7 +391,7 @@ public class RaceController : MonoBehaviour
             if (players.Exists(x => x.networkID == networkID))
             {
                 PlayerEntity pe = players.Find(x => x.networkID == networkID);
-                gameUI.UpdateLap(pe.lap.ToString(), targetNumberOfLaps.ToString());
+                gameUI.UpdateLap(pe.lap.ToString(), targetNumberOfLaps.ToString(), String.Format("{0:0.}", pe.currentLapTime) + "s");
                 gameUI.UpdatePosition(pe.position.ToString(), GetRacingPlayers().Count.ToString());
             }
         }
@@ -801,11 +801,12 @@ public class GameUI
 {
     public TextMeshProUGUI currentLapText;
     public TextMeshProUGUI targetLapText;
+    public TextMeshProUGUI lapTimeText;
 
     public TextMeshProUGUI currentPositionText;
     public TextMeshProUGUI maxPositionText;
 
-    public void UpdateLap(string currentLap, string targetLap)
+    public void UpdateLap(string currentLap, string targetLap, string lapTime)
     {
         if(currentLapText != null)
         {
@@ -815,6 +816,11 @@ public class GameUI
         if(targetLapText != null)
         {
             targetLapText.SetText(targetLap);
+        }
+
+        if(lapTimeText != null)
+        {
+            lapTimeText.SetText(lapTime);
         }
     }
 
