@@ -148,6 +148,9 @@ public class RaceController : MonoBehaviour
         cameraController.targetObject = null;
         frame = 0;
         clientFastestLapTime = float.MaxValue;
+
+        cameraController.GetComponent<AudioListener>().enabled = true;
+
         em.Reset();
     }
 
@@ -261,6 +264,10 @@ public class RaceController : MonoBehaviour
                     AttachCamera(c.transform);
                     c.DisableUsernameText();
                     c.PlayCarSounds();
+
+                    cameraController.GetComponent<AudioListener>().enabled = false;
+                    c.GetComponent<AudioListener>().enabled = true;
+
                     // TODO
                     // Figure out to use MOE or not...
                     //em.useMOEEntities.Add(pe.carID);

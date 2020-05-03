@@ -305,7 +305,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 376872012734333570}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: 0, y: 0, z: 1}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 88412683161457432}
@@ -987,6 +987,7 @@ GameObject:
   - component: {fileID: 4261872027723047871}
   - component: {fileID: 4261872027723047870}
   - component: {fileID: 4261872027723047867}
+  - component: {fileID: 2666000633442752497}
   m_Layer: 8
   m_Name: Car0
   m_TagString: Untagged
@@ -1057,7 +1058,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a1e4566216670d049a0b02576e2a2c78, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  controllable: 0
   centerOfMass: {x: 0, y: 0, z: 0}
   rb: {fileID: 4261872027723047870}
   axles:
@@ -1154,6 +1154,14 @@ MonoBehaviour:
   rpmPercent: 0
   rpmPercentChange: 0.35
   usernameText: {fileID: 1749351673}
+--- !u!81 &2666000633442752497
+AudioListener:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4261872027723047873}
+  m_Enabled: 0
 --- !u!1 &4261872027879443404
 GameObject:
   m_ObjectHideFlags: 0
