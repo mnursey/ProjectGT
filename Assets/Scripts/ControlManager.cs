@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using TMPro;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -252,5 +253,88 @@ public class ControlManager : MonoBehaviour
     private void OnDisabled()
     {
         controls.Disable();
+    }
+}
+
+#if UNITY_EDITOR
+[InitializeOnLoad]
+#endif
+public class BinaryStepProcessor : InputProcessor<float>
+{
+    [Tooltip("If value is greater than x return step high, else return step low")]
+    public float x = 0.5f;
+    public float stepHigh = 1.0f;
+    public float stepLow = 0.0f;
+
+    public override float Process(float value, InputControl control)
+    {
+        if(value > x)
+        {
+            return stepHigh;
+        } else
+        {
+            return stepLow;
+        }
+    }
+
+    #if UNITY_EDITOR
+    static BinaryStepProcessor()
+    {
+        Initialize();
+    }
+    #endif
+
+    [RuntimeInitializeOnLoadMethod]
+    static void Initialize()
+    {
+        InputSystem.RegisterProcessor<BinaryStepProcessor>();
+    }
+}
+
+#if UNITY_EDITOR
+[InitializeOnLoad]
+#endif
+public class TwoStepProcessor : InputProcessor<float>
+{
+    [Tooltip("If value is greater than x return step high, else return step low")]
+    public float x = 0.5f;
+    public float stepHigh = 1.0f;
+    public float stepLow =  -1.0f;
+
+    public override float Process(float value, InputControl control)
+    {
+        if(value > 0.0f)
+        {
+            if (value > x)
+            {
+                return 1.0f;
+            }
+            else
+            {
+                return 0.0f;
+            }
+        } else
+        {
+            if(value < -x)
+            {
+                return -1.0f;
+            } else
+            {
+                return 0.0f;
+            }
+        }
+    }
+
+#if UNITY_EDITOR
+    static TwoStepProcessor()
+    {
+        Initialize();
+    }
+#endif
+
+    [RuntimeInitializeOnLoadMethod]
+    static void Initialize()
+    {
+        InputSystem.RegisterProcessor<TwoStepProcessor>();
     }
 }

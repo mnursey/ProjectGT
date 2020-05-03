@@ -32,7 +32,7 @@ public class @InputMaster : IInputActionCollection, IDisposable
                     ""id"": ""c469739e-1957-4d29-8694-bc301e1462e6"",
                     ""expectedControlType"": """",
                     ""processors"": """",
-                    ""interactions"": """"
+                    ""interactions"": ""Press(behavior=2)""
                 },
                 {
                     ""name"": ""Reset"",
@@ -92,6 +92,17 @@ public class @InputMaster : IInputActionCollection, IDisposable
                 },
                 {
                     ""name"": """",
+                    ""id"": ""ce28eac9-38d1-474e-a142-c143bce5a267"",
+                    ""path"": ""<Gamepad>/rightTrigger"",
+                    ""interactions"": """",
+                    ""processors"": ""BinaryStep"",
+                    ""groups"": ""Gamepad"",
+                    ""action"": ""Throttle"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
                     ""id"": ""11c95abd-9a67-42d9-b420-96c18108cc58"",
                     ""path"": ""<Keyboard>/r"",
                     ""interactions"": ""Hold"",
@@ -105,7 +116,7 @@ public class @InputMaster : IInputActionCollection, IDisposable
                     ""name"": ""Steering"",
                     ""id"": ""59664bf0-4a43-4e86-84a4-29f731e90edf"",
                     ""path"": ""1DAxis"",
-                    ""interactions"": ""Press(behavior=2)"",
+                    ""interactions"": """",
                     ""processors"": """",
                     ""groups"": """",
                     ""action"": ""Steering"",
@@ -157,6 +168,28 @@ public class @InputMaster : IInputActionCollection, IDisposable
                     ""isPartOfComposite"": true
                 },
                 {
+                    ""name"": ""negative"",
+                    ""id"": ""f16a91ca-f609-4ee1-bf04-0d3e08f206b9"",
+                    ""path"": ""<Gamepad>/leftStick/left"",
+                    ""interactions"": """",
+                    ""processors"": ""TwoStep"",
+                    ""groups"": ""Gamepad"",
+                    ""action"": ""Steering"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": true
+                },
+                {
+                    ""name"": ""positive"",
+                    ""id"": ""dde5253d-a468-4cdb-a9b7-e6339c144479"",
+                    ""path"": ""<Gamepad>/leftStick/right"",
+                    ""interactions"": """",
+                    ""processors"": ""TwoStep"",
+                    ""groups"": ""Gamepad"",
+                    ""action"": ""Steering"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": true
+                },
+                {
                     ""name"": """",
                     ""id"": ""cced2ef5-1948-4986-9484-e6e3558b82e8"",
                     ""path"": ""<Keyboard>/s"",
@@ -173,6 +206,17 @@ public class @InputMaster : IInputActionCollection, IDisposable
                     ""path"": ""<Keyboard>/downArrow"",
                     ""interactions"": """",
                     ""processors"": """",
+                    ""groups"": ""Keyboard"",
+                    ""action"": ""Brake"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""1b17d0dc-0ba7-4c94-bbab-4cb8a7b11dfa"",
+                    ""path"": ""<Gamepad>/leftTrigger"",
+                    ""interactions"": """",
+                    ""processors"": ""BinaryStep"",
                     ""groups"": ""Keyboard"",
                     ""action"": ""Brake"",
                     ""isComposite"": false,
