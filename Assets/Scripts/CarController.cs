@@ -10,8 +10,6 @@ public class CarController : MonoBehaviour
 {
     public PhysicsScene physicsScene;
 
-    public bool controllable = true;
-
     public Vector3 centerOfMass = Vector3.zero;
     public Rigidbody rb;
     public Axle[] axles = new Axle[2];
@@ -90,28 +88,9 @@ public class CarController : MonoBehaviour
 
     public TextMeshProUGUI usernameText;
 
-    InputMaster controls;
-
     void Awake()
     {
-        controls = new InputMaster();
-
-        if(controllable)
-        {
-            EnableControls();
-        }
-
         carSoundManagers[0].onAudioPlay = exhaust.Puff;
-    }
-
-    public void EnableControls()
-    {
-        controls.CarControls.Throttle.performed += context => accelerationInput = context.ReadValue<float>();
-        controls.CarControls.Brake.performed += context => brakingInput = context.ReadValue<float>();
-        controls.CarControls.Steering.performed += context => steeringInput = context.ReadValue<float>();
-
-        controls.CarControls.Reset.performed += context => Reset();
-        controls.CarControls.ResetToCheckpoint.performed += context => ResetToCheckpoint();
     }
 
     void Start()
@@ -120,12 +99,12 @@ public class CarController : MonoBehaviour
         rb.centerOfMass = centerOfMass;
     }
 
-    void Reset()
+    public void Reset()
     {
         resetInput = true;
     }
 
-    void ResetToCheckpoint()
+    public void ResetToCheckpoint()
     {
         resetToCheckpointInput = true;
     }
@@ -669,16 +648,6 @@ public class CarController : MonoBehaviour
         axles[Axle.FRONT_AXLE_INDEX].rightWheel.compressionPrev = compressionValues[5];
         axles[Axle.REAR_AXLE_INDEX].leftWheel.compressionPrev = compressionValues[6];
         axles[Axle.REAR_AXLE_INDEX].rightWheel.compressionPrev = compressionValues[7];
-    }
-
-    private void OnEnable()
-    {
-        controls.Enable();
-    }
-
-    private void OnDisabled()
-    {
-        controls.Disable();
     }
 }
 

@@ -20,7 +20,7 @@ public class RaceController : MonoBehaviour
     public UserManager um;
     public CameraController cameraController;
     public RaceTrack currentTrack;
-
+    public ControlManager cm;
     public List<PlayerEntity> players = new List<PlayerEntity>();
 
     public Scene targetScene;
@@ -257,7 +257,7 @@ public class RaceController : MonoBehaviour
 
                 if (c != null)
                 {
-                    c.EnableControls();
+                    cm.SetCar(c);                 
                     AttachCamera(c.transform);
                     c.DisableUsernameText();
                     c.PlayCarSounds();
@@ -533,7 +533,6 @@ public class RaceController : MonoBehaviour
         if (raceControllerMode == RaceControllerMode.SERVER)
         {
             CarController c = GetCarControllerFromID(carID);
-            c.controllable = false;
             c.DisableUsernameText();
             c.DisableCarSounds();
 

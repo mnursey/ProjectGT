@@ -5,6 +5,8 @@ using TMPro;
 using System;
 using System.Linq;
 using UnityEngine.UI;
+using UnityEngine.InputSystem;
+using static UnityEngine.InputSystem.InputActionRebindingExtensions;
 
 public class MenuController : MonoBehaviour
 {
@@ -81,6 +83,19 @@ public class MenuController : MonoBehaviour
             }
         }
     }
+
+    // TODO
+    // REFACTOR THIS SOMEWHERE ELSE
+    // CONTROL MANAGER?
+    /*
+    public void RebindAction(InputAction action)
+    {
+        RebindingOperation rbOperation = action.PerformInteractiveRebinding().WithCancelingThrough("<Keyboard>/escape");
+        rbOperation.Start();
+
+        rbOperation.Dispose();
+    }
+    */
 
     void UpdateResolutionOptions()
     {
@@ -234,5 +249,25 @@ public class MenuController : MonoBehaviour
     private void OnDisabled()
     {
         controls.Disable();
+    }
+
+    public static void SetOthersStateAtLevel(bool state, GameObject g)
+    {
+        foreach (Transform child in g.transform.parent)
+        {
+            if (child.gameObject != g)
+            {
+                Button b = child.gameObject.GetComponentInChildren<Button>();
+
+                if(b == null) {
+                    child.gameObject.GetComponent<Button>();
+                }
+
+                if(b != null)
+                {
+                    child.gameObject.GetComponentInChildren<Button>().interactable = state;
+                }
+            }
+        }
     }
 }

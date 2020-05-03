@@ -56,7 +56,7 @@ public class @InputMaster : IInputActionCollection, IDisposable
                     ""id"": ""781c6b96-2e0b-473c-9ad3-305a79788c8d"",
                     ""expectedControlType"": """",
                     ""processors"": """",
-                    ""interactions"": """"
+                    ""interactions"": ""Press(behavior=2)""
                 },
                 {
                     ""name"": ""ShowMenu"",
@@ -160,7 +160,7 @@ public class @InputMaster : IInputActionCollection, IDisposable
                     ""name"": """",
                     ""id"": ""cced2ef5-1948-4986-9484-e6e3558b82e8"",
                     ""path"": ""<Keyboard>/s"",
-                    ""interactions"": ""Press(behavior=2)"",
+                    ""interactions"": """",
                     ""processors"": """",
                     ""groups"": ""Keyboard"",
                     ""action"": ""Brake"",
@@ -171,7 +171,7 @@ public class @InputMaster : IInputActionCollection, IDisposable
                     ""name"": """",
                     ""id"": ""34fc5d80-bae5-482f-82de-def0d435375c"",
                     ""path"": ""<Keyboard>/downArrow"",
-                    ""interactions"": ""Press(behavior=2)"",
+                    ""interactions"": """",
                     ""processors"": """",
                     ""groups"": ""Keyboard"",
                     ""action"": ""Brake"",
