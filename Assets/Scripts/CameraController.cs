@@ -31,6 +31,7 @@ public class CameraController : MonoBehaviour
     public float cameraSafeMoveSpeed = 10.0f;
     public float backPercent = 1.0f;
     public float minPercent = 0.3f;
+    public float cameraRadius = 1.0f;
 
     public bool debug;
 
@@ -140,6 +141,10 @@ public class CameraController : MonoBehaviour
         {
             // Position
 
+            int layerMask = ~LayerMask.GetMask("Entities", "Water", "CameraIgnore");
+
+            bool cameraEffected = Physics.CheckSphere(transform.position, cameraRadius, layerMask, QueryTriggerInteraction.Ignore);
+
             int safeIndex = 0;
 
             for(int i = 0; i < safeChecks.Count; ++i)
@@ -170,6 +175,11 @@ public class CameraController : MonoBehaviour
             if (safeIndex == 2)
             {
                 acc *= 1.0f;
+            }
+
+            if(!cameraEffected && acc < 0.0f)
+            {
+                acc = 0.0f;
             }
 
             backPercent += acc * Time.deltaTime;
