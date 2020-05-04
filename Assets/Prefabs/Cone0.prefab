@@ -10,7 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1153496155634504986}
   - component: {fileID: 1153496155634504965}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Cone0
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -59,6 +59,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Name
       value: cone_0 Variant
+      objectReference: {fileID: 0}
+    - target: {fileID: 994888775081043741, guid: 2290fba9b6dfe224f98a6587ae31e5ff,
+        type: 3}
+      propertyPath: m_Layer
+      value: 8
       objectReference: {fileID: 0}
     - target: {fileID: 4293575078897800462, guid: 2290fba9b6dfe224f98a6587ae31e5ff,
         type: 3}

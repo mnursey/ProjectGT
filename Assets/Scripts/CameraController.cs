@@ -27,7 +27,31 @@ public class CameraController : MonoBehaviour
     public float panToSpeed = 1;
     public float finishedDelta = 0.0001f;
 
+    public List<SpherePoint> safeChecks = new List<SpherePoint>();
+    public float cameraSafeMoveSpeed = 10.0f;
+    public float backPercent = 1.0f;
+    public float minPercent = 0.3f;
+
+    public bool debug;
+
     public CameraEventCallback moveBehindPanToCallback;
+
+    void OnDrawGizmos()
+    {
+        if (debug)
+        {
+            foreach (SpherePoint sc in safeChecks)
+            {
+                if(targetObject != null)
+                {
+                    Vector3 finalPosition = targetObject.position - (targetObject.forward * sc.point.x) + (Vector3.up * sc.point.y) + (targetObject.right * sc.point.z);
+
+                    Gizmos.color = new Color(242 / 255f, 245 / 255f, 66 / 255f, 190 / 255f);
+                    Gizmos.DrawSphere(finalPosition, sc.radius);
+                }
+            }
+        }
+    }
 
     void Update()
     {
@@ -91,6 +115,20 @@ public class CameraController : MonoBehaviour
         }
     }
 
+    Vector3 GetSpherePointRelativeToTarget(SpherePoint sp)
+    {
+        return targetObject.position - (targetObject.forward * sp.point.x) + (Vector3.up * sp.point.y) + (targetObject.right * sp.point.z);
+    }
+
+    bool SpherePointCheck(SpherePoint sp)
+    {
+        Vector3 spherePosition = GetSpherePointRelativeToTarget(sp);
+
+        int layerMask = ~LayerMask.GetMask("Entities", "Water", "CameraIgnore");
+
+        return Physics.CheckSphere(spherePosition, sp.radius, layerMask, QueryTriggerInteraction.Ignore);
+    }
+
     void SafeCamera()
     {
         if (looking)
@@ -101,7 +139,44 @@ public class CameraController : MonoBehaviour
         if (targetObject != null)
         {
             // Position
-            Vector3 finalPosition = targetObject.position - (targetObject.forward * moveBehindDistance) + (Vector3.up * moveBehindHeight);
+
+            int safeIndex = 0;
+
+            for(int i = 0; i < safeChecks.Count; ++i)
+            {
+                if(!SpherePointCheck(safeChecks[i]))
+                {
+                    safeIndex = i;
+                } else
+                {
+                    break;
+                }
+            }
+
+            float acc = cameraSafeMoveSpeed;
+
+            Debug.Log(safeIndex);
+
+            if(safeIndex == 0)
+            {
+                acc *= -2.0f;
+            }
+
+            if(safeIndex == 1)
+            {
+                acc *= -1.0f;
+            }
+
+            if (safeIndex == 2)
+            {
+                acc *= 1.0f;
+            }
+
+            backPercent += acc * Time.deltaTime;
+
+            backPercent = Mathf.Clamp(backPercent, minPercent, 1.0f);
+
+            Vector3 finalPosition = targetObject.position - (targetObject.forward * moveBehindDistance * backPercent) + (Vector3.up * moveBehindHeight * backPercent);
             transform.position = finalPosition;
 
             // Look at
@@ -208,4 +283,11 @@ public class CameraController : MonoBehaviour
         Cursor.visible = true;
         Cursor.lockState = CursorLockMode.None;
     }
+}
+
+[Serializable]
+public class SpherePoint
+{
+    public Vector3 point;
+    public float radius;
 }

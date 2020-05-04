@@ -334,8 +334,8 @@ public class CarController : MonoBehaviour
 
         RaycastHit hit;
 
-        int layerMask = ~LayerMask.GetMask("Cars", "Water");
-        bool hitSomething = physicsScene.Raycast(compressedWheelPos, -transform.up, out hit, axle.suspensionHeight, layerMask);
+        int layerMask = ~LayerMask.GetMask("Entities", "Water");
+        bool hitSomething = physicsScene.Raycast(compressedWheelPos, -transform.up, out hit, axle.suspensionHeight, layerMask, QueryTriggerInteraction.Ignore);
 
         Debug.DrawLine(compressedWheelPos, compressedWheelPos - (transform.up * axle.suspensionHeight), Color.green);
 
