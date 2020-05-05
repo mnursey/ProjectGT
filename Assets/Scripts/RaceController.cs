@@ -593,7 +593,7 @@ public class RaceController : MonoBehaviour
     {
         players = state.playerEntities;
         em.removedEntities = state.removedEntities;
-        em.SetAllStates(state.entities);
+        em.SetAllStates(state.entities, true);
     }
 
     public InputState GetUserInputs(int frame)
@@ -657,7 +657,7 @@ public class RaceController : MonoBehaviour
 
                 if(inputState.currentState.id > -1)
                 {
-                    em.SetEntityState(inputState.currentState);
+                    em.SetEntityState(inputState.currentState, false);
                 }
             }
         }

@@ -150,7 +150,7 @@ public class EntityManager : MonoBehaviour
         }
     }
 
-    public void SetEntityState(EntityState state)
+    public void SetEntityState(EntityState state, bool clientMode)
     {
         if(state.created || !entities.Exists(x => x.GetID() == state.id))
         {
@@ -158,7 +158,17 @@ public class EntityManager : MonoBehaviour
             // Handle prefab types?
 
             Vector3 rot = state.rotation.GetValue();
-            AddEntity(state.prefabID, state.id, state.position.GetValue(), Quaternion.Euler(rot.x, rot.y, rot.z));
+            int id = AddEntity(state.prefabID, state.id, state.position.GetValue(), Quaternion.Euler(rot.x, rot.y, rot.z));
+
+            if(clientMode)
+            {
+                // Car
+                if (state.prefabID == 0)
+                {
+                    Entity e = entities.Find(x => x.GetID() == id);
+                    e.GetGameObject().GetComponent<CarController>().PlayCarSounds();
+                }
+            }
         }
 
         Entity entity = entities.Find(x => x.GetID() == state.id);
@@ -289,11 +299,11 @@ public class EntityManager : MonoBehaviour
         return states;
     }
 
-    public void SetAllStates(List<EntityState> states)
+    public void SetAllStates(List<EntityState> states, bool clientMode)
     {
         foreach(EntityState state in states)
         {
-            SetEntityState(state);
+            SetEntityState(state, clientMode);
         }
 
         foreach(Entity entity in entities.ToArray())
