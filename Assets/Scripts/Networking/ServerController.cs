@@ -24,6 +24,7 @@ public class ServerController : MonoBehaviour
     public RaceController rc;
 
     public int maxPlayers = 20;
+    public bool disconnectAll = false;
 
     // Start is called before the first frame update
     void Start()
@@ -45,8 +46,14 @@ public class ServerController : MonoBehaviour
             TestSend();
             testSend = false;
         }
+
+        if(disconnectAll)
+        {
+            DisconnectAll();
+            disconnectAll = false;
+        }
     }
-    
+
     void TestSend()
     {
         Socket sock = new Socket(AddressFamily.InterNetwork, SocketType.Dgram,ProtocolType.Udp);
@@ -85,6 +92,29 @@ public class ServerController : MonoBehaviour
         {
             sc.BeginSend(msg);
         }
+    }
+
+    void DisconnectAll()
+    {
+        foreach (ServerConnection sc in clients.ToArray())
+        {
+            SendDisconnect(sc.clientID);
+        }
+    }
+
+    public void SendDisconnect(int clientID)
+    {
+        ServerConnection sc = clients.Find(x => x.clientID == clientID);
+
+        if (sc != null)
+        {
+            string s = NetworkingMessageTranslator.GenerateDisconnectMessage(clientID);
+            sc.BeginSend(s);
+        }
+
+        clients.Remove(sc);
+
+        rc.QueueRemovePlayer(sc.clientID);
     }
 
     public void SendGameState(GameState gameState)

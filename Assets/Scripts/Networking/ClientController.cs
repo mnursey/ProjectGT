@@ -76,6 +76,22 @@ public class ClientController : MonoBehaviour
                 Reset();
             }
         }
+
+        if(state == ClientState.CONNECTED)
+        {
+            if (lastReceivedTime > maxConnectingTime)
+            {
+                onDisconnect?.Invoke();
+
+                Close();
+                Reset();
+                rc.Reset();
+
+                Debug.Log("Disconnected due to lack of received messages");
+            }
+
+            lastReceivedTime += Time.deltaTime;
+        }
     }
 
     void Reset()
@@ -175,6 +191,11 @@ public class ClientController : MonoBehaviour
         socket.BeginReceiveFrom(receiveObject.buffer, 0, receiveObject.buffer.Length, 0, ref receiveObject.sender, new AsyncCallback(EndReceive), receiveObject);
     }
 
+    void UpdateLastReceiveTime()
+    {
+        UnityMainThreadDispatcher.Instance().Enqueue(() => lastReceivedTime = 0.0f);
+    }
+
     void EndReceive(IAsyncResult ar)
     {
         String data = String.Empty;
@@ -183,10 +204,7 @@ public class ClientController : MonoBehaviour
 
         int bytesRead = socket.EndReceiveFrom(ar, ref receiveObject.sender);
 
-        //lastReceivedTime = Time.time;
-
-        // TODO
-        // Last msg accepted
+        UpdateLastReceiveTime();
 
         if (bytesRead > 0)
         {
@@ -231,6 +249,8 @@ public class ClientController : MonoBehaviour
 
                         Close();
                         Reset();
+
+                        UnityMainThreadDispatcher.Instance().Enqueue(() => rc.Reset());
 
                         Debug.Log("Server disconnected...");
 

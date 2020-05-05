@@ -87,19 +87,6 @@ public class MenuController : MonoBehaviour
         }
     }
 
-    // TODO
-    // REFACTOR THIS SOMEWHERE ELSE
-    // CONTROL MANAGER?
-    /*
-    public void RebindAction(InputAction action)
-    {
-        RebindingOperation rbOperation = action.PerformInteractiveRebinding().WithCancelingThrough("<Keyboard>/escape");
-        rbOperation.Start();
-
-        rbOperation.Dispose();
-    }
-    */
-
     void UpdateResolutionOptions()
     {
         resolutionDropdown.ClearOptions();
@@ -117,7 +104,10 @@ public class MenuController : MonoBehaviour
         while(menuStack.Count > 0 && currentMenu != mainMenu)
         {
             BackMenu();
-        } 
+        }
+
+        DisableGameUI();
+        Cursor.visible = true;
 
         if(menuStack.Count == 0 && currentMenu != mainMenu)
         {
@@ -152,8 +142,8 @@ public class MenuController : MonoBehaviour
 
     public void OnDisconnect()
     {
-        ShowPopup("Disconnected");
         ReturnToMainMenu();
+        ShowPopup("Disconnected");
     }
 
     public void OnReject(string reject)
