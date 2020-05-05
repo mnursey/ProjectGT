@@ -216,7 +216,10 @@ public class EntityManager : MonoBehaviour
                 {
                     CarController cc = entity.GetGameObject().GetComponent<CarController>();
 
-                    cc.SetWheelCompressionValues(state.extraValues);
+                    cc.SetWheelCompressionValues(state.extraValues.GetRange(0, 8));
+                    cc.accelerationInput = state.extraValues[8];
+                    cc.steeringInput = state.extraValues[9];
+                    cc.brakingInput = state.extraValues[10];
                 }
 
                 // Boulder
@@ -261,7 +264,9 @@ public class EntityManager : MonoBehaviour
         {
             // Car
             CarController cc = entity.GetGameObject().GetComponent<CarController>();
-            entityState = new EntityState(entity.GetID(), entity.GetPrefabID(), rb.velocity, rb.position, rb.angularVelocity, rb.rotation.eulerAngles, cc.GetWheelCompressionValues());
+            List<float> extraValues = cc.GetWheelCompressionValues();
+            extraValues.AddRange(new float[] { cc.accelerationInput, cc.steeringInput, cc.brakingInput});
+            entityState = new EntityState(entity.GetID(), entity.GetPrefabID(), rb.velocity, rb.position, rb.angularVelocity, rb.rotation.eulerAngles, extraValues);
         }
         else if (entity.GetPrefabID() == 2)
         {
