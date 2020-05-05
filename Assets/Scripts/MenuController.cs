@@ -135,6 +135,8 @@ public class MenuController : MonoBehaviour
 
         gameMenuPlay.text = gameMenuPlayResumeText;
 
+        Cursor.visible = false;
+
         controls.CarControls.ShowMenu.performed += context => ShowGameMenu();
     }
 
@@ -143,12 +145,16 @@ public class MenuController : MonoBehaviour
         currentMenu.SetActive(true);
         DisableGameUI();
 
+        Cursor.visible = true;
+
         controls.CarControls.ShowMenu.performed -= context => ShowGameMenu();
     }
 
     public void GameMenuLeave()
     {
         controls.CarControls.ShowMenu.performed -= context => ShowGameMenu();
+
+        Cursor.visible = true;
 
         rc.Reset();
         cc.Disconnect();
