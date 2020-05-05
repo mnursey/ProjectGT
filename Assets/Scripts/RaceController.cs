@@ -789,10 +789,30 @@ public class InputState
 public class JoinRequest
 {
     public string username;
-
-    public JoinRequest(string username)
+    public string version;
+    public JoinRequest(string username, string version)
     {
         this.username = username;
+        this.version = version;
+    }
+}
+
+[Serializable]
+public class JoinRequestResponce
+{
+    public int clientID;
+    public string reason;
+
+    public JoinRequestResponce(int clientID)
+    {
+        this.clientID = clientID;
+        reason = "";
+    }
+
+    public JoinRequestResponce(string reason)
+    {
+        clientID = -1;
+        this.reason = reason;
     }
 }
 

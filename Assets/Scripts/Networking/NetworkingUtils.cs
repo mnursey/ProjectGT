@@ -33,9 +33,10 @@ public static class NetworkingMessageTranslator
         return ToJson(msg);
     }
 
-    public static string GenerateServerJoinResponseMessage(int clientID)
+    public static string GenerateServerJoinResponseMessage(JoinRequestResponce joinRequestResponce)
     {
-        NetworkingMessage msg = new NetworkingMessage(NetworkingMessageType.SERVER_JOIN_RESPONSE, clientID);
+        NetworkingMessage msg = new NetworkingMessage(NetworkingMessageType.SERVER_JOIN_RESPONSE, joinRequestResponce.clientID);
+        msg.content = ToJson(joinRequestResponce);
 
         return ToJson(msg);
     }
@@ -97,6 +98,11 @@ public static class NetworkingMessageTranslator
     public static JoinRequest ParseJoinRequest(string json)
     {
         return JsonUtility.FromJson<JoinRequest>(json);
+    }
+
+    public static JoinRequestResponce ParseJoinRequestResponce(string json)
+    {
+        return JsonUtility.FromJson<JoinRequestResponce>(json);
     }
 
     public static InputState ParseInputState(string json)

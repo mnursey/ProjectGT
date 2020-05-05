@@ -9,6 +9,7 @@ using System.Text;
 
 public class ServerController : MonoBehaviour
 {
+    public string version = "0.01";
     public bool startServer = false;
     public int serverPort = 10069;
     Socket socket;
@@ -170,18 +171,26 @@ public class ServerController : MonoBehaviour
 
                     JoinRequest jr = NetworkingMessageTranslator.ParseJoinRequest(msg.content);
                     
-                    // Add new server connection
-                    clients.Add(newConnection);
+                    if(jr.version == version)
+                    {
+                        // Add new server connection
+                        clients.Add(newConnection);
 
-                    rc.um.AddUser(jr.username, newConnection.clientID);
+                        rc.um.AddUser(jr.username, newConnection.clientID);
 
-                    // Send Accept Connect msg
-                    newConnection.BeginSend(NetworkingMessageTranslator.GenerateServerJoinResponseMessage(newConnection.clientID), SendUserManagerState);
+                        // Send Accept Connect msg
+                        newConnection.BeginSend(NetworkingMessageTranslator.GenerateServerJoinResponseMessage(new JoinRequestResponce(newConnection.clientID)), SendUserManagerState);
+
+                    } else {
+                        Debug.Log("Server Rejected client connection due to version mismatch... Client Version " + jr.version);
+                        // Send Disconnect msg
+                        newConnection.BeginSend(NetworkingMessageTranslator.GenerateServerJoinResponseMessage(new JoinRequestResponce("Version Mismatch.\nVisit itch.io to download the up-to-date client.")));
+                    }
                 } else
                 {
                     Debug.Log("Server Disallowed connection!");
                     // Send Disconnect msg
-                    newConnection.BeginSend(NetworkingMessageTranslator.GenerateServerJoinResponseMessage(-1));
+                    newConnection.BeginSend(NetworkingMessageTranslator.GenerateServerJoinResponseMessage(new JoinRequestResponce("Server full.")));
                 }
             } else
             {

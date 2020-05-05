@@ -16,6 +16,7 @@ public delegate void OnReject(string reason);
 
 public class ClientController : MonoBehaviour
 {
+    public string version = "0.01";
     public string address = "";
 
     public bool startClient = false;
@@ -138,7 +139,7 @@ public class ClientController : MonoBehaviour
 
         BeginReceive();
 
-        BeginSend(NetworkingMessageTranslator.GenerateClientJoinMessage(new JoinRequest(username)));
+        BeginSend(NetworkingMessageTranslator.GenerateClientJoinMessage(new JoinRequest(username, version)));
     }
 
     public void Disconnect()
@@ -217,7 +218,8 @@ public class ClientController : MonoBehaviour
             {
                 if (msg.type == NetworkingMessageType.SERVER_JOIN_RESPONSE)
                 {
-                    clientID = msg.clientID;
+                    JoinRequestResponce jrr = NetworkingMessageTranslator.ParseJoinRequestResponce(msg.content);
+                    clientID = jrr.clientID;
 
                     // Todo
                     // Refactor this.... ugly.. very ugly...
@@ -229,7 +231,7 @@ public class ClientController : MonoBehaviour
                         state = ClientState.CONNECTED;
                     } else
                     {
-                        UnityMainThreadDispatcher.Instance().Enqueue(() => onReject?.Invoke(clientID.ToString()));
+                        UnityMainThreadDispatcher.Instance().Enqueue(() => onReject?.Invoke(jrr.reason));
                         Reset();
                     }
                 }

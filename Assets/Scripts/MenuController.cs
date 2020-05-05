@@ -149,7 +149,7 @@ public class MenuController : MonoBehaviour
     public void OnReject(string reject)
     {
         ShowConnectingUI(false);
-        ShowPopup("Rejected");
+        ShowPopup(reject);
     }
 
     public void MainMenuPlay()
