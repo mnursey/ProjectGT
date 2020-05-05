@@ -802,6 +802,7 @@ public class JoinRequestResponce
 {
     public int clientID;
     public string reason;
+    public List<string> forwardIPs = new List<string>();
 
     public JoinRequestResponce(int clientID)
     {
@@ -813,6 +814,13 @@ public class JoinRequestResponce
     {
         clientID = -1;
         this.reason = reason;
+    }
+
+    public JoinRequestResponce(List<string> forwardIPs)
+    {
+        clientID = -1;
+        reason = "";
+        this.forwardIPs = forwardIPs;
     }
 }
 

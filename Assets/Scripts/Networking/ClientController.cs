@@ -36,15 +36,18 @@ public class ClientController : MonoBehaviour
 
     public RaceController rc;
 
+    string connection_username;
     public OnConnect onConnect;
     public OnDisconnect onDisconnect;
     public OnReject onReject;
+
+    public List<string> forwardIPs = new List<string>();
+    public int connectionServerIPIndex = 0;
 
     public float maxConnectingTime = 5.0f;
     public float connectingTime = 0.0f;
 
     public bool disconnect = false;
-
     void Start()
     {
         
@@ -97,6 +100,11 @@ public class ClientController : MonoBehaviour
 
     void Reset()
     {
+        Reset(true);
+    }
+
+    void Reset(bool resetConnectingTime)
+    {
         state = ClientState.IDLE;
 
         if (socket != null)
@@ -110,7 +118,8 @@ public class ClientController : MonoBehaviour
         lastSentTime = 0;
         lastAcceptedMessage = 0;
         serverEndPoint = null;
-        connectingTime = 0.0f;
+        if (resetConnectingTime)
+            connectingTime = 0.0f;
     }
 
     public void ConnectToServer(string username)
@@ -123,6 +132,7 @@ public class ClientController : MonoBehaviour
         this.onConnect = onConnect;
         this.onDisconnect = onDisconnect;
         this.onReject = onReject;
+        connection_username = username;
 
         Reset();
 
@@ -227,12 +237,42 @@ public class ClientController : MonoBehaviour
 
                     if(clientID > -1)
                     {
+                        // CONNECTED
                         UnityMainThreadDispatcher.Instance().Enqueue(() => onConnect?.Invoke(true));
                         state = ClientState.CONNECTED;
                     } else
                     {
-                        UnityMainThreadDispatcher.Instance().Enqueue(() => onReject?.Invoke(jrr.reason));
-                        Reset();
+                        // NOT CONNECTED
+                        if(jrr.reason != "")
+                        {
+                            // REASON FOR NOT CONNECTING
+                            UnityMainThreadDispatcher.Instance().Enqueue(() => onReject?.Invoke(jrr.reason));
+                            Reset(true);
+                        } else
+                        {
+                            // FORWARD TO OTHER SERVER
+                            Reset(false);
+
+                            // Add forwarding IPs
+                            if (jrr.forwardIPs != null)
+                            {
+                                foreach (string fp in jrr.forwardIPs)
+                                {
+                                    if (!forwardIPs.Exists(x => fp == x))
+                                    {
+                                        forwardIPs.Add(fp);
+                                    }
+                                }
+                            }
+
+                            // Change ServerIP & port
+                            connectionServerIPIndex++;
+                            serverIP = forwardIPs[connectionServerIPIndex % forwardIPs.Count].Split(':')[0];
+                            serverport = int.Parse(forwardIPs[connectionServerIPIndex % forwardIPs.Count].Split(':')[1]);
+
+                            // Retry...
+                            ConnectToServer(connection_username, onConnect, onDisconnect, onReject);
+                        }
                     }
                 }
             }

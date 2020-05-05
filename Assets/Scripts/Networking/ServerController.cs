@@ -27,6 +27,8 @@ public class ServerController : MonoBehaviour
     public int maxPlayers = 20;
     public bool disconnectAll = false;
 
+    public List<string> forwardIPs = new List<string>();
+
     // Start is called before the first frame update
     void Start()
     {
@@ -190,7 +192,13 @@ public class ServerController : MonoBehaviour
                 {
                     Debug.Log("Server Disallowed connection!");
                     // Send Disconnect msg
-                    newConnection.BeginSend(NetworkingMessageTranslator.GenerateServerJoinResponseMessage(new JoinRequestResponce("Server full.")));
+                    if(forwardIPs.Count == 0)
+                    {
+                        newConnection.BeginSend(NetworkingMessageTranslator.GenerateServerJoinResponseMessage(new JoinRequestResponce("Server full.")));
+                    } else
+                    {
+                        newConnection.BeginSend(NetworkingMessageTranslator.GenerateServerJoinResponseMessage(new JoinRequestResponce(forwardIPs)));
+                    }
                 }
             } else
             {
@@ -256,7 +264,7 @@ public class ServerController : MonoBehaviour
 
     public bool AcceptingNewClients()
     {
-        if(rc.players.Count <= maxPlayers)
+        if(rc.players.Count < maxPlayers)
         {
             return true;
         }

@@ -136,7 +136,7 @@ public class MenuController : MonoBehaviour
             ForwardMenu(gameMenu, false);
         } else
         {
-            ShowPopup("Failed to connect");
+            ShowPopup("Failed to connect...\nTry again\nand check your connection or check the server status on itch.io");
         }
     }
 
