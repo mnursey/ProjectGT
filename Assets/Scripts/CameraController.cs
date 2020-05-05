@@ -160,8 +160,6 @@ public class CameraController : MonoBehaviour
 
             float acc = cameraSafeMoveSpeed;
 
-            Debug.Log(safeIndex);
-
             if(safeIndex == 0)
             {
                 acc *= -2.0f;

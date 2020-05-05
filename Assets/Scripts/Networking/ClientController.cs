@@ -10,6 +10,10 @@ using System.Text;
 [Serializable]
 public enum ClientState { IDLE, CONNECTING, CONNECTED, DISCONNECTING, ERROR };
 
+public delegate void OnConnect(bool connected);
+public delegate void OnDisconnect();
+public delegate void OnReject(string reason);
+
 public class ClientController : MonoBehaviour
 {
     public string address = "";
@@ -30,6 +34,13 @@ public class ClientController : MonoBehaviour
     IPEndPoint serverEndPoint;
 
     public RaceController rc;
+
+    public OnConnect onConnect;
+    public OnDisconnect onDisconnect;
+    public OnReject onReject;
+
+    public float maxConnectingTime = 5.0f;
+    public float connectingTime = 0.0f;
 
     public bool disconnect = false;
 
@@ -53,6 +64,18 @@ public class ClientController : MonoBehaviour
             Disconnect();
             disconnect = false;
         }
+
+        if(state == ClientState.CONNECTING)
+        {
+            connectingTime += Time.deltaTime;
+
+            if(connectingTime > maxConnectingTime)
+            {
+                onConnect?.Invoke(false);
+
+                Reset();
+            }
+        }
     }
 
     void Reset()
@@ -70,10 +93,20 @@ public class ClientController : MonoBehaviour
         lastSentTime = 0;
         lastAcceptedMessage = 0;
         serverEndPoint = null;
+        connectingTime = 0.0f;
     }
 
     public void ConnectToServer(string username)
     {
+        ConnectToServer(username, null, null, null);
+    }
+
+    public void ConnectToServer(string username, OnConnect onConnect, OnDisconnect onDisconnect, OnReject onReject)
+    {
+        this.onConnect = onConnect;
+        this.onDisconnect = onDisconnect;
+        this.onReject = onReject;
+
         Reset();
 
         state = ClientState.CONNECTING;
@@ -174,9 +207,11 @@ public class ClientController : MonoBehaviour
 
                     if(clientID > -1)
                     {
+                        UnityMainThreadDispatcher.Instance().Enqueue(() => onConnect?.Invoke(true));
                         state = ClientState.CONNECTED;
                     } else
                     {
+                        UnityMainThreadDispatcher.Instance().Enqueue(() => onReject?.Invoke(clientID.ToString()));
                         Reset();
                     }
                 }
@@ -191,6 +226,8 @@ public class ClientController : MonoBehaviour
                     case NetworkingMessageType.PING_RESPONSE:
 
                     case NetworkingMessageType.DISCONNECT:
+
+                        UnityMainThreadDispatcher.Instance().Enqueue(() => onDisconnect?.Invoke());
 
                         Close();
                         Reset();

@@ -27,6 +27,9 @@ public class MenuController : MonoBehaviour
     public LeaderboardManager lm;
 
     public GameObject currentMenu;
+    public GameObject connectingUI;
+    public GameObject popupMenu;
+    public TextMeshProUGUI popupMenuText;
 
     [Header("Menu GameObjects")]
 
@@ -109,6 +112,56 @@ public class MenuController : MonoBehaviour
         qualityDropdown.AddOptions(optionsController.GetQualityOptions());
     }
 
+    void ReturnToMainMenu()
+    {
+        while(menuStack.Count > 0 && currentMenu != mainMenu)
+        {
+            BackMenu();
+        } 
+
+        if(menuStack.Count == 0 && currentMenu != mainMenu)
+        {
+            ForwardMenu(mainMenu, false);
+        }
+    }
+
+    void ShowConnectingUI(bool show)
+    {
+        connectingUI.SetActive(show);
+    }
+
+    void ShowPopup(string text)
+    {
+        popupMenuText.text = text;
+        popupMenu.SetActive(true);
+    }
+
+    public void OnConnection(bool connected)
+    {
+
+        ShowConnectingUI(false);
+
+        if (connected)
+        {
+            ForwardMenu(gameMenu, false);
+        } else
+        {
+            ShowPopup("Failed to connect");
+        }
+    }
+
+    public void OnDisconnect()
+    {
+        ShowPopup("Disconnected");
+        ReturnToMainMenu();
+    }
+
+    public void OnReject(string reject)
+    {
+        ShowConnectingUI(false);
+        ShowPopup("Rejected");
+    }
+
     public void MainMenuPlay()
     {
         if(serverIP.text != "")
@@ -120,11 +173,13 @@ public class MenuController : MonoBehaviour
 
         rc.Reset();
 
-        cc.ConnectToServer(username);
+        cc.ConnectToServer(username, OnConnection, OnDisconnect, OnReject);
 
         gameMenuPlay.text = gameMenuPlaySpawnText;
 
-        ForwardMenu(gameMenu);
+        clickSoundEffect.Play();
+
+        ShowConnectingUI(true);
     }
 
     public void GameMenuJoinRace()
