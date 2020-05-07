@@ -6,7 +6,7 @@ using UnityEditor;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-public enum ControlAction { Throttle, Steering, Reset, ResetToCheckpoint, Brake };
+public enum ControlAction { Throttle, Steering, Reset, ResetToCheckpoint, Brake, Horn };
 
 public class ControlManager : MonoBehaviour
 {
@@ -37,8 +37,9 @@ public class ControlManager : MonoBehaviour
 
         controls.CarControls.Reset.performed += context => ActivateCarReset(context);
         controls.CarControls.ResetToCheckpoint.performed += context => ActivateCarResetToCheckpoint(context);
-    }
 
+        controls.CarControls.Horn.performed += context => ActivateCarHorn(context);
+    }
 
     public void RebindThrottle(GameObject g)
     {
@@ -80,6 +81,13 @@ public class ControlManager : MonoBehaviour
         if (currentRebind != null) return;
 
         currentRebind = RebindStart(controls.CarControls.ResetToCheckpoint, g);
+    }
+
+    public void RebindHorn(GameObject g)
+    {
+        if (currentRebind != null) return;
+
+        currentRebind = RebindStart(controls.CarControls.Horn, g);
     }
 
     public InputActionRebindingExtensions.RebindingOperation RebindStart(InputAction inputAction, GameObject buttonObject)
@@ -198,6 +206,9 @@ public class ControlManager : MonoBehaviour
             case ControlAction.ResetToCheckpoint:
                 action = controls.CarControls.ResetToCheckpoint;
                 break;
+            case ControlAction.Horn:
+                action = controls.CarControls.Horn;
+                break;
         }
 
         ui.text = GetUserDisplay(action, bindingID);
@@ -231,6 +242,12 @@ public class ControlManager : MonoBehaviour
     {
         if (cc == null) return;
         cc.ResetToCheckpoint();
+    }
+
+    void ActivateCarHorn(InputAction.CallbackContext context)
+    {
+        if (cc == null) return;
+        cc.Horn();
     }
 
     // Start is called before the first frame update

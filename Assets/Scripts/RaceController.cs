@@ -244,6 +244,7 @@ public class RaceController : MonoBehaviour
                 car.brakingInput = inputState.brakingInput;
                 car.resetInput = inputState.resetInput;
                 car.resetToCheckpointInput = inputState.resetToCheckpointInput;
+                car.hornInput = inputState.hornInput;
             }
         }
     }
@@ -612,7 +613,7 @@ public class RaceController : MonoBehaviour
             }
             else
             {
-                InputState s = new InputState(networkID, frame, car.steeringInput, car.accelerationInput, car.brakingInput, car.resetInput, car.resetToCheckpointInput, spawnCar, em.GetEntityState(pe.carID));
+                InputState s = new InputState(networkID, frame, car.steeringInput, car.accelerationInput, car.brakingInput, car.resetInput, car.resetToCheckpointInput, car.hornInput, spawnCar, em.GetEntityState(pe.carID));
                 spawnCar = false;
                 return s;
             }
@@ -654,6 +655,7 @@ public class RaceController : MonoBehaviour
                 car.brakingInput = inputState.brakingInput;
                 car.resetInput = (inputState.resetInput || car.resetInput);
                 car.resetToCheckpointInput = (inputState.resetToCheckpointInput || car.resetToCheckpointInput);
+                car.hornInput = (inputState.hornInput || car.hornInput);
 
                 if(inputState.currentState.id > -1)
                 {
@@ -744,6 +746,7 @@ public class InputState
     public bool spawnCar = false;
     public bool resetInput = false;
     public bool resetToCheckpointInput = false;
+    public bool hornInput = false;
 
     public EntityState currentState = new EntityState(-1);
 
@@ -759,7 +762,7 @@ public class InputState
         this.frameID = frameID;
     }
 
-    public InputState(int networkID, int frameID, float steeringInput, float accelerationInput, float brakingInput, bool resetInput, bool resetToCheckpointInput, EntityState currentState)
+    public InputState(int networkID, int frameID, float steeringInput, float accelerationInput, float brakingInput, bool resetInput, bool resetToCheckpointInput, bool hornInput, EntityState currentState)
     {
         this.networkID = networkID;
         this.frameID = frameID;
@@ -768,10 +771,11 @@ public class InputState
         this.brakingInput = brakingInput;
         this.resetInput = resetInput;
         this.resetToCheckpointInput = resetToCheckpointInput;
+        this.hornInput = hornInput;
         this.currentState = currentState;
     }
 
-    public InputState(int networkID, int frameID, float steeringInput, float accelerationInput, float brakingInput, bool resetInput, bool resetToCheckpointInput, bool spawnCar, EntityState currentState)
+    public InputState(int networkID, int frameID, float steeringInput, float accelerationInput, float brakingInput, bool resetInput, bool resetToCheckpointInput, bool hornInput, bool spawnCar, EntityState currentState)
     {
         this.networkID = networkID;
         this.frameID = frameID;
@@ -780,6 +784,7 @@ public class InputState
         this.brakingInput = brakingInput;
         this.resetInput = resetInput;
         this.resetToCheckpointInput = resetToCheckpointInput;
+        this.hornInput = hornInput;
         this.spawnCar = spawnCar;
         this.currentState = currentState;
     }

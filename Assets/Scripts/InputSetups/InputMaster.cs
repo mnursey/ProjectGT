@@ -65,6 +65,14 @@ public class @InputMaster : IInputActionCollection, IDisposable
                     ""expectedControlType"": """",
                     ""processors"": """",
                     ""interactions"": """"
+                },
+                {
+                    ""name"": ""Horn"",
+                    ""type"": ""Button"",
+                    ""id"": ""9dc736ea-eda3-419b-85dc-00137367fa55"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """"
                 }
             ],
             ""bindings"": [
@@ -265,6 +273,17 @@ public class @InputMaster : IInputActionCollection, IDisposable
                     ""action"": ""ResetToCheckpoint"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""26909b39-2435-461c-8789-7ff78eedb7f4"",
+                    ""path"": ""<Keyboard>/space"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": ""Keyboard"",
+                    ""action"": ""Horn"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
                 }
             ]
         }
@@ -301,6 +320,7 @@ public class @InputMaster : IInputActionCollection, IDisposable
         m_CarControls_ResetToCheckpoint = m_CarControls.FindAction("ResetToCheckpoint", throwIfNotFound: true);
         m_CarControls_Brake = m_CarControls.FindAction("Brake", throwIfNotFound: true);
         m_CarControls_ShowMenu = m_CarControls.FindAction("ShowMenu", throwIfNotFound: true);
+        m_CarControls_Horn = m_CarControls.FindAction("Horn", throwIfNotFound: true);
     }
 
     public void Dispose()
@@ -356,6 +376,7 @@ public class @InputMaster : IInputActionCollection, IDisposable
     private readonly InputAction m_CarControls_ResetToCheckpoint;
     private readonly InputAction m_CarControls_Brake;
     private readonly InputAction m_CarControls_ShowMenu;
+    private readonly InputAction m_CarControls_Horn;
     public struct CarControlsActions
     {
         private @InputMaster m_Wrapper;
@@ -366,6 +387,7 @@ public class @InputMaster : IInputActionCollection, IDisposable
         public InputAction @ResetToCheckpoint => m_Wrapper.m_CarControls_ResetToCheckpoint;
         public InputAction @Brake => m_Wrapper.m_CarControls_Brake;
         public InputAction @ShowMenu => m_Wrapper.m_CarControls_ShowMenu;
+        public InputAction @Horn => m_Wrapper.m_CarControls_Horn;
         public InputActionMap Get() { return m_Wrapper.m_CarControls; }
         public void Enable() { Get().Enable(); }
         public void Disable() { Get().Disable(); }
@@ -393,6 +415,9 @@ public class @InputMaster : IInputActionCollection, IDisposable
                 @ShowMenu.started -= m_Wrapper.m_CarControlsActionsCallbackInterface.OnShowMenu;
                 @ShowMenu.performed -= m_Wrapper.m_CarControlsActionsCallbackInterface.OnShowMenu;
                 @ShowMenu.canceled -= m_Wrapper.m_CarControlsActionsCallbackInterface.OnShowMenu;
+                @Horn.started -= m_Wrapper.m_CarControlsActionsCallbackInterface.OnHorn;
+                @Horn.performed -= m_Wrapper.m_CarControlsActionsCallbackInterface.OnHorn;
+                @Horn.canceled -= m_Wrapper.m_CarControlsActionsCallbackInterface.OnHorn;
             }
             m_Wrapper.m_CarControlsActionsCallbackInterface = instance;
             if (instance != null)
@@ -415,6 +440,9 @@ public class @InputMaster : IInputActionCollection, IDisposable
                 @ShowMenu.started += instance.OnShowMenu;
                 @ShowMenu.performed += instance.OnShowMenu;
                 @ShowMenu.canceled += instance.OnShowMenu;
+                @Horn.started += instance.OnHorn;
+                @Horn.performed += instance.OnHorn;
+                @Horn.canceled += instance.OnHorn;
             }
         }
     }
@@ -445,5 +473,6 @@ public class @InputMaster : IInputActionCollection, IDisposable
         void OnResetToCheckpoint(InputAction.CallbackContext context);
         void OnBrake(InputAction.CallbackContext context);
         void OnShowMenu(InputAction.CallbackContext context);
+        void OnHorn(InputAction.CallbackContext context);
     }
 }

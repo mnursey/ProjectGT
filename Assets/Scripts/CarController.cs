@@ -23,6 +23,7 @@ public class CarController : MonoBehaviour
     public float brakingInput = 0.0f;
     public bool resetInput = false;
     public bool resetToCheckpointInput = false;
+    public bool hornInput = false;
 
     public CheckPoint resetCheckpoint;
 
@@ -72,6 +73,7 @@ public class CarController : MonoBehaviour
     public List<CarSoundManager> carSoundManagers = new List<CarSoundManager>();
     public HitSoundManager splashSound;
     public HitSoundManager hitSound;
+    public HitSoundManager hornSound;
     public float hitSoundMaxImpulse = 10.0f;
 
     [Range(0.0f, 100.0f)]
@@ -107,6 +109,11 @@ public class CarController : MonoBehaviour
     public void ResetToCheckpoint()
     {
         resetToCheckpointInput = true;
+    }
+
+    public void Horn()
+    {
+        hornInput = true;
     }
 
     void Update()
@@ -176,6 +183,7 @@ public class CarController : MonoBehaviour
 
         splashSound.CleanUpSound();
         hitSound.CleanUpSound();
+        hornSound.CleanUpSound();
     }
 
     public void PlayCarSounds()
@@ -195,10 +203,17 @@ public class CarController : MonoBehaviour
 
         splashSound.DisableSounds();
         hitSound.DisableSounds();
+        hornSound.DisableSounds();
     }
 
     public void UpdatePhysics()
     {
+        if(hornInput)
+        {
+            hornSound.Play();
+            hornInput = false;
+        }
+
         if(resetInput)
         {
             rb.velocity = new Vector3();
