@@ -58,22 +58,22 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 48a79b01ea5641d4aa6daa2e23605641, type: 3}
   m_Name: Bloom
   m_EditorClassIdentifier: 
-  active: 0
+  active: 1
   enabled:
     overrideState: 1
     value: 1
   intensity:
     overrideState: 1
-    value: 5
+    value: 2
   threshold:
     overrideState: 1
     value: 1
   softKnee:
     overrideState: 1
-    value: 0.5
+    value: 0.2
   clamp:
     overrideState: 1
-    value: 65472
+    value: 65477.64
   diffusion:
     overrideState: 1
     value: 7
@@ -120,22 +120,22 @@ MonoBehaviour:
     overrideState: 1
     value: 0
   toneCurveToeStrength:
-    overrideState: 0
-    value: 0
+    overrideState: 1
+    value: 1
   toneCurveToeLength:
-    overrideState: 0
-    value: 0.5
+    overrideState: 1
+    value: 0
   toneCurveShoulderStrength:
-    overrideState: 0
-    value: 0
+    overrideState: 1
+    value: 1
   toneCurveShoulderLength:
-    overrideState: 0
-    value: 0.5
-  toneCurveShoulderAngle:
-    overrideState: 0
+    overrideState: 1
     value: 0
+  toneCurveShoulderAngle:
+    overrideState: 1
+    value: 1
   toneCurveGamma:
-    overrideState: 0
+    overrideState: 1
     value: 1
   ldrLut:
     overrideState: 0
@@ -154,8 +154,8 @@ MonoBehaviour:
     overrideState: 0
     value: {r: 1, g: 1, b: 1, a: 1}
   hueShift:
-    overrideState: 0
-    value: 0
+    overrideState: 1
+    value: 1
   saturation:
     overrideState: 1
     value: 16.2

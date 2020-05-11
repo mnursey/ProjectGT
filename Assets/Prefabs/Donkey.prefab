@@ -25,6 +25,7 @@ GameObject:
   - component: {fileID: 8494913017797722184}
   - component: {fileID: 8494913017797722231}
   - component: {fileID: 2136972639}
+  - component: {fileID: 2774354632645729433}
   m_Layer: 0
   m_Name: Donkey
   m_TagString: Untagged
@@ -78,6 +79,29 @@ MonoBehaviour:
   com: {x: 0, y: -5, z: -0.8}
   updateCOM: 0
   showCOM: 1
+--- !u!114 &2774354632645729433
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8494913017797722230}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f40dc972be4c30c4ba32f5e7241e073d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  mode: 0
+  roamAreaCentre: {x: -55, y: 0, z: -79}
+  radius: 15
+  debug: 0
+  actionTime: 2
+  idleTime: 2
+  rotationForce: 100
+  jumpForce: 17500
+  forwardForce: 300
+  groundCheckDistance: 1
+  rc: {fileID: 0}
 --- !u!1001 &8494913016900187441
 PrefabInstance:
   m_ObjectHideFlags: 0
