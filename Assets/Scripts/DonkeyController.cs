@@ -15,6 +15,8 @@ public class DonkeyController : MonoBehaviour
 
     public float actionTime = 5.0f;
     public float idleTime = 5.0f;
+    public float outsideAreaIdleTIme = 1.0f;
+
     float timer = 0.0f;
 
     public float rotationForce = 100.0f;
@@ -24,6 +26,9 @@ public class DonkeyController : MonoBehaviour
     public float forwardForce = 100.0f;
 
     public float groundCheckDistance = 0.005f;
+
+    public bool inRoamArea = true;
+    public float angleMargin = 5.0f;
 
     public PhysicsScene phs;
     public RaceController rc;
@@ -55,13 +60,31 @@ public class DonkeyController : MonoBehaviour
         }
     }
 
+    bool InRoamArea()
+    {
+        return Vector3.Distance(transform.position, roamAreaCentre) <= radius;
+    }
+
+    float AngleToRoamArea()
+    {
+        Vector3 targetDir = roamAreaCentre - transform.position;
+        Vector3 forward = transform.forward;
+
+        targetDir = new Vector3(targetDir.x, 0.0f, targetDir.z);
+        forward = new Vector3(forward.x, 0.0f, forward.z);
+
+        float angle = Vector3.SignedAngle(targetDir, forward, Vector3.up);
+
+        return angle;
+    }
+
     void FixedUpdate()
     {
         timer += Time.fixedDeltaTime;
 
         if(mode == DonkeyMode.IDLE)
         {
-            if(timer > idleTime)
+            if(timer > idleTime || (!inRoamArea && timer > outsideAreaIdleTIme))
             {
                 mode = DonkeyMode.ACTION;
                 timer = 0.0f;
@@ -83,6 +106,8 @@ public class DonkeyController : MonoBehaviour
 
                 // Set random rotation force for next action step
                 currentRotationForce = Random.Range(-rotationForce, rotationForce);
+
+                inRoamArea = InRoamArea();
             }
             else
             {
@@ -90,7 +115,21 @@ public class DonkeyController : MonoBehaviour
                 if (!IsGrounded())
                 {
                     // ROTATE
-                    rb.AddTorque(transform.up * currentRotationForce * Time.fixedDeltaTime, ForceMode.Acceleration);
+                    if (inRoamArea)
+                    {
+                        rb.AddTorque(transform.up * currentRotationForce * Time.fixedDeltaTime, ForceMode.Acceleration);
+
+                    } else
+                    {
+                        float angle = AngleToRoamArea();
+
+                        Debug.Log(angle);
+
+                        if (Mathf.Abs(angle) > angleMargin)
+                        {
+                            rb.AddTorque(transform.up * Mathf.Abs(currentRotationForce) * Time.fixedDeltaTime * -Mathf.Sign(angle), ForceMode.Acceleration);
+                        }
+                    }
 
                     // MOVE FORWARD
                     rb.AddForce(transform.forward * forwardForce * Time.fixedDeltaTime, ForceMode.Acceleration);
