@@ -33,6 +33,11 @@ public class DonkeyController : MonoBehaviour
     public HitSoundManager hitSound;
     public float hitSoundMaxImpulse = 1000.0f;
 
+    public float flyMinImpluse = 1500.0f;
+    public float flyForce = 1000.0f;
+    bool flying = false;
+    float startedFlying = 0.0f;
+
     public PhysicsScene phs;
     public RaceController rc;
 
@@ -54,6 +59,14 @@ public class DonkeyController : MonoBehaviour
         if(other.gameObject.layer == LayerMask.NameToLayer("Entities"))
         {
             hitSound.Play(other.impulse.magnitude / hitSoundMaxImpulse);
+
+            if(other.impulse.magnitude > flyMinImpluse && IsGrounded())
+            {
+                // FLY
+                rb.AddForce(transform.up * flyForce * Time.fixedDeltaTime, ForceMode.Acceleration);
+                flying = true;
+                startedFlying = Time.time;
+            }
         }
     }
 
@@ -94,6 +107,14 @@ public class DonkeyController : MonoBehaviour
     {
         timer += Time.fixedDeltaTime;
 
+        if(flying)
+        {
+            if(IsGrounded() && Mathf.Abs(rb.velocity.y) < 1.0f && startedFlying + 1.0f < Time.time)
+            {
+                flying = false;
+            }
+        }
+
         if(mode == DonkeyMode.IDLE)
         {
             if(timer > idleTime || (!inRoamArea && timer > outsideAreaIdleTIme))
@@ -124,7 +145,7 @@ public class DonkeyController : MonoBehaviour
             else
             {
                 // CHECK IF GROUNDED
-                if (!IsGrounded())
+                if (!IsGrounded() && !flying)
                 {
                     // ROTATE
                     if (inRoamArea)

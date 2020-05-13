@@ -90,6 +90,13 @@ public class EntityManager : MonoBehaviour
             {
                 ps.Stop();
             }
+
+            AudioSource[] audioSources = gameObject.GetComponentsInChildren<AudioSource>();
+            foreach (AudioSource adS in audioSources)
+            {
+                adS.Stop();
+                adS.enabled = false;
+            }
         }
 
         entities.Add(new Entity(id, prefabID, gameObject));
@@ -115,12 +122,21 @@ public class EntityManager : MonoBehaviour
             {
                 ps.Stop();
             }
+
+            AudioSource[] audioSources = gameObject.GetComponentsInChildren<AudioSource>();
+            foreach (AudioSource adS in audioSources)
+            {
+                adS.Stop();
+                adS.enabled = false;
+            }
         }
 
         entities.Add(new Entity(id, prefabID, gameObject));
 
         return id;
     }
+
+    // END REFACTOR
 
     public void RemoveEntity(int id)
     {
