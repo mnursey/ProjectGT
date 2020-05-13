@@ -313,12 +313,6 @@ public class CarController : MonoBehaviour
 
     void BrakingForce()
     {
-
-        if(!IsMovingForward())
-        {
-            return;
-        }
-
         foreach (Axle axle in axles)
         {
             // Refactor this and remove the divide by 4. First count number of braking wheels on all axis

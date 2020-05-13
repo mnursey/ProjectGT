@@ -1110,7 +1110,7 @@ MonoBehaviour:
     raduis: 0
   enginePower: 1500
   steeringPower: 800
-  brakingPower: 3000
+  brakingPower: 500
   carVisualZRoll: 0
   carVisualZRollMaxDegrees: 15
   carVisualZRollMaxSpeed: 30
@@ -1528,6 +1528,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   hitSound: {fileID: 8252507470700157979}
   fadeOutSpeed: 0.05
+  playImmuneTime: 0
 --- !u!1 &6889931591502696752
 GameObject:
   m_ObjectHideFlags: 0
@@ -1689,6 +1690,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   hitSound: {fileID: 9155891088125433772}
   fadeOutSpeed: 0.05
+  playImmuneTime: 0
 --- !u!1 &7566449049761778361
 GameObject:
   m_ObjectHideFlags: 0
@@ -1850,6 +1852,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   hitSound: {fileID: 2035393547854941145}
   fadeOutSpeed: 0.05
+  playImmuneTime: 0
 --- !u!1001 &2909061949457679652
 PrefabInstance:
   m_ObjectHideFlags: 0
