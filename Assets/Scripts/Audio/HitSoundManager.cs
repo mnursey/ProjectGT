@@ -14,6 +14,10 @@ public class HitSoundManager : MonoBehaviour
 
     public OnAudioPlay onAudioPlay;
 
+    // After a play, another play cannot happen until immune timer is finished
+    public float playImmuneTime = 0.0f;
+    private float lastPlayTime = 0.0f;
+
     private bool fadeout = false;
     private bool destroyOnFadeout = false;
 
@@ -21,18 +25,26 @@ public class HitSoundManager : MonoBehaviour
     {
         if(!hitSound.isPlaying)
         {
-            hitSound.Play();
-            onAudioPlay?.Invoke();
+            if (lastPlayTime + playImmuneTime < Time.time)
+            {
+                hitSound.Play();
+                onAudioPlay?.Invoke();
+
+                lastPlayTime = Time.time;
+            }
         }
     }
 
     public void Play(float volume)
     {
+        if(lastPlayTime + playImmuneTime < Time.time)
+        {
+            hitSound.volume = volume;
+            hitSound.Play();
+            onAudioPlay?.Invoke();
 
-        hitSound.volume = volume;
-        hitSound.Play();
-        onAudioPlay?.Invoke();
-        
+            lastPlayTime = Time.time;
+        }
     }
 
     // Update is called once per frame

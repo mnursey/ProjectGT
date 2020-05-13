@@ -30,12 +30,16 @@ public class DonkeyController : MonoBehaviour
     public bool inRoamArea = true;
     public float angleMargin = 5.0f;
 
+    public HitSoundManager hitSound;
+    public float hitSoundMaxImpulse = 1000.0f;
+
     public PhysicsScene phs;
     public RaceController rc;
 
     void Awake()
     {
         rb = GetComponent<Rigidbody>();
+        hitSound.enabled = true;
     }
 
     // Start is called before the first frame update
@@ -44,7 +48,15 @@ public class DonkeyController : MonoBehaviour
         phs = rc.targetPhysicsScene;
         timer = Random.Range(0.0f, idleTime);
     }
-     
+
+    void OnCollisionEnter(Collision other)
+    {
+        if(other.gameObject.layer == LayerMask.NameToLayer("Entities"))
+        {
+            hitSound.Play(other.impulse.magnitude / hitSoundMaxImpulse);
+        }
+    }
+
     bool IsGrounded()
     {
         if(phs != null)
