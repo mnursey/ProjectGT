@@ -41,9 +41,15 @@ public class DonkeyController : MonoBehaviour
     public PhysicsScene phs;
     public RaceController rc;
 
+    public Animator parachuteAnimator;
+
     void Awake()
     {
         rb = GetComponent<Rigidbody>();
+
+        if (parachuteAnimator == null)
+            parachuteAnimator = GetComponentInChildren<Animator>();
+
         hitSound.enabled = true;
     }
 
@@ -60,7 +66,7 @@ public class DonkeyController : MonoBehaviour
         {
             hitSound.Play(other.impulse.magnitude / hitSoundMaxImpulse);
 
-            if(other.impulse.magnitude > flyMinImpluse && IsGrounded())
+            if(other.impulse.magnitude > flyMinImpluse && IsGrounded(groundCheckDistance))
             {
                 // FLY
                 rb.AddForce(transform.up * flyForce * Time.fixedDeltaTime, ForceMode.Acceleration);
@@ -70,16 +76,26 @@ public class DonkeyController : MonoBehaviour
         }
     }
 
-    bool IsGrounded()
+    bool IsGrounded(float checkDistance)
     {
-        if(phs != null)
+        return IsGrounded(checkDistance, false);
+    }
+
+    bool IsGrounded(float checkDistance, bool worldUp)
+    {
+        Vector3 upValue = transform.up;
+
+        if (worldUp) upValue = Vector3.up;
+
+        if (phs != null)
         {
-            if(debug)
+            if (debug)
             {
-                Debug.DrawLine(transform.position, transform.position - (transform.up * groundCheckDistance), Color.red);
+                Debug.DrawLine(transform.position, transform.position - (upValue * checkDistance), Color.red);
             }
-            return phs.Raycast(transform.position, -transform.up, groundCheckDistance);
-        } else
+            return phs.Raycast(transform.position, -upValue, checkDistance);
+        }
+        else
         {
             return false;
         }
@@ -107,9 +123,11 @@ public class DonkeyController : MonoBehaviour
     {
         timer += Time.fixedDeltaTime;
 
-        if(flying)
+        parachuteAnimator.SetBool("closeToGround", IsGrounded(5.0f, true));
+
+        if (flying)
         {
-            if(IsGrounded() && Mathf.Abs(rb.velocity.y) < 1.0f && startedFlying + 1.0f < Time.time)
+            if(IsGrounded(groundCheckDistance) && Mathf.Abs(rb.velocity.y) < 1.0f && startedFlying + 1.0f < Time.time)
             {
                 flying = false;
             }
@@ -145,7 +163,7 @@ public class DonkeyController : MonoBehaviour
             else
             {
                 // CHECK IF GROUNDED
-                if (!IsGrounded() && !flying)
+                if (!IsGrounded(groundCheckDistance) && !flying)
                 {
                     // ROTATE
                     if (inRoamArea)
