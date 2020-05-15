@@ -274,8 +274,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   mode: 0
-  roamAreaCentre: {x: -55, y: 0, z: -79}
-  radius: 15
+  roamAreaCentre: {x: -54.61, y: 0, z: -79}
+  radius: 6
   debug: 0
   actionTime: 2
   idleTime: 2

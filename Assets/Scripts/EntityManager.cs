@@ -154,6 +154,12 @@ public class EntityManager : MonoBehaviour
                     entity.GetGameObject().GetComponent<CarController>().CleanUpSounds();
                 }
 
+                if(entity.GetPrefabID() == 3)
+                {
+                    // Donkey
+                    entity.GetGameObject().GetComponent<DonkeyController>().CleanUpSounds();
+                }
+
                 Destroy(entity.GetGameObject());
             }
 
@@ -252,6 +258,18 @@ public class EntityManager : MonoBehaviour
                         mc.enabled = false;
                     }
                 }
+
+                // Donkey
+                if (entity.GetPrefabID() == 3)
+                {
+                    DonkeyController dc = entity.GetGameObject().GetComponent<DonkeyController>();
+
+                    if(state.extraValues.Count > 0)
+                    {
+                        dc.timer = state.extraValues[0];
+                        dc.currentRotationForce = state.extraValues[1];
+                    }
+                }
             }
         }
     }
@@ -281,7 +299,7 @@ public class EntityManager : MonoBehaviour
             // Car
             CarController cc = entity.GetGameObject().GetComponent<CarController>();
             List<float> extraValues = cc.GetWheelCompressionValues();
-            extraValues.AddRange(new float[] { cc.accelerationInput, cc.steeringInput, cc.brakingInput});
+            extraValues.AddRange(new float[] { cc.accelerationInput, cc.steeringInput, cc.brakingInput });
             entityState = new EntityState(entity.GetID(), entity.GetPrefabID(), rb.velocity, rb.position, rb.angularVelocity, rb.rotation.eulerAngles, extraValues);
         }
         else if (entity.GetPrefabID() == 2)
@@ -291,13 +309,19 @@ public class EntityManager : MonoBehaviour
 
             float enabledValue = 0.0f;
 
-            if(mc.enabled == true)
+            if (mc.enabled == true)
             {
                 enabledValue = 1.0f;
             }
 
             List<float> values = new List<float> { enabledValue };
             entityState = new EntityState(entity.GetID(), entity.GetPrefabID(), rb.velocity, rb.position, rb.angularVelocity, rb.rotation.eulerAngles, values);
+        }
+        else if (entity.GetPrefabID() == 3)
+        {
+            DonkeyController dc = entity.GetGameObject().GetComponent<DonkeyController>();
+            List<float> extraValues = new List<float>(new []{ dc.timer, dc.currentRotationForce});
+            entityState = new EntityState(entity.GetID(), entity.GetPrefabID(), rb.velocity, rb.position, rb.angularVelocity, rb.rotation.eulerAngles, extraValues);
         }
         else
         {

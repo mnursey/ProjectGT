@@ -17,10 +17,10 @@ public class DonkeyController : MonoBehaviour
     public float idleTime = 5.0f;
     public float outsideAreaIdleTIme = 1.0f;
 
-    float timer = 0.0f;
+    public float timer = 0.0f;
 
     public float rotationForce = 100.0f;
-    float currentRotationForce = 100.0f;
+    public float currentRotationForce = 100.0f;
 
     public float jumpForce = 100.0f;
     public float forwardForce = 100.0f;
@@ -50,6 +50,14 @@ public class DonkeyController : MonoBehaviour
         if (parachuteAnimator == null)
             parachuteAnimator = GetComponentInChildren<Animator>();
 
+        if (rc == null)
+        {
+            // TODO
+            // FIX THIS TO BE MORE DYNAMIC
+            RaceController[] rcs = FindObjectsOfType<RaceController>();
+            rc = rcs[rcs.Length - 1];
+        }
+
         hitSound.enabled = true;
     }
 
@@ -69,11 +77,16 @@ public class DonkeyController : MonoBehaviour
             if(other.impulse.magnitude > flyMinImpluse && IsGrounded(groundCheckDistance))
             {
                 // FLY
-                rb.AddForce(transform.up * flyForce * Time.fixedDeltaTime, ForceMode.Acceleration);
+                rb.AddForce(Vector3.up * flyForce * Time.fixedDeltaTime, ForceMode.Acceleration);
                 flying = true;
                 startedFlying = Time.time;
             }
         }
+    }
+
+    public void CleanUpSounds()
+    {
+        hitSound.CleanUpSound();
     }
 
     bool IsGrounded(float checkDistance)
@@ -173,8 +186,6 @@ public class DonkeyController : MonoBehaviour
                     } else
                     {
                         float angle = AngleToRoamArea();
-
-                        Debug.Log(angle);
 
                         if (Mathf.Abs(angle) > angleMargin)
                         {
