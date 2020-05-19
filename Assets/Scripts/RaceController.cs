@@ -51,6 +51,10 @@ public class RaceController : MonoBehaviour
 
     public AudioSource fastestLaptimeSound;
 
+    [Header("AI")]
+
+    public AIGANN aiGANN = new AIGANN();
+    public bool aiActive = false;
 
     [Header("Misc")]
 
@@ -301,6 +305,66 @@ public class RaceController : MonoBehaviour
         if (raceControllerMode == RaceControllerMode.CLIENT && cc.state == ClientState.CONNECTED)
         {
             input = GetUserInputs(frame);
+
+            if (aiActive)
+            {
+                PlayerEntity pe = players.Find(x => x.networkID == networkID);
+
+                if (pe != null)
+                {
+                    CarController car = GetCarControllerFromID(pe.carID);
+                    if (car != null)
+                    {
+                        float[] inputs;
+                        aiGANN.Update(car, currentTrack.checkPoints[(pe.checkpoint + 1) % currentTrack.checkPoints.Count], currentTrack.checkPoints[0], pe, currentTrack.checkPoints, out inputs);
+
+                        if (inputs != null)
+                        {
+                            // Todo...
+                            // Clean this up...
+
+                            if(inputs[0] < 0.5 && inputs[0] > -0.5)
+                            {
+                                inputs[0] = 0.0f;
+                            }
+
+                            if(inputs[0] >= 0.5)
+                            {
+                                inputs[0] = 1.0f;
+                            }
+
+                            if (inputs[0] <= -0.5)
+                            {
+                                inputs[0] = -1.0f;
+                            }
+
+                            if (inputs[1] >= 0.5)
+                            {
+                                inputs[1] = 1.0f;
+                            }
+                            else
+                            {
+                                inputs[1] = 0.0f;
+                            }
+
+                            if (inputs[2] >= 0.5)
+                            {
+                                inputs[2] = 1.0f;
+                            }
+                            else
+                            {
+                                inputs[2] = 0.0f;
+                            }
+
+                            car.steeringInput = inputs[0];
+                            car.accelerationInput = inputs[1];
+                            car.brakingInput = inputs[2];
+
+                            input.SetInput(inputs[0], inputs[1], inputs[2]);
+                        }
+                    }
+                }
+            }
 
             ClientHandleIncomingGameState();
 
@@ -787,6 +851,13 @@ public class InputState
         this.hornInput = hornInput;
         this.spawnCar = spawnCar;
         this.currentState = currentState;
+    }
+
+    public void SetInput(float steeringInput, float accelerationInput, float brakingInput)
+    {
+        this.steeringInput = steeringInput;
+        this.accelerationInput = accelerationInput;
+        this.brakingInput = brakingInput;
     }
 }
 

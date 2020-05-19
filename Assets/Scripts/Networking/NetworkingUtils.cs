@@ -144,18 +144,36 @@ public class NetworkingMessage
 public class SVector3
 {
     public string valueS;
+    public float x;
+    public float y;
+    public float z;
+    bool floatsLoaded = false;
 
     public SVector3(Vector3 vector3)
     {
         // Todo
         // use string building or something... ugly.. and slow..
+        x = vector3.x;
+        y = vector3.y;
+        z = vector3.z;
 
-        valueS = vector3.x.ToString() + "|" + vector3.y.ToString() + "|" + vector3.z.ToString();
+        floatsLoaded = true;
+
+        valueS = x.ToString() + "|" + y.ToString() + "|" + z.ToString();
     }
 
     public Vector3 GetValue()
     {
-        string[] vals = valueS.Split(new Char[] { '|' });
-        return new Vector3(float.Parse(vals[0]), float.Parse(vals[1]), float.Parse(vals[2]));
+        if(!floatsLoaded)
+        {
+            string[] vals = valueS.Split(new Char[] { '|' });
+            x = float.Parse(vals[0]);
+            y = float.Parse(vals[1]);
+            z = float.Parse(vals[2]);
+
+            floatsLoaded = true;
+        }
+
+        return new Vector3(x, y, z);
     }
 }

@@ -86,6 +86,8 @@ public class CarController : MonoBehaviour
     [Range(0.0f, 1.0f)]
     public float rpmPercentChange = 0.5f;
 
+    public float largestHitImpact = 0.0f;
+
     [Header("UI")]
 
     public TextMeshProUGUI usernameText;
@@ -156,6 +158,11 @@ public class CarController : MonoBehaviour
             go.GetComponent<ParticleSystem>().emission.SetBursts(new ParticleSystem.Burst[] {
                 new ParticleSystem.Burst(0.0f, Mathf.RoundToInt(maxParticlesToEmmit * other.impulse.magnitude / hitSoundMaxImpulse))
             });
+        }
+
+        if(largestHitImpact < other.impulse.magnitude)
+        {
+            largestHitImpact = other.impulse.magnitude;
         }
     }
 

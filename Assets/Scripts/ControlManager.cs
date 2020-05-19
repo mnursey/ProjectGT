@@ -15,6 +15,8 @@ public class ControlManager : MonoBehaviour
     public CarController cc;
     public GameObject buttonObject;
 
+    public bool disableCarInputs = false;
+
     InputActionRebindingExtensions.RebindingOperation currentRebind;
 
     void Awake()
@@ -216,37 +218,37 @@ public class ControlManager : MonoBehaviour
 
     void SetCarAccelerationInput(InputAction.CallbackContext context)
     {
-        if (cc == null) return;
+        if (cc == null || disableCarInputs) return;
         cc.accelerationInput = context.ReadValue<float>();
     }
 
     void SetCarBrakingInput(InputAction.CallbackContext context)
     {
-        if (cc == null) return;
+        if (cc == null || disableCarInputs) return;
         cc.brakingInput = context.ReadValue<float>();
     }
 
     void SetCarSteeringInput(InputAction.CallbackContext context)
     {
-        if (cc == null) return;
+        if (cc == null || disableCarInputs) return;
         cc.steeringInput = context.ReadValue<float>();
     }
 
     void ActivateCarReset(InputAction.CallbackContext context)
     {
-        if (cc == null) return;
+        if (cc == null || disableCarInputs) return;
         cc.Reset();
     }
 
     void ActivateCarResetToCheckpoint(InputAction.CallbackContext context)
     {
-        if (cc == null) return;
+        if (cc == null || disableCarInputs) return;
         cc.ResetToCheckpoint();
     }
 
     void ActivateCarHorn(InputAction.CallbackContext context)
     {
-        if (cc == null) return;
+        if (cc == null || disableCarInputs) return;
         cc.Horn();
     }
 

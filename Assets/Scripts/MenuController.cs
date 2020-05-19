@@ -46,7 +46,7 @@ public class MenuController : MonoBehaviour
 
     public bool enableMainMenuOnStart = true;
     public AudioSource clickSoundEffect;
-
+    public int maxUsernameLength = 12;
     [Header("Text Updates")]
     public string gameMenuPlaySpawnText = "Join Race";
     public string gameMenuPlayResumeText = "Resume";
@@ -154,12 +154,18 @@ public class MenuController : MonoBehaviour
 
     public void MainMenuPlay()
     {
-        if(serverIP.text != "")
+        if(serverIP != null && serverIP.text != "")
         {
             cc.serverIP = serverIP.text;
         }
 
         string username = usernameOption.text;
+
+
+        if(username.Length > maxUsernameLength)
+        {
+            username = username.Substring(0, maxUsernameLength);
+        }
 
         rc.Reset();
 
