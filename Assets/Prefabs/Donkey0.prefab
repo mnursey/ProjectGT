@@ -207,7 +207,7 @@ GameObject:
   - component: {fileID: 2136972639}
   - component: {fileID: 2774354632645729433}
   m_Layer: 0
-  m_Name: Donkey
+  m_Name: Donkey0
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -274,13 +274,15 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   mode: 0
-  roamAreaCentre: {x: -54.61, y: 0, z: -79}
+  roamAreaCentre: {x: -62.76, y: 0, z: -188.49}
   radius: 6
   debug: 0
   actionTime: 2
   idleTime: 2
   outsideAreaIdleTIme: 1
+  timer: 0
   rotationForce: 300
+  currentRotationForce: 100
   jumpForce: 17500
   forwardForce: 300
   groundCheckDistance: 1
