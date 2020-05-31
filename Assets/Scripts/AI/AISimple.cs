@@ -17,6 +17,7 @@ public class AISimple : MonoBehaviour
 
     public float sinceLastCheckpoint = 0.0f;
     public float maxSinceLastCheckpointTime = 4.0f;
+    public float minVelMag = 100.0f;
     public bool setupCheckpoints = false;
 
     void SetupCheckpoints()
@@ -108,7 +109,7 @@ public class AISimple : MonoBehaviour
             carInput[2] = 1;
         }
 
-        if (sinceLastCheckpoint > maxSinceLastCheckpointTime)
+        if (sinceLastCheckpoint > maxSinceLastCheckpointTime && car.rb.velocity.magnitude < minVelMag)
         {
             carInput[3] = 1.0f;
             sinceLastCheckpoint = 0.0f;

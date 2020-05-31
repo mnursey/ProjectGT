@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using System;
 
+[ExecuteInEditMode]
 public class RaceTrack : MonoBehaviour
 {
     public GameObject track;
@@ -11,8 +12,30 @@ public class RaceTrack : MonoBehaviour
 
     public List<CheckPoint> checkPoints = new List<CheckPoint>();
     public bool debugCheckPoints = false;
+    public Transform checkpointTransform;
+    public bool setupCheckpoints = false;
+    public float defaultRadius;
 
     public List<TrackNetworkEntity> trackNetworkEntities = new List<TrackNetworkEntity>();
+
+    void SetupCheckpoints()
+    {
+        checkPoints = new List<CheckPoint>();
+        foreach (Transform c in checkpointTransform)
+        {
+            CheckPoint child = new CheckPoint();
+            child.t = c;
+            child.raduis = defaultRadius;
+
+            RaycastHit hit;
+            if (Physics.Raycast(child.t.position + (Vector3.up * 100.0f), Vector3.down, out hit))
+            {
+                Debug.Log("Hit " + hit.point.y);
+                child.t.position = new Vector3(child.t.position.x, hit.point.y + 2.0f, child.t.position.z);
+            }
+            checkPoints.Add(child);
+        }
+    }
 
     // Start is called before the first frame update
     void Start()
@@ -21,9 +44,13 @@ public class RaceTrack : MonoBehaviour
     }
 
     // Update is called once per frame
-    void Update()
+    public void Update()
     {
-        
+        if (setupCheckpoints)
+        {
+            SetupCheckpoints();
+            setupCheckpoints = false;
+        }
     }
 
     void OnDrawGizmos()
