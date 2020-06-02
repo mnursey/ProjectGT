@@ -32,7 +32,7 @@ public class CameraController : MonoBehaviour
     public float backPercent = 1.0f;
     public float minPercent = 0.3f;
     public float cameraRadius = 1.0f;
-
+    public float minYDiff = 2.0f;
     public bool debug;
 
     public CameraEventCallback moveBehindPanToCallback;
@@ -185,6 +185,11 @@ public class CameraController : MonoBehaviour
             backPercent = Mathf.Clamp(backPercent, minPercent, 1.0f);
 
             Vector3 finalPosition = targetObject.position - (targetObject.forward * moveBehindDistance * backPercent) + (Vector3.up * moveBehindHeight * backPercent);
+
+            if(finalPosition.y < targetObject.position.y + minYDiff)
+            {
+                finalPosition = new Vector3(finalPosition.x, targetObject.position.y + minYDiff, finalPosition.z);
+            }
             transform.position = finalPosition;
 
             // Look at
