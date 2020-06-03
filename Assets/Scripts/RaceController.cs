@@ -41,7 +41,7 @@ public class RaceController : MonoBehaviour
 
     [Header("Settings")]
 
-    public RaceControllerState raceControllerState = RaceControllerState.IDLE;
+    public RaceControllerState raceControllerState = RaceControllerState.PRACTICE;
     public RaceControllerMode raceControllerMode = RaceControllerMode.CLIENT;
     public int targetNumberOfLaps = 0;
 
@@ -61,7 +61,6 @@ public class RaceController : MonoBehaviour
     public bool spawnCar;
 
     private int frame = 0;
-    public int serverSendFrq = 30;
 
     public float idleTime = 5.0f;
 
@@ -296,46 +295,64 @@ public class RaceController : MonoBehaviour
         }
     }
 
+    void HandleAI(ref InputState input)
+    {
+        if(aiActive)
+        {
+            PlayerEntity pe = players.Find(x => x.networkID == networkID);
+
+            if (pe != null)
+            {
+                CarController car = GetCarControllerFromID(pe.carID);
+                if (car != null)
+                {
+                    float[] inputs;
+                    simpleAI.Process(car, out inputs);
+
+                    if (inputs != null)
+                    {
+                        car.steeringInput = inputs[0];
+                        car.accelerationInput = inputs[1];
+                        car.brakingInput = inputs[2];
+                        car.resetToCheckpointInput = inputs[3] > 0.5;
+                        input.SetInput(inputs[0], inputs[1], inputs[2], inputs[3] > 0.5);
+                    }
+                }
+            }
+        }
+    }
+
+    void RewardForPersonalBestTime()
+    {
+        if (ClientCheckIfBeatPrevRecord())
+        {
+            fastestLaptimeSound.Play();
+
+            objectTitle.text = "Personal Best Lap";
+            objectValue.text = String.Format("{0:0.0#}", clientFastestLapTime) + "s";
+            objectiveAnimator.SetTrigger("Display");
+        }
+    }
+
     void FixedUpdate()
     {
-        // Todo:
-        // Improve this system...
-
         InputState input = new InputState();
 
         if (raceControllerMode == RaceControllerMode.CLIENT && cc.state == ClientState.CONNECTED)
         {
             input = GetUserInputs(frame);
 
-            if (aiActive)
-            {
-                PlayerEntity pe = players.Find(x => x.networkID == networkID);
-
-                if (pe != null)
-                {
-                    CarController car = GetCarControllerFromID(pe.carID);
-                    if (car != null)
-                    {
-                        float[] inputs;
-                        simpleAI.Process(car, out inputs);
-
-                        if (inputs != null)
-                        {
-                            car.steeringInput = inputs[0];
-                            car.accelerationInput = inputs[1];
-                            car.brakingInput = inputs[2];
-                            car.resetToCheckpointInput = inputs[3] > 0.5;
-                            input.SetInput(inputs[0], inputs[1], inputs[2], inputs[3] > 0.5);
-                        }
-                    }
-                }
-            }
+            HandleAI(ref input);
 
             ClientHandleIncomingGameState();
 
             UpdateCarGameUI();
 
             ClientHandleInitialCarSpawn();
+
+            cc.SendInput(input);
+
+            RewardForPersonalBestTime();
         }
 
         if (raceControllerMode == RaceControllerMode.SERVER && sc.ServerActive())
@@ -356,33 +373,8 @@ public class RaceController : MonoBehaviour
             {
                 RemovePlayer(leavingPlayerNetworkID);
             }
-        }
 
-        if(raceControllerMode == RaceControllerMode.CLIENT && cc.state == ClientState.CONNECTED)
-        {
-            cc.SendInput(input);
-
-            if(ClientCheckIfBeatPrevRecord())
-            {
-                fastestLaptimeSound.Play();
-
-                objectTitle.text = "Personal Best Lap";
-                objectValue.text = String.Format("{0:0.0#}", clientFastestLapTime) + "s";
-                objectiveAnimator.SetTrigger("Display");
-            }
-        }
-
-        if (raceControllerMode == RaceControllerMode.SERVER && sc.ServerActive())
-        {
-            if(serverSendFrq < 1)
-            {
-                serverSendFrq = 1;
-            }
-
-            if(frame % serverSendFrq == 0)
-            {
-                sc.SendGameState(GetGameState());
-            }
+            sc.SendGameState(GetGameState());
         }
 
         RunSinglePhysicsFrame();
