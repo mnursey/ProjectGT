@@ -92,6 +92,13 @@ public class CarController : MonoBehaviour
 
     public TextMeshProUGUI usernameText;
 
+    [Header("Misc")]
+
+    public CameraShake cameraShake;
+    public float shakeTime = 0.01f;
+    public float shakeAmount = 0.01f;
+    public float maxShakeImpule = 4000.0f;
+
     void Awake()
     {
         carSoundManagers[0].onAudioPlay = exhaust.Puff;
@@ -158,6 +165,12 @@ public class CarController : MonoBehaviour
             go.GetComponent<ParticleSystem>().emission.SetBursts(new ParticleSystem.Burst[] {
                 new ParticleSystem.Burst(0.0f, Mathf.RoundToInt(maxParticlesToEmmit * other.impulse.magnitude / hitSoundMaxImpulse))
             });
+
+            if(cameraShake != null)
+            {
+                cameraShake.shakeTimer = shakeTime;
+                cameraShake.shakeAmount = Mathf.Clamp01(other.impulse.magnitude / maxShakeImpule) * shakeAmount;
+            }
         }
 
         if(largestHitImpact < other.impulse.magnitude)

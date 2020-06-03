@@ -1156,7 +1156,12 @@ MonoBehaviour:
   redlineVelocity: 45
   rpmPercent: 0
   rpmPercentChange: 0.35
+  largestHitImpact: 0
   usernameText: {fileID: 1749351673}
+  cameraShake: {fileID: 0}
+  shakeTime: 0.1
+  shakeAmount: 0.2
+  maxShakeImpule: 7000
 --- !u!81 &2666000633442752497
 AudioListener:
   m_ObjectHideFlags: 0
