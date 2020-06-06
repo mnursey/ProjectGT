@@ -115,6 +115,18 @@ public class CarController : MonoBehaviour
         resetInput = true;
     }
 
+    public void LockMovement()
+    {
+        rb.constraints = RigidbodyConstraints.FreezeAll;
+        Debug.Log("Locked");
+    }
+
+    public void UnlockMovement()
+    {
+        rb.constraints = RigidbodyConstraints.None;
+        Debug.Log("Unlocked");
+    }
+
     public void ResetToCheckpoint()
     {
         resetToCheckpointInput = true;

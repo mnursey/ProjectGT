@@ -180,9 +180,14 @@ public class MenuController : MonoBehaviour
 
     public void GameMenuJoinRace()
     {
+        rc.RequestToSpawnCar();
+        ToGame();
+    }
+
+    public void ToGame()
+    {
         currentMenu.SetActive(false);
         EnableGameUI();
-        rc.RequestToSpawnCar();
 
         gameMenuPlay.text = gameMenuPlayResumeText;
 
@@ -191,7 +196,7 @@ public class MenuController : MonoBehaviour
         controls.CarControls.ShowMenu.performed += context => ShowGameMenu();
     }
 
-    void ShowGameMenu()
+    public void ShowGameMenu()
     {
         currentMenu.SetActive(true);
         DisableGameUI();

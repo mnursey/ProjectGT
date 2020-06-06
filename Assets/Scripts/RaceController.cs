@@ -7,8 +7,10 @@ using UnityEngine.SceneManagement;
 using TMPro;
 using System.Linq;
 
-public enum RaceControllerState { IDLE , PRACTICE, RACE };
+public enum RaceControllerStateEnum { IDLE , PRACTICE, RACE };
 public enum RaceControllerMode { CLIENT, SERVER };
+
+public enum RaceModeState { PRERACE, RACING, POSTRACE };
 
 public class RaceController : MonoBehaviour
 {
@@ -29,9 +31,14 @@ public class RaceController : MonoBehaviour
     public ClientController cc;
     public ServerController sc;
 
+    public MenuController mc;
+
     [Header("UI")]
 
     public GameUI gameUI = new GameUI();
+
+    public TextMeshProUGUI raceStartText;
+    public Animator raceStartAnim;
 
     [Header("ObjectiveUI")]
 
@@ -41,9 +48,8 @@ public class RaceController : MonoBehaviour
 
     [Header("Settings")]
 
-    public RaceControllerState raceControllerState = RaceControllerState.PRACTICE;
+    public RaceControllerStateEnum raceControllerState = RaceControllerStateEnum.PRACTICE;
     public RaceControllerMode raceControllerMode = RaceControllerMode.CLIENT;
-    public int targetNumberOfLaps = 0;
 
     public GameObject carPrefab;
 
@@ -55,6 +61,26 @@ public class RaceController : MonoBehaviour
 
     public AISimple simpleAI;
     public bool aiActive = false;
+
+    [Header("RaceMode")]
+
+    public RaceModeState raceModeState = RaceModeState.PRERACE;
+    public RaceModeState prevRaceModeState = RaceModeState.PRERACE;
+
+    public int targetNumberOfLaps = 0;
+
+    public float maxRaceTimer = 60f * 5;
+    public float raceTimer = 0f;
+
+    public float leaderFinishedRaceTime = 30.0f;
+
+    public float maxReadyTimer = 30f;
+    public float readyTimer = 0f;
+
+    public float maxStartTimer = 5f;
+    public float startTimer = 0f;
+
+    public int openGridPos = 0;
 
     [Header("Misc")]
 
@@ -334,6 +360,292 @@ public class RaceController : MonoBehaviour
         }
     }
 
+    PlayerEntity GetLeadingCar()
+    {
+        if(players.Count > 0)
+        {
+            PlayerEntity leader = players[0];
+            foreach(PlayerEntity pe in players)
+            {
+                if(pe.lapScore < leader.lapScore)
+                {
+                    leader = pe;
+                }
+            }
+
+            return leader;
+        }
+
+        return null;
+    }
+
+    bool LeaderWon()
+    {
+        PlayerEntity leader = GetLeadingCar();
+
+        if(leader != null)
+        {
+            if(leader.lap > targetNumberOfLaps)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    bool AllFinished()
+    {
+        if (players.Count > 0)
+        {
+            foreach (PlayerEntity pe in players)
+            {
+                if (pe.lap <= targetNumberOfLaps && pe.carID > -1)
+                {
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
+
+    bool CheckRaceTimeout()
+    {
+        if(raceControllerMode == RaceControllerMode.SERVER) raceTimer += Time.fixedDeltaTime;
+
+        if(raceTimer > maxRaceTimer)
+        {
+            return true;
+        }
+
+        return false;
+    }
+
+    bool CheckIfAllReady()
+    {
+        foreach(PlayerEntity pe in players)
+        {
+            if (!pe.ready) return false;
+        }
+
+        return true;
+    }
+
+    bool CheckReadyTimeout()
+    {
+        if (raceControllerMode == RaceControllerMode.SERVER) readyTimer += Time.fixedDeltaTime;
+
+        if (readyTimer > maxReadyTimer)
+        {
+            return true;
+        }
+
+        return false;
+    }
+
+    float CheckStartTimer()
+    {
+        if (raceControllerMode == RaceControllerMode.SERVER) startTimer += Time.fixedDeltaTime;
+
+        return startTimer;
+    }
+
+    void PlaceCarOnGrid(PlayerEntity pe)
+    {
+        if(raceControllerMode == RaceControllerMode.SERVER)
+        {
+            int carID = SpawnCar(pe, openGridPos++);
+            GetCarControllerFromID(carID).LockMovement();
+        }
+    }
+
+    void StartUX(float timeUntilStart)
+    {
+        if(raceStartText != null)
+        {
+            string prevText = raceStartText.text;
+
+            int value = Mathf.CeilToInt(timeUntilStart);
+
+            if(raceStartText.text != "Go!")
+            {
+                raceStartText.text = value.ToString();
+            }
+
+            if (prevText != raceStartText.text)
+            {
+                if(value > 0)
+                {
+                    if ( raceStartAnim != null) raceStartAnim.SetTrigger("Show");
+
+                    // Todo
+                    // Play short sound
+                }
+
+                if(value <= 0 && raceStartText.text != "Go!")
+                {
+                    if (raceStartAnim != null) raceStartAnim.SetTrigger("Show");
+
+                    raceStartText.text = "Go!";
+                    // Todo
+                    // Play long sound
+                }
+            }
+        }
+    }
+
+    void RaceStart()
+    {
+        // Todo
+        // Only do this once...
+        if(CheckStartTimer() > maxStartTimer)
+        {
+            foreach (PlayerEntity pe in players)
+            {
+                CarController cc = GetCarControllerFromID(pe.carID);
+
+                if(cc != null)
+                {
+                    cc.UnlockMovement();
+                }
+            }
+        } else
+        {
+            foreach (PlayerEntity pe in players)
+            {
+                CarController cc = GetCarControllerFromID(pe.carID);
+
+                if (cc != null)
+                {
+                    cc.LockMovement();
+                }
+            }
+        }
+
+        StartUX(maxStartTimer - startTimer);
+    }
+
+    void RaceEnd()
+    {
+        // Todo
+        // Get players by place
+        // Post race results
+        // Save to file / server / db
+        // If server send results to clients...
+        // If client wait for results...
+        // Remove all entities
+        // Reset scene etc
+        // Remove cars
+
+        if (mc != null) mc.ShowGameMenu();
+
+        ResetRaceMode();
+    }
+
+    void ShowPreRaceMenu()
+    {
+        // Todo
+    }
+
+    void ShowPostRaceMenu()
+    {
+        // Todo
+    }
+
+    void RaceModeUpdate()
+    {
+        switch (raceModeState)
+        {
+            case RaceModeState.PRERACE:
+
+                // Todo
+                // Reset race times and stuff
+
+                ShowPreRaceMenu();
+
+                foreach(PlayerEntity pe in players)
+                {
+                    if(pe.ready && pe.carID == -1)
+                    {
+                        PlaceCarOnGrid(pe);
+                    }
+
+                    // Todo
+                    // Only do this once...
+                    if (pe.carID > -1)
+                    {
+                        CarController cc = GetCarControllerFromID(pe.carID);
+
+                        if (cc != null) cc.LockMovement();
+                    }
+                }
+
+                if (CheckReadyTimeout() || CheckIfAllReady())
+                {
+                    foreach (PlayerEntity pe in players)
+                    {
+                        if (pe.carID == -1)
+                        {
+                            PlaceCarOnGrid(pe);
+                        }
+                    }
+
+                    raceModeState = RaceModeState.RACING;
+                }
+
+                break;
+
+            case RaceModeState.RACING:
+
+                if (mc != null && prevRaceModeState == RaceModeState.PRERACE) mc.ToGame();
+
+                RaceStart();
+
+                if (AllFinished() || CheckRaceTimeout())
+                {
+                    raceModeState = RaceModeState.POSTRACE;
+                }
+
+                if (LeaderWon() && raceTimer < maxRaceTimer - leaderFinishedRaceTime)
+                {
+                    raceTimer = maxRaceTimer - leaderFinishedRaceTime;
+                }
+
+                break;
+
+            case RaceModeState.POSTRACE:
+
+                RaceEnd();
+
+                break;
+        }
+
+        prevRaceModeState = raceModeState;
+    }
+
+    void ResetRaceMode()
+    {
+        raceModeState = RaceModeState.PRERACE;
+        prevRaceModeState = RaceModeState.PRERACE;
+
+        readyTimer = 0.0f;
+        raceTimer = 0.0f;
+        startTimer = 0.0f;
+
+        openGridPos = 0;
+
+        foreach (PlayerEntity pe in players)
+        {
+            pe.ready = false;
+        }
+    }
+
+    void GetRaceModeState()
+    {
+
+    }
+
     void FixedUpdate()
     {
         InputState input = new InputState();
@@ -377,10 +689,24 @@ public class RaceController : MonoBehaviour
             sc.SendGameState(GetGameState());
         }
 
+        switch (raceControllerState)
+        {
+            case RaceControllerStateEnum.IDLE:
+                break;
+
+            case RaceControllerStateEnum.PRACTICE:
+                break;
+
+            case RaceControllerStateEnum.RACE:
+                RaceModeUpdate();
+                break;
+        }
+
         RunSinglePhysicsFrame();
 
         frame++;
     }
+
 
     void RemoveIdlePlayers()
     {
@@ -463,6 +789,11 @@ public class RaceController : MonoBehaviour
                         }
 
                         pe.currentLapTime = 0.0f;
+
+                        if (pe.lap > targetNumberOfLaps && pe.finishedTime < 0.0f)
+                        {
+                            pe.finishedTime = Time.time;
+                        }
                     }
                 }
 
@@ -553,9 +884,15 @@ public class RaceController : MonoBehaviour
 
     int SpawnCar(PlayerEntity pe)
     {
+        return SpawnCar(pe, 0);
+    }
+
+
+    int SpawnCar(PlayerEntity pe, int gridPos)
+    {
         Debug.Assert(pe.carID == -1, "Player already assigned car... " + raceControllerMode.ToString() + " " + pe.carID);
 
-        int carID = em.AddEntity(0, currentTrack.carStarts[0].position, currentTrack.carStarts[0].rotation);
+        int carID = em.AddEntity(0, currentTrack.carStarts[gridPos].position, currentTrack.carStarts[gridPos].rotation);
 
         pe.carID = carID;
 
@@ -606,9 +943,24 @@ public class RaceController : MonoBehaviour
 
     public GameState GetGameState()
     {
-        GameState state = new GameState(frame, em.GetAllStates(), players, em.removedEntities);
+        RaceControllerState rcs = new RaceControllerState(raceControllerState, raceModeState, targetNumberOfLaps, maxRaceTimer, raceTimer, leaderFinishedRaceTime, maxReadyTimer, readyTimer, maxStartTimer, startTimer);
+        GameState state = new GameState(frame, em.GetAllStates(), players, em.removedEntities, rcs);
 
         return state;
+    }
+
+    public void UpdateRaceControllerState(RaceControllerState rcs)
+    {
+        raceControllerState = rcs.raceControllerState;
+        raceModeState = rcs.raceModeState;
+        targetNumberOfLaps = rcs.targetNumberOfLaps;
+        maxRaceTimer = rcs.maxRaceTimer;
+        raceTimer = rcs.raceTimer;
+        leaderFinishedRaceTime = rcs.leaderFinishedRaceTime;
+        maxReadyTimer = rcs.maxReadyTimer;
+        readyTimer = rcs.readyTimer;
+        maxStartTimer = rcs.maxStartTimer;
+        startTimer = rcs.startTimer;
     }
 
     public void UpdateGameState(GameState state)
@@ -616,6 +968,8 @@ public class RaceController : MonoBehaviour
         players = state.playerEntities;
         em.removedEntities = state.removedEntities;
         em.SetAllStates(state.entities, true);
+
+        UpdateRaceControllerState(state.raceControllerState);
     }
 
     public InputState GetUserInputs(int frame)
@@ -691,14 +1045,15 @@ public class RaceController : MonoBehaviour
 public class PlayerEntity
 {
     public int carID = -1;
+    public bool ready = false;
     public int lap = 0;
     public int checkpoint = 0;
     public int frame;
     public int networkID;
 
     public int position = 0;
-
     public float lapScore = 0.0f;
+    public float finishedTime = -1.0f;
 
     public float currentLapTime = 0.0f;
     public float fastestLapTime = float.MaxValue;
@@ -740,6 +1095,7 @@ public class GameState
     public List<EntityState> entities = new List<EntityState>();
     public List<PlayerEntity> playerEntities = new List<PlayerEntity>();
     public List<int> removedEntities = new List<int>();
+    public RaceControllerState raceControllerState = new RaceControllerState();
     public int frame;
 
     public GameState()
@@ -747,12 +1103,52 @@ public class GameState
 
     }
 
-    public GameState(int frame, List<EntityState> entities, List<PlayerEntity> playerEntities, List<int> removedEntities)
+    public GameState(int frame, List<EntityState> entities, List<PlayerEntity> playerEntities, List<int> removedEntities, RaceControllerState raceControllerState)
     {
         this.entities = entities;
         this.playerEntities = playerEntities;
         this.removedEntities = removedEntities;
         this.frame = frame;
+        this.raceControllerState = raceControllerState;
+    }
+}
+
+[Serializable]
+public class RaceControllerState
+{
+    public RaceControllerStateEnum raceControllerState = RaceControllerStateEnum.IDLE;
+
+    public RaceModeState raceModeState = RaceModeState.PRERACE;
+
+    public int targetNumberOfLaps = 0;
+
+    public float maxRaceTimer = 60f * 5;
+    public float raceTimer = 0f;
+    public float leaderFinishedRaceTime = 30.0f;
+
+    public float maxReadyTimer = 30f;
+    public float readyTimer = 0f;
+
+    public float maxStartTimer = 5f;
+    public float startTimer = 0f;
+
+    public RaceControllerState()
+    {
+
+    }
+
+    public RaceControllerState(RaceControllerStateEnum raceControllerState, RaceModeState raceModeState, int targetNumberOfLaps, float maxRaceTimer, float raceTimer, float leaderFinishedRaceTime, float maxReadyTimer, float readyTimer, float maxStartTimer, float startTimer)
+    {
+        this.raceControllerState = raceControllerState;
+        this.raceModeState = raceModeState;
+        this.targetNumberOfLaps = targetNumberOfLaps;
+        this.maxRaceTimer = maxRaceTimer;
+        this.raceTimer = raceTimer;
+        this.leaderFinishedRaceTime = leaderFinishedRaceTime;
+        this.maxReadyTimer = maxReadyTimer;
+        this.readyTimer = readyTimer;
+        this.maxStartTimer = maxStartTimer;
+        this.startTimer = startTimer;
     }
 }
 
