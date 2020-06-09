@@ -12,6 +12,8 @@ public enum RaceControllerMode { CLIENT, SERVER };
 
 public enum RaceModeState { PRERACE, RACING, POSTRACE };
 
+public delegate void OnAction();
+
 public class RaceController : MonoBehaviour
 {
     public int networkID;
@@ -84,7 +86,7 @@ public class RaceController : MonoBehaviour
 
     [Header("Misc")]
 
-    public bool spawnCar;
+    public bool ready;
 
     private int frame = 0;
 
@@ -180,6 +182,10 @@ public class RaceController : MonoBehaviour
 
         cameraController.GetComponent<AudioListener>().enabled = true;
 
+        raceControllerState = RaceControllerStateEnum.IDLE;
+
+        ResetRaceMode();
+
         em.Reset();
     }
 
@@ -210,15 +216,7 @@ public class RaceController : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if(spawnCar)
-        {
-            spawnCar = false;
 
-            if(raceControllerMode == RaceControllerMode.CLIENT)
-            {
-                RequestToSpawnCar();
-            }
-        }
     }
 
     void UpdateCarGameUI()
@@ -534,23 +532,31 @@ public class RaceController : MonoBehaviour
         // Save to file / server / db
         // If server send results to clients...
         // If client wait for results...
-        // Remove all entities
-        // Reset scene etc
-        // Remove cars
 
-        if (mc != null) mc.ShowGameMenu();
 
-        ResetRaceMode();
+        if(raceControllerMode == RaceControllerMode.SERVER)
+        {
+            // end time out
+            //ResetRaceMode();
+        }
     }
 
     void ShowPreRaceMenu()
     {
-        // Todo
+        if(mc != null && mc.currentMenu != mc.preRaceMenu.menu)
+        {
+            mc.ShowPreraceMenu();
+        }
     }
 
     void ShowPostRaceMenu()
     {
-        // Todo
+        if (mc != null && mc.currentMenu != mc.postRaceMenu.menu)
+        {
+            mc.ToGame();
+            mc.ReturnToMainMenu();
+            mc.ShowPostRaceMenu();
+        } 
     }
 
     void RaceModeUpdate()
@@ -592,19 +598,31 @@ public class RaceController : MonoBehaviour
                     }
 
                     raceModeState = RaceModeState.RACING;
+                    prevRaceModeState = RaceModeState.PRERACE;
                 }
 
                 break;
 
             case RaceModeState.RACING:
 
-                if (mc != null && prevRaceModeState == RaceModeState.PRERACE) mc.ToGame();
+
+                if(prevRaceModeState == RaceModeState.PRERACE)
+                {
+                    if (mc != null)
+                    {
+                        mc.BackMenu(false);
+                        mc.ToGame();
+                    }
+
+                    prevRaceModeState = RaceModeState.RACING;
+                }
 
                 RaceStart();
 
                 if (AllFinished() || CheckRaceTimeout())
                 {
                     raceModeState = RaceModeState.POSTRACE;
+                    prevRaceModeState = RaceModeState.RACING;
                 }
 
                 if (LeaderWon() && raceTimer < maxRaceTimer - leaderFinishedRaceTime)
@@ -616,12 +634,20 @@ public class RaceController : MonoBehaviour
 
             case RaceModeState.POSTRACE:
 
+                if (prevRaceModeState == RaceModeState.RACING)
+                {
+                    if (mc != null)
+                    {
+                        ShowPostRaceMenu();
+                    }
+
+                    prevRaceModeState = RaceModeState.POSTRACE;
+                }
+
                 RaceEnd();
 
                 break;
         }
-
-        prevRaceModeState = raceModeState;
     }
 
     void ResetRaceMode()
@@ -638,6 +664,11 @@ public class RaceController : MonoBehaviour
         foreach (PlayerEntity pe in players)
         {
             pe.ready = false;
+        }
+
+        if(raceStartText != null)
+        {
+            raceStartText.text = "";
         }
     }
 
@@ -692,13 +723,28 @@ public class RaceController : MonoBehaviour
         switch (raceControllerState)
         {
             case RaceControllerStateEnum.IDLE:
+
+                if (raceControllerMode == RaceControllerMode.SERVER && players.Count > 0)
+                {
+                    raceControllerState = RaceControllerStateEnum.RACE;
+                }
+
                 break;
 
             case RaceControllerStateEnum.PRACTICE:
                 break;
 
             case RaceControllerStateEnum.RACE:
-                RaceModeUpdate();
+
+                if(raceControllerMode == RaceControllerMode.SERVER && players.Count == 0)
+                {
+                    raceControllerState = RaceControllerStateEnum.IDLE;
+                    ResetRaceMode();
+                } else
+                {
+                    RaceModeUpdate();
+                }
+
                 break;
         }
 
@@ -858,11 +904,11 @@ public class RaceController : MonoBehaviour
         return currentTrack.checkPoints[pe.checkpoint];
     }
 
-    public void RequestToSpawnCar()
+    public void MarkReady()
     {
         if (raceControllerMode == RaceControllerMode.CLIENT)
         {
-            spawnCar = true;
+            ready = true;
         }
     }
 
@@ -982,14 +1028,14 @@ public class RaceController : MonoBehaviour
 
             if (car == null)
             {
-                InputState s = new InputState(networkID, frame, spawnCar);
-                spawnCar = false;
+                InputState s = new InputState(networkID, frame, ready);
+                ready = false;
                 return s;
             }
             else
             {
-                InputState s = new InputState(networkID, frame, car.steeringInput, car.accelerationInput, car.brakingInput, car.resetInput, car.resetToCheckpointInput, car.hornInput, spawnCar, em.GetEntityState(pe.carID));
-                spawnCar = false;
+                InputState s = new InputState(networkID, frame, car.steeringInput, car.accelerationInput, car.brakingInput, car.resetInput, car.resetToCheckpointInput, car.hornInput, ready, em.GetEntityState(pe.carID));
+                ready = false;
                 return s;
             }
         }
@@ -1014,14 +1060,21 @@ public class RaceController : MonoBehaviour
 
         if (inputState.frameID >= p.frame)
         {
+            p.ready = inputState.ready;
+
             CarController car = GetCarControllerFromID(p.carID);
 
             if (car == null)
             {
-                if (inputState.spawnCar)
+                // Todo 
+                // Remove this
+                // Should be mode dependant
+                /*
+                if (inputState.ready)
                 {
                     SpawnCar(p);
                 }
+                */
             }
             else
             {
@@ -1160,7 +1213,7 @@ public class InputState
     public float steeringInput = 0.0f;
     public float accelerationInput = 0.0f;
     public float brakingInput = 0.0f;
-    public bool spawnCar = false;
+    public bool ready = false;
     public bool resetInput = false;
     public bool resetToCheckpointInput = false;
     public bool hornInput = false;
@@ -1172,10 +1225,10 @@ public class InputState
 
     }
 
-    public InputState(int networkID, int frameID, bool spawnCar)
+    public InputState(int networkID, int frameID, bool ready)
     {
         this.networkID = networkID;
-        this.spawnCar = spawnCar;
+        this.ready = ready;
         this.frameID = frameID;
     }
 
@@ -1192,7 +1245,7 @@ public class InputState
         this.currentState = currentState;
     }
 
-    public InputState(int networkID, int frameID, float steeringInput, float accelerationInput, float brakingInput, bool resetInput, bool resetToCheckpointInput, bool hornInput, bool spawnCar, EntityState currentState)
+    public InputState(int networkID, int frameID, float steeringInput, float accelerationInput, float brakingInput, bool resetInput, bool resetToCheckpointInput, bool hornInput, bool ready, EntityState currentState)
     {
         this.networkID = networkID;
         this.frameID = frameID;
@@ -1202,7 +1255,7 @@ public class InputState
         this.resetInput = resetInput;
         this.resetToCheckpointInput = resetToCheckpointInput;
         this.hornInput = hornInput;
-        this.spawnCar = spawnCar;
+        this.ready = ready;
         this.currentState = currentState;
     }
 

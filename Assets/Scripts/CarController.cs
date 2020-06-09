@@ -118,13 +118,11 @@ public class CarController : MonoBehaviour
     public void LockMovement()
     {
         rb.constraints = RigidbodyConstraints.FreezeAll;
-        Debug.Log("Locked");
     }
 
     public void UnlockMovement()
     {
         rb.constraints = RigidbodyConstraints.None;
-        Debug.Log("Unlocked");
     }
 
     public void ResetToCheckpoint()

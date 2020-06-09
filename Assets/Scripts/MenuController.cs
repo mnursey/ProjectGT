@@ -35,6 +35,11 @@ public class MenuController : MonoBehaviour
 
     public GameObject mainMenu;
     public GameObject gameMenu;
+
+    public RaceMenu preRaceMenu;
+    public RaceMenu duringRaceMenu;
+    public RaceMenu postRaceMenu;
+
     public TextMeshProUGUI gameMenuPlay;
 
     public GameObject optionsMenu;
@@ -99,7 +104,7 @@ public class MenuController : MonoBehaviour
         qualityDropdown.AddOptions(optionsController.GetQualityOptions());
     }
 
-    void ReturnToMainMenu()
+    public void ReturnToMainMenu()
     {
         while(menuStack.Count > 0 && currentMenu != mainMenu)
         {
@@ -133,11 +138,74 @@ public class MenuController : MonoBehaviour
 
         if (connected)
         {
-            ForwardMenu(gameMenu, false);
-        } else
+            currentMenu.SetActive(false);
+        }
+        else
         {
             ShowPopup("Failed to connect...\nTry again\nand check your connection or check the server status on itch.io");
         }
+    }
+
+    public void ShowPreraceMenu()
+    {
+        ForwardMenu(preRaceMenu.menu, false);
+
+        lm.SetNewTargetLeaderboard(preRaceMenu.leaderboard);
+
+        preRaceMenu.actionButton.interactable = true;
+        preRaceMenu.actionButtonText.text = "Join Grid";
+
+        OnAction action = delegate () {
+            preRaceMenu.actionButtonText.text = "Waiting...";
+            preRaceMenu.actionButton.interactable = false;
+            rc.ready = true;
+        };
+
+        preRaceMenu.actionButton.onClick.RemoveAllListeners();
+        preRaceMenu.actionButton.onClick.AddListener(new UnityEngine.Events.UnityAction(action));
+    }
+
+    public void ShowDuringRaceMenu()
+    {
+        ForwardMenu(duringRaceMenu.menu, false);
+        currentMenu.SetActive(true);
+        DisableGameUI();
+
+        lm.SetNewTargetLeaderboard(duringRaceMenu.leaderboard);
+
+        Cursor.visible = true;
+
+        OnAction action = delegate () {
+            ToGame();
+        };
+
+        duringRaceMenu.actionButton.onClick.RemoveAllListeners();
+        duringRaceMenu.actionButton.onClick.AddListener(new UnityEngine.Events.UnityAction(action));
+
+        DisableShowDuringRaceMenu();
+    }
+
+    public void DisableShowDuringRaceMenu()
+    {
+        controls.CarControls.ShowMenu.performed -= context => ShowDuringRaceMenu();
+    }
+
+    public void ShowPostRaceMenu()
+    {
+        ForwardMenu(postRaceMenu.menu, false);
+
+        lm.SetNewTargetLeaderboard(postRaceMenu.leaderboard);
+
+        postRaceMenu.actionButton.interactable = false;
+        postRaceMenu.actionButtonText.text = "Next Race Starting in...";
+
+        OnAction action = delegate () {
+            postRaceMenu.actionButtonText.text = "Waiting...";
+            postRaceMenu.actionButton.interactable = false;
+        };
+
+        postRaceMenu.actionButton.onClick.RemoveAllListeners();
+        postRaceMenu.actionButton.onClick.AddListener(new UnityEngine.Events.UnityAction(action));
     }
 
     public void OnDisconnect()
@@ -178,12 +246,6 @@ public class MenuController : MonoBehaviour
         ShowConnectingUI(true);
     }
 
-    public void GameMenuJoinRace()
-    {
-        rc.RequestToSpawnCar();
-        ToGame();
-    }
-
     public void ToGame()
     {
         currentMenu.SetActive(false);
@@ -193,28 +255,18 @@ public class MenuController : MonoBehaviour
 
         Cursor.visible = false;
 
-        controls.CarControls.ShowMenu.performed += context => ShowGameMenu();
-    }
-
-    public void ShowGameMenu()
-    {
-        currentMenu.SetActive(true);
-        DisableGameUI();
-
-        Cursor.visible = true;
-
-        controls.CarControls.ShowMenu.performed -= context => ShowGameMenu();
+        controls.CarControls.ShowMenu.performed += context => ShowDuringRaceMenu();
     }
 
     public void GameMenuLeave()
     {
-        controls.CarControls.ShowMenu.performed -= context => ShowGameMenu();
+        DisableShowDuringRaceMenu();
 
         Cursor.visible = true;
 
         rc.Reset();
         cc.Disconnect();
-        BackMenu();
+        ReturnToMainMenu();
     }
 
     public void MainMenuQuit()
@@ -290,17 +342,25 @@ public class MenuController : MonoBehaviour
 
     public void BackMenu()
     {
+        BackMenu(true);
+    }
+
+    public void BackMenu(bool setPrevActive)
+    {
         GameObject g = PopFromStack();
 
         if(g != null)
         {
-            g.SetActive(true);
+            g.SetActive(setPrevActive);
         }
 
         currentMenu.SetActive(false);
         currentMenu = g;
 
-        clickSoundEffect.Play();
+        if(setPrevActive)
+        {
+            clickSoundEffect.Play();
+        }
     }
 
     private void OnEnable()
@@ -332,4 +392,13 @@ public class MenuController : MonoBehaviour
             }
         }
     }
+}
+
+[System.Serializable]
+public class RaceMenu
+{
+    public GameObject menu;
+    public GameObject leaderboard;
+    public Button actionButton;
+    public TextMeshProUGUI actionButtonText;
 }

@@ -10,6 +10,18 @@ public class LeaderboardManager : MonoBehaviour
 
     private List<LeaderboardEntry> entries = new List<LeaderboardEntry>();
 
+    public void SetNewTargetLeaderboard(GameObject leaderboardMenu)
+    {
+        foreach(LeaderboardEntry g in entries)
+        {
+            Destroy(g.gameObject);
+        }
+
+        entries = new List<LeaderboardEntry>();
+
+        this.leaderboardMenu = leaderboardMenu;
+    }
+
     void AddEntry(int networkID, string username)
     {
         GameObject gameObject = Instantiate(leaderboardEntryPrefab);
