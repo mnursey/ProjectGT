@@ -533,7 +533,7 @@ public class RaceController : MonoBehaviour
 
         if(mc != null)
         {
-            mc.postRaceMenu.actionButtonText.text = "Next Race Starting in " + String.Format("{0:0.}", (maxReadyTimer - readyTimer)) + "s";
+            mc.postRaceMenu.infoText.text = "Next Race in " + String.Format("{0:0.}", (maxReadyTimer - readyTimer)) + "s";
         }
 
         if (raceControllerMode == RaceControllerMode.SERVER && CheckReadyTimeout())
@@ -576,6 +576,11 @@ public class RaceController : MonoBehaviour
                     }
 
                     prevRaceModeState = RaceModeState.PRERACE;
+                }
+
+                if (mc != null)
+                {
+                    mc.preRaceMenu.infoText.text = "Starting in " + String.Format("{0:0.}", (maxReadyTimer - readyTimer)) + "s";
                 }
 
                 foreach (PlayerEntity pe in players)

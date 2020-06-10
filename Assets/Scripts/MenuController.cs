@@ -161,6 +161,7 @@ public class MenuController : MonoBehaviour
 
         preRaceMenu.actionButton.interactable = true;
         preRaceMenu.actionButtonText.text = "Join Grid";
+        preRaceMenu.infoText.text = "Starting in...";
 
         OnAction action = delegate () {
             preRaceMenu.actionButtonText.text = "Waiting...";
@@ -196,16 +197,7 @@ public class MenuController : MonoBehaviour
 
         lm.SetNewTargetLeaderboard(postRaceMenu.leaderboard);
 
-        postRaceMenu.actionButton.interactable = false;
-        postRaceMenu.actionButtonText.text = "Next Race Starting in...";
-
-        OnAction action = delegate () {
-            postRaceMenu.actionButtonText.text = "Waiting...";
-            postRaceMenu.actionButton.interactable = false;
-        };
-
-        postRaceMenu.actionButton.onClick.RemoveAllListeners();
-        postRaceMenu.actionButton.onClick.AddListener(new UnityEngine.Events.UnityAction(action));
+        postRaceMenu.infoText.text = "Next Race in...";
     }
 
     public void OnDisconnect()
@@ -401,4 +393,5 @@ public class RaceMenu
     public GameObject leaderboard;
     public Button actionButton;
     public TextMeshProUGUI actionButtonText;
+    public TextMeshProUGUI infoText;
 }
