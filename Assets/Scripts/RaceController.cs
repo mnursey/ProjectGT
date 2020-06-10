@@ -358,6 +358,48 @@ public class RaceController : MonoBehaviour
         }
     }
 
+    void RewardForRaceComplete()
+    {
+        // Todo
+        // Check player completed race...
+        // Check player position...
+
+        {
+            int playerPosition = 0;
+
+            fastestLaptimeSound.Play();
+
+            objectTitle.text = "Race Complete";
+
+            objectValue.text = "...";
+
+            if (playerPosition <= 10)
+            {
+                objectValue.text = "Top 10";
+            }
+
+            if (playerPosition <= 5)
+            {
+                objectValue.text = "Top 5";
+            }
+
+            switch (playerPosition)
+            {
+                case 1:
+                    objectValue.text = "1st";
+                    break;
+                case 2:
+                    objectValue.text = "2nd";
+                    break;
+                case 3:
+                    objectValue.text = "3rd";
+                    break;
+            }
+
+            objectiveAnimator.SetTrigger("Display");
+        }
+    }
+
     PlayerEntity GetLeadingCar()
     {
         if(players.Count > 0)
@@ -643,6 +685,9 @@ public class RaceController : MonoBehaviour
                     raceTimer = maxRaceTimer - leaderFinishedRaceTime;
                 }
 
+                // Todo finish this...
+                //RewardForRaceComplete();
+
                 break;
 
             case RaceModeState.POSTRACE:
@@ -805,7 +850,15 @@ public class RaceController : MonoBehaviour
             if (players.Exists(x => x.networkID == networkID))
             {
                 PlayerEntity pe = players.Find(x => x.networkID == networkID);
-                gameUI.UpdateLap(pe.lap.ToString(), targetNumberOfLaps.ToString(), String.Format("{0:0.}", pe.currentLapTime) + "s");
+
+                float timeRemaining = float.MaxValue;
+
+                if(raceControllerState == RaceControllerStateEnum.RACE)
+                {
+                    timeRemaining = maxRaceTimer - raceTimer;
+                }
+
+                gameUI.UpdateLap(pe.lap.ToString(), targetNumberOfLaps.ToString(), String.Format("{0:0.}", pe.currentLapTime) + "s", timeRemaining);
                 gameUI.UpdatePosition(pe.position.ToString(), GetRacingPlayers().Count.ToString());
             }
         }
@@ -1354,7 +1407,10 @@ public class GameUI
     public TextMeshProUGUI currentPositionText;
     public TextMeshProUGUI maxPositionText;
 
-    public void UpdateLap(string currentLap, string targetLap, string lapTime)
+    public TextMeshProUGUI timeRemainingText;
+    public GameObject timeRemainingObject;
+
+    public void UpdateLap(string currentLap, string targetLap, string lapTime, float timeRemaining)
     {
         if(currentLapText != null)
         {
@@ -1369,6 +1425,18 @@ public class GameUI
         if(lapTimeText != null)
         {
             lapTimeText.SetText(lapTime);
+        }
+
+        if(timeRemainingObject != null && timeRemainingText != null)
+        {
+            if(timeRemaining < 30f)
+            {
+                timeRemainingObject.SetActive(true);
+                timeRemainingText.text = String.Format("{0:0.}", timeRemaining) + "s";
+            } else
+            {
+                timeRemainingObject.SetActive(false);
+            }
         }
     }
 
