@@ -58,6 +58,8 @@ public class MenuController : MonoBehaviour
 
     InputMaster controls;
 
+    public bool inGameMode = false;
+
     public void Awake()
     {
         controls = new InputMaster();
@@ -68,6 +70,11 @@ public class MenuController : MonoBehaviour
         {
             clickSoundEffect = GetComponent<AudioSource>();
         }
+
+        controls.CarControls.ShowMenu.performed += context => {
+            if (inGameMode)
+                ShowDuringRaceMenu();
+        };
     }
 
     public void Start()
@@ -181,13 +188,6 @@ public class MenuController : MonoBehaviour
 
         duringRaceMenu.actionButton.onClick.RemoveAllListeners();
         duringRaceMenu.actionButton.onClick.AddListener(new UnityEngine.Events.UnityAction(action));
-
-        DisableShowDuringRaceMenu();
-    }
-
-    public void DisableShowDuringRaceMenu()
-    {
-        controls.CarControls.ShowMenu.performed -= context => ShowDuringRaceMenu();
     }
 
     public void ShowPostRaceMenu()
@@ -248,19 +248,18 @@ public class MenuController : MonoBehaviour
 
     public void ToGame()
     {
+        inGameMode = true;
         currentMenu.SetActive(false);
         EnableGameUI();
 
         gameMenuPlay.text = gameMenuPlayResumeText;
 
         Cursor.visible = false;
-
-        controls.CarControls.ShowMenu.performed += context => ShowDuringRaceMenu();
     }
 
     public void GameMenuLeave()
     {
-        DisableShowDuringRaceMenu();
+        inGameMode = false;
 
         Cursor.visible = true;
 
@@ -302,6 +301,7 @@ public class MenuController : MonoBehaviour
 
     public void DisableGameUI()
     {
+        inGameMode = false;
         gameUI.gameObject.SetActive(false);
     }
 

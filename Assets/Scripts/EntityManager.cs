@@ -152,6 +152,13 @@ public class EntityManager : MonoBehaviour
                 {
                     // Car
                     entity.GetGameObject().GetComponent<CarController>().CleanUpSounds();
+
+                    // Refactor this...
+                    AudioListener al = entity.GetGameObject().GetComponent<AudioListener>();
+                    if(al.enabled)
+                    {
+                        GameObject.FindGameObjectWithTag("MainCamera").GetComponent<AudioListener>().enabled = true;
+                    }
                 }
 
                 if(entity.GetPrefabID() == 3)

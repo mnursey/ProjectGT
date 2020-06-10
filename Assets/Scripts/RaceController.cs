@@ -530,14 +530,16 @@ public class RaceController : MonoBehaviour
         // Get players by place
         // Post race results
         // Save to file / server / db
-        // If server send results to clients...
-        // If client wait for results...
 
-
-        if(raceControllerMode == RaceControllerMode.SERVER)
+        if(mc != null)
         {
-            // end time out
-            //ResetRaceMode();
+            mc.postRaceMenu.actionButtonText.text = "Next Race Starting in " + String.Format("{0:0.}", (maxReadyTimer - readyTimer)) + "s";
+        }
+
+        if (raceControllerMode == RaceControllerMode.SERVER && CheckReadyTimeout())
+        {
+            ResetRaceMode();
+            RemoveAllPlayersCars();
         }
     }
 
@@ -545,6 +547,7 @@ public class RaceController : MonoBehaviour
     {
         if(mc != null && mc.currentMenu != mc.preRaceMenu.menu)
         {
+            mc.ReturnToMainMenu();
             mc.ShowPreraceMenu();
         }
     }
@@ -553,7 +556,6 @@ public class RaceController : MonoBehaviour
     {
         if (mc != null && mc.currentMenu != mc.postRaceMenu.menu)
         {
-            mc.ToGame();
             mc.ReturnToMainMenu();
             mc.ShowPostRaceMenu();
         } 
@@ -565,12 +567,18 @@ public class RaceController : MonoBehaviour
         {
             case RaceModeState.PRERACE:
 
-                // Todo
-                // Reset race times and stuff
+                if(prevRaceModeState == RaceModeState.POSTRACE)
+                {
+                    if(raceControllerMode == RaceControllerMode.CLIENT)
+                    {
+                        ResetRaceMode();
+                        ShowPreRaceMenu();
+                    }
 
-                ShowPreRaceMenu();
+                    prevRaceModeState = RaceModeState.PRERACE;
+                }
 
-                foreach(PlayerEntity pe in players)
+                foreach (PlayerEntity pe in players)
                 {
                     if(pe.ready && pe.carID == -1)
                     {
@@ -641,6 +649,8 @@ public class RaceController : MonoBehaviour
                         ShowPostRaceMenu();
                     }
 
+                    readyTimer = 0f;
+
                     prevRaceModeState = RaceModeState.POSTRACE;
                 }
 
@@ -653,7 +663,7 @@ public class RaceController : MonoBehaviour
     void ResetRaceMode()
     {
         raceModeState = RaceModeState.PRERACE;
-        prevRaceModeState = RaceModeState.PRERACE;
+        prevRaceModeState = RaceModeState.POSTRACE;
 
         readyTimer = 0.0f;
         raceTimer = 0.0f;
@@ -664,6 +674,11 @@ public class RaceController : MonoBehaviour
         foreach (PlayerEntity pe in players)
         {
             pe.ready = false;
+            pe.currentLapTime = 0.0f;
+            pe.elapsedTime = 0.0f;
+            pe.finishedTime = -1.0f;
+            pe.lapScore = 0.0f;
+            pe.SetLapState(0, 0);
         }
 
         if(raceStartText != null)
@@ -982,9 +997,26 @@ public class RaceController : MonoBehaviour
         players.Remove(pe);
     }
 
+    void RemoveAllPlayersCars()
+    {
+        foreach (PlayerEntity pe in players)
+        {
+            if (pe.carID > -1)
+            {
+                RemoveCar(pe);
+            }
+        }
+    }
+
     void RemoveCar(PlayerEntity pe)
     {
         em.RemoveEntity(pe.carID);
+        pe.carID = -1;
+
+        if(pe.networkID == networkID)
+        {
+            cameraController.GetComponent<AudioListener>().enabled = true;
+        }
     }
 
     public GameState GetGameState()
