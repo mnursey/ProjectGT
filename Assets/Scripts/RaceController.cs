@@ -96,6 +96,8 @@ public class RaceController : MonoBehaviour
 
     public float clientFastestLapTime = float.MaxValue;
 
+    public bool shownCompletedReward = false;
+
     private ConcurrentQueue<InputState> incomingInputStates = new ConcurrentQueue<InputState>();
     private ConcurrentQueue<int> playersToRemove = new ConcurrentQueue<int>();
 
@@ -365,7 +367,7 @@ public class RaceController : MonoBehaviour
 
         PlayerEntity localPlayer = players.Find(o => o.networkID == networkID);
 
-        if(localPlayer != null && PlayerFinished(localPlayer))
+        if(localPlayer != null && PlayerFinished(localPlayer) && !shownCompletedReward)
         {
             int playerPosition = GetPlayerPosition(localPlayer);
 
@@ -399,6 +401,8 @@ public class RaceController : MonoBehaviour
             }
 
             objectiveAnimator.SetTrigger("Display");
+
+            shownCompletedReward = true;
         }
     }
 
@@ -752,6 +756,8 @@ public class RaceController : MonoBehaviour
         {
             raceStartText.text = "";
         }
+
+        shownCompletedReward = false;
     }
 
     void GetRaceModeState()
