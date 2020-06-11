@@ -439,7 +439,7 @@ public class RaceController : MonoBehaviour
     {
         int pos = 0;
 
-        List<PlayerEntity> p = GetPlayersByPosition(GetPlayersByLapScore(players));
+        List<PlayerEntity> p = GetPlayersByPosition(players);
 
         pos = p.IndexOf(pe) + 1;
 
@@ -973,7 +973,7 @@ public class RaceController : MonoBehaviour
 
     public List<PlayerEntity> GetPlayersByPosition(List<PlayerEntity> ps)
     {
-        List<PlayerEntity> p = ps.OrderBy(o => o.finishedTime).ThenBy(o => -o.lapScore).ToList();
+        List<PlayerEntity> p = ps.OrderBy(o => -o.lapScore ).ThenBy(o => o.finishedTime).ToList();
 
         return p;
     }
