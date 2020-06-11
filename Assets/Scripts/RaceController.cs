@@ -58,6 +58,8 @@ public class RaceController : MonoBehaviour
     [Header("Audio")]
 
     public AudioSource fastestLaptimeSound;
+    public AudioSource shortTone;
+    public AudioSource longTone;
 
     [Header("AI")]
 
@@ -360,12 +362,12 @@ public class RaceController : MonoBehaviour
 
     void RewardForRaceComplete()
     {
-        // Todo
-        // Check player completed race...
-        // Check player position...
 
+        PlayerEntity localPlayer = players.Find(o => o.networkID == networkID);
+
+        if(localPlayer != null && PlayerFinished(localPlayer))
         {
-            int playerPosition = 0;
+            int playerPosition = GetPlayerPosition(localPlayer);
 
             fastestLaptimeSound.Play();
 
@@ -419,16 +421,34 @@ public class RaceController : MonoBehaviour
         return null;
     }
 
+    bool PlayerFinished(PlayerEntity pe)
+    {
+        if (pe.lap > targetNumberOfLaps)
+        {
+            return true;
+        }
+
+        return false;
+    }
+
+    int GetPlayerPosition(PlayerEntity pe)
+    {
+        int pos = 0;
+
+        List<PlayerEntity> p = GetPlayersByPosition(GetPlayersByLapScore(players));
+
+        pos = p.IndexOf(pe) + 1;
+
+        return pos;
+    }
+
     bool LeaderWon()
     {
         PlayerEntity leader = GetLeadingCar();
 
         if(leader != null)
         {
-            if(leader.lap > targetNumberOfLaps)
-            {
-                return true;
-            }
+            return PlayerFinished(leader);
         }
 
         return false;
@@ -519,8 +539,7 @@ public class RaceController : MonoBehaviour
                 {
                     if ( raceStartAnim != null) raceStartAnim.SetTrigger("Show");
 
-                    // Todo
-                    // Play short sound
+                    shortTone.Play();
                 }
 
                 if(value <= 0 && raceStartText.text != "Go!")
@@ -528,8 +547,7 @@ public class RaceController : MonoBehaviour
                     if (raceStartAnim != null) raceStartAnim.SetTrigger("Show");
 
                     raceStartText.text = "Go!";
-                    // Todo
-                    // Play long sound
+                    longTone.Play();
                 }
             }
         }
@@ -685,8 +703,7 @@ public class RaceController : MonoBehaviour
                     raceTimer = maxRaceTimer - leaderFinishedRaceTime;
                 }
 
-                // Todo finish this...
-                //RewardForRaceComplete();
+                RewardForRaceComplete();
 
                 break;
 
@@ -936,10 +953,21 @@ public class RaceController : MonoBehaviour
         }
     }
 
-    public List<PlayerEntity> GetPlayersByLapScore()
+    public List<PlayerEntity> GetPlayersByLapScore() { return GetPlayersByLapScore(players); }
+
+    public List<PlayerEntity> GetPlayersByLapScore(List<PlayerEntity> ps)
     {
-        List<PlayerEntity> p = players.OrderBy(o => o.lapScore).ToList();
+        List<PlayerEntity> p = ps.OrderBy(o => o.lapScore).ToList();
         p.Reverse();
+
+        return p;
+    }
+
+    public List<PlayerEntity> GetPlayersByPosition() { return GetPlayersByPosition(players); }
+
+    public List<PlayerEntity> GetPlayersByPosition(List<PlayerEntity> ps)
+    {
+        List<PlayerEntity> p = ps.OrderBy(o => o.finishedTime).ThenBy(o => -o.lapScore).ToList();
 
         return p;
     }

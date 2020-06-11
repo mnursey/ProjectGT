@@ -51,6 +51,7 @@ public class MenuController : MonoBehaviour
 
     public bool enableMainMenuOnStart = true;
     public AudioSource clickSoundEffect;
+
     public int maxUsernameLength = 12;
     [Header("Text Updates")]
     public string gameMenuPlaySpawnText = "Join Race";
@@ -93,7 +94,7 @@ public class MenuController : MonoBehaviour
             {
                 if(rc.players != null)
                 {
-                    lm.UpdateLeaderboard(rc.players, rc.um);
+                    lm.UpdateLeaderboard(rc.GetPlayersByPosition(), rc.um);
                 }
             }
         }
