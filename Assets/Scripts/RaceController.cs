@@ -305,7 +305,7 @@ public class RaceController : MonoBehaviour
                     // Figure out to use MOE or not...
                     //em.useMOEEntities.Add(pe.carID);
 
-                    //em.ignoreUpdates.Add(pe.carID);
+                    em.ignoreUpdates.Add(pe.carID);
                 }
             }
         }
