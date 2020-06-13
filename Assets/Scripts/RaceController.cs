@@ -1153,13 +1153,11 @@ public class RaceController : MonoBehaviour
             if (car == null)
             {
                 InputState s = new InputState(networkID, frame, ready);
-                ready = false;
                 return s;
             }
             else
             {
                 InputState s = new InputState(networkID, frame, car.steeringInput, car.accelerationInput, car.brakingInput, car.resetInput, car.resetToCheckpointInput, car.hornInput, ready, em.GetEntityState(pe.carID));
-                ready = false;
                 return s;
             }
         }
