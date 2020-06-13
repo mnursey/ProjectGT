@@ -691,6 +691,8 @@ public class RaceController : MonoBehaviour
                         mc.ToGame();
                     }
 
+                    ready = false;
+
                     prevRaceModeState = RaceModeState.RACING;
                 }
 
