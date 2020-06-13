@@ -305,7 +305,7 @@ public class RaceController : MonoBehaviour
                     // Figure out to use MOE or not...
                     //em.useMOEEntities.Add(pe.carID);
 
-                    em.ignoreUpdates.Add(pe.carID);
+                    //em.ignoreUpdates.Add(pe.carID);
                 }
             }
         }
@@ -1104,12 +1104,10 @@ public class RaceController : MonoBehaviour
 
     void RemoveCar(PlayerEntity pe)
     {
-        em.RemoveEntity(pe.carID);
-        pe.carID = -1;
-
-        if(pe.networkID == networkID)
+        if(raceControllerMode == RaceControllerMode.SERVER)
         {
-            cameraController.GetComponent<AudioListener>().enabled = true;
+            em.RemoveEntity(pe.carID);
+            pe.carID = -1;
         }
     }
 
