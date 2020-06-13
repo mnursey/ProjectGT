@@ -413,7 +413,7 @@ public class RaceController : MonoBehaviour
             PlayerEntity leader = players[0];
             foreach(PlayerEntity pe in players)
             {
-                if(pe.lapScore < leader.lapScore)
+                if(pe.lapScore > leader.lapScore)
                 {
                     leader = pe;
                 }
@@ -951,11 +951,11 @@ public class RaceController : MonoBehaviour
             pe.lapScore = GetPlayerLapScore(pe);
         }
 
-        List<PlayerEntity> sortedByLapScore = GetPlayersByLapScore();
+        List<PlayerEntity> pbp = GetPlayersByPosition();
         
-        for(int i = 0; i < sortedByLapScore.Count; ++i)
+        for(int i = 0; i < pbp.Count; ++i)
         {
-            sortedByLapScore[i].position = (i + 1);
+            pbp[i].position = (i + 1);
         }
     }
 

@@ -126,6 +126,8 @@ public class MenuController : MonoBehaviour
         {
             ForwardMenu(mainMenu, false);
         }
+
+        currentMenu.SetActive(true);
     }
 
     void ShowConnectingUI(bool show)
