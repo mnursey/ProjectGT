@@ -765,6 +765,7 @@ public class RaceController : MonoBehaviour
         }
 
         shownCompletedReward = false;
+        ready = false;
     }
 
     void GetRaceModeState()
@@ -1052,7 +1053,7 @@ public class RaceController : MonoBehaviour
     {
         Debug.Assert(pe.carID == -1, "Player already assigned car... " + raceControllerMode.ToString() + " " + pe.carID);
 
-        int carID = em.AddEntity(0, currentTrack.carStarts[gridPos].position, currentTrack.carStarts[gridPos].rotation);
+        int carID = em.AddEntity(0, currentTrack.carStarts[gridPos % currentTrack.carStarts.Count].position, currentTrack.carStarts[gridPos % currentTrack.carStarts.Count].rotation);
 
         pe.carID = carID;
 
