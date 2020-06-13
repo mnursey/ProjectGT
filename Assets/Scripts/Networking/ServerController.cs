@@ -283,6 +283,14 @@ public class ServerController : MonoBehaviour
         serverActive = false;
         Debug.Log("Server closed...");
     }
+
+    void OnApplicationQuit()
+    {
+        if(ServerActive())
+        {
+            Close();
+        }
+    }
 }
 
 [System.Serializable]
