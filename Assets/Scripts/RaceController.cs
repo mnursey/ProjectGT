@@ -645,6 +645,11 @@ public class RaceController : MonoBehaviour
                 if (mc != null)
                 {
                     mc.preRaceMenu.infoText.text = "Starting in " + String.Format("{0:0.}", (maxReadyTimer - readyTimer)) + "s";
+
+                    if(mc.currentMenu.activeSelf == false)
+                    {
+                        mc.currentMenu.SetActive(true);
+                    }
                 }
 
                 foreach (PlayerEntity pe in players)
