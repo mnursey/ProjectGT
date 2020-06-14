@@ -585,7 +585,11 @@ public class RaceController : MonoBehaviour
             }
         }
 
-        StartUX(maxStartTimer - startTimer);
+        PlayerEntity cp = players.Find(x => x.networkID == networkID);
+        if (cp != null && cp.carID > -1)
+        {
+            StartUX(maxStartTimer - startTimer);
+        }
     }
 
     void RaceEnd()
@@ -701,6 +705,18 @@ public class RaceController : MonoBehaviour
                     prevRaceModeState = RaceModeState.RACING;
                 }
 
+                // Check if we don't have a car...
+                PlayerEntity cp = players.Find(x => x.networkID == networkID);
+                if (cp != null && cp.carID < 0)
+                {
+                    gameUI.WaitingMode(maxRaceTimer - raceTimer);
+
+                    if (mc != null && mc.currentMenu.activeSelf == false && mc.gameUI.gameObject.activeSelf == false)
+                    {
+                        mc.ToGame();
+                    }
+                }
+
                 RaceStart();
 
                 if (AllFinished() || CheckRaceTimeout())
@@ -730,6 +746,11 @@ public class RaceController : MonoBehaviour
                     readyTimer = 0f;
 
                     prevRaceModeState = RaceModeState.POSTRACE;
+                }
+
+                if (mc != null && mc.currentMenu.activeSelf == false)
+                {
+                    ShowPostRaceMenu();
                 }
 
                 RaceEnd();
@@ -763,6 +784,8 @@ public class RaceController : MonoBehaviour
         {
             raceStartText.text = "";
         }
+
+        gameUI.DisableWaitingMode();
 
         shownCompletedReward = false;
         ready = false;
@@ -1447,6 +1470,26 @@ public class GameUI
 
     public TextMeshProUGUI timeRemainingText;
     public GameObject timeRemainingObject;
+
+    public GameObject waitingModeObject;
+    public TextMeshProUGUI waitingModeText;
+
+    public void WaitingMode(float timeRemaining)
+    {
+        if(waitingModeObject != null)
+        {
+            waitingModeObject.SetActive(true);
+            waitingModeText.text = "Race over in\n" + String.Format("{0:0.}", timeRemaining) + "s";
+        }
+    }
+
+    public void DisableWaitingMode()
+    {
+        if (waitingModeObject != null)
+        {
+            waitingModeObject.SetActive(false);
+        }
+    }
 
     public void UpdateLap(string currentLap, string targetLap, string lapTime, float timeRemaining)
     {
