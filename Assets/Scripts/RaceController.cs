@@ -1498,6 +1498,8 @@ public class JoinRequestResponce
 [Serializable]
 public class GameUI
 {
+    public GameObject regularUI;
+
     public TextMeshProUGUI currentLapText;
     public TextMeshProUGUI targetLapText;
     public TextMeshProUGUI lapTimeText;
@@ -1513,8 +1515,9 @@ public class GameUI
 
     public void WaitingMode(float timeRemaining)
     {
-        if(waitingModeObject != null)
+        if(waitingModeObject != null && regularUI != null)
         {
+            regularUI.SetActive(false);
             waitingModeObject.SetActive(true);
             waitingModeText.text = "Race over in\n" + String.Format("{0:0.}", timeRemaining) + "s";
         }
@@ -1522,8 +1525,9 @@ public class GameUI
 
     public void DisableWaitingMode()
     {
-        if (waitingModeObject != null)
+        if (waitingModeObject != null && regularUI != null)
         {
+            regularUI.SetActive(true);
             waitingModeObject.SetActive(false);
         }
     }
