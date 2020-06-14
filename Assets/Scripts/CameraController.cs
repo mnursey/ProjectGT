@@ -6,7 +6,7 @@ using UnityEngine;
 
 public delegate void CameraEventCallback();
 
-public enum CameraModeEnum { FreeLook, MoveBehindPanTo, Locked, SafeCamera };
+public enum CameraModeEnum { FreeLook, MoveBehindPanTo, Locked, SafeCamera, LookAt };
 
 public class CameraController : MonoBehaviour
 {
@@ -73,6 +73,13 @@ public class CameraController : MonoBehaviour
                 SafeCamera();
                 break;
 
+            case CameraModeEnum.LookAt:
+                if(targetObject != null)
+                {
+                    transform.LookAt(targetObject);
+                }
+                break;
+            
             default:
                 break;
         }

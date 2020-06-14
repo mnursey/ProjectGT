@@ -715,6 +715,22 @@ public class RaceController : MonoBehaviour
                     {
                         mc.ToGame();
                     }
+
+                    // Camera 
+                    cameraController.mode = CameraModeEnum.LookAt;
+
+                    PlayerEntity leadingPlayer = GetLeadingCar();
+
+                    if(leadingPlayer != null)
+                    {
+                        CarController leadingCar = GetCarControllerFromID(leadingPlayer.carID);
+
+                        if(leadingCar != null)
+                        {
+                            cameraController.targetObject = leadingCar.transform;
+                            cameraController.transform.position = GetNextCheckpoint(leadingPlayer).t.position + (Vector3.up * 4);
+                        }
+                    }
                 }
 
                 RaceStart();
@@ -931,6 +947,27 @@ public class RaceController : MonoBehaviour
         }
 
         return racers;
+    }
+
+    CheckPoint GetNextCheckpoint(PlayerEntity pe)
+    {
+        CarController c = GetCarControllerFromID(pe.carID);
+
+        if (c != null)
+        {
+            pe.elapsedTime += Time.fixedDeltaTime;
+            pe.currentLapTime += Time.fixedDeltaTime;
+
+            c.resetCheckpoint = GetCurrentCheckpoint(pe);
+
+            // Check if at next checkpoint...
+            int nextCheckPointID = (pe.checkpoint + 1) % currentTrack.checkPoints.Count;
+            CheckPoint nextCheckPoint = currentTrack.checkPoints[nextCheckPointID];
+
+            return nextCheckPoint;
+        }
+
+        return null;
     }
 
     void UpdateCarProgress()
