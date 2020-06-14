@@ -174,14 +174,20 @@ public class ClientController : MonoBehaviour
 
     public void BeginSend(string msg, OnSent onSent)
     {
-        MessageObject message = new MessageObject();
+        try
+        {
+            MessageObject message = new MessageObject();
 
-        message.onSent = onSent;
+            message.onSent = onSent;
 
-        message.buffer = Encoding.UTF8.GetBytes(msg);
-        int messageBufferSize = Encoding.UTF8.GetByteCount(msg);
+            message.buffer = Encoding.UTF8.GetBytes(msg);
+            int messageBufferSize = Encoding.UTF8.GetByteCount(msg);
 
-        socket.BeginSendTo(message.buffer, 0, messageBufferSize, SocketFlags.None, serverEndPoint, new AsyncCallback(EndSend), message);
+            socket.BeginSendTo(message.buffer, 0, messageBufferSize, SocketFlags.None, serverEndPoint, new AsyncCallback(EndSend), message);
+        } catch(Exception ex)
+        {
+            Debug.LogWarning(ex.ToString());
+        }
     }
 
     public void EndSend(IAsyncResult ar)
