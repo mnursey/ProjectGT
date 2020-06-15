@@ -21,13 +21,13 @@ MonoBehaviour:
     value: 1
   intensity:
     overrideState: 1
-    value: 0.094
+    value: 0.1
   size:
     overrideState: 1
-    value: 0.449
+    value: 0.5
   lumContrib:
     overrideState: 1
-    value: 1
+    value: 0.95
 --- !u!114 &11400000
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -64,7 +64,7 @@ MonoBehaviour:
     value: 1
   intensity:
     overrideState: 1
-    value: 2
+    value: 1
   threshold:
     overrideState: 1
     value: 1
@@ -152,13 +152,13 @@ MonoBehaviour:
     value: 0
   colorFilter:
     overrideState: 0
-    value: {r: 1, g: 1, b: 1, a: 1}
+    value: {r: 52.203922, g: 52.203922, b: 52.203922, a: 1}
   hueShift:
     overrideState: 1
-    value: 1
+    value: 0
   saturation:
     overrideState: 1
-    value: 29.6
+    value: 0
   brightness:
     overrideState: 0
     value: 0
@@ -167,7 +167,7 @@ MonoBehaviour:
     value: 0
   contrast:
     overrideState: 1
-    value: 6.3
+    value: 0
   mixerRedOutRedIn:
     overrideState: 0
     value: 100
