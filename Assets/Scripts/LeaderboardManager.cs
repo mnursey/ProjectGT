@@ -7,7 +7,7 @@ public class LeaderboardManager : MonoBehaviour
 {
     public GameObject leaderboardMenu;
     public GameObject leaderboardEntryPrefab;
-
+    public RaceController rc;
     private List<LeaderboardEntry> entries = new List<LeaderboardEntry>();
 
     public void SetNewTargetLeaderboard(GameObject leaderboardMenu)
@@ -81,7 +81,20 @@ public class LeaderboardManager : MonoBehaviour
 
             if(pe.carID < 0)
             {
-                positionString = "Prepairing";
+                switch(rc.raceModeState)
+                {
+                    case RaceModeState.PRERACE:
+                        positionString = "Prepairing";
+                        break;
+
+                    case RaceModeState.RACING:
+                        positionString = "Spectating";
+                        break;
+
+                    case RaceModeState.POSTRACE:
+                        positionString = "Waiting";
+                        break; 
+                }
             }
 
             string fastestLapTimeText = String.Format("{0:0.0#}", pe.fastestLapTime) + "s";
