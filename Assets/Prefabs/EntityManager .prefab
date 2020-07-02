@@ -10,6 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 5661802296911541627}
   - component: {fileID: 5661802296911541626}
+  - component: {fileID: 5661802298856600150}
   m_Layer: 0
   m_Name: 'EntityManager '
   m_TagString: Untagged
@@ -45,7 +46,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   mode: 0
   prefabs:
-  - {fileID: 4261872027723047873, guid: 79fcae859fdeebe45ad20a44f9403132, type: 3}
+  - {fileID: 4261872027723047873, guid: fe93f4455d55928498f407a72f9a5328, type: 3}
   - {fileID: 1153496155634504964, guid: 7c1e045af0cb5eb4dbbf77402341cad4, type: 3}
   - {fileID: 3664397140262431157, guid: 8ec9129cd0173484880c90b56404fde4, type: 3}
   - {fileID: 8494913017797722230, guid: 4d429949cf691ab44811a6126f28ee93, type: 3}
@@ -55,3 +56,28 @@ MonoBehaviour:
   rotMarginOfError: 0
   useMOEEntities: 
   ignoreUpdates: 
+  cmm: {fileID: 5661802298856600150}
+--- !u!114 &5661802298856600150
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5661802296911541625}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d50fe83358bd8a7459f854beb98de21c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  models:
+  - name: Speedster
+    description: Light, nimble, and quick on its feet. Had a "slight" bit of oversteer
+      providing many thrills... Definitely a pedal to the metal car.
+    prefab: {fileID: 4261872027723047873, guid: 79fcae859fdeebe45ad20a44f9403132,
+      type: 3}
+  - name: Rotary
+    description: Equipped with a unique high power rotary engine this car is designed
+      for one thing only... SPEED. A decently balanced car, provided that you can
+      modulate the break the throttle correctly when apporaching corners.
+    prefab: {fileID: 4261872027723047873, guid: fe93f4455d55928498f407a72f9a5328,
+      type: 3}

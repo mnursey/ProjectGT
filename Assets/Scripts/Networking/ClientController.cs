@@ -167,6 +167,11 @@ public class ClientController : MonoBehaviour
         BeginSend(NetworkingMessageTranslator.GenerateInputMessage(inputState, clientID));
     }
 
+    public void SendCarModel(int carModel)
+    {
+        BeginSend(NetworkingMessageTranslator.GenerateCarModelMessage(carModel, clientID));
+    }
+
     public void BeginSend(string msg)
     {
         BeginSend(msg, null);

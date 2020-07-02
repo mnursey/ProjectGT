@@ -241,6 +241,21 @@ public class ServerController : MonoBehaviour
 
                             break;
 
+                        case NetworkingMessageType.CAR_MODEL:
+
+                            int carModel = NetworkingMessageTranslator.ParseCarModel(msg.content);
+                            PlayerEntity pe = rc.players.Find(x => x.networkID == msg.clientID);
+
+                            if(pe != null)
+                            {
+                                pe.carModel = carModel;
+                            } else
+                            {
+                                Debug.Log("SOFT WARNING! Could not find matching player entity to set car model...");
+                            }
+
+                            break;
+
                         default:
                             break;
                     }

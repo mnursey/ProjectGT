@@ -20,6 +20,7 @@ public class EntityManager : MonoBehaviour
     public List<int> ignoreUpdates = new List<int>();
 
     private Scene targetScene;
+    public CarModelManager cmm;
 
     public void SetTargetScene(Scene targetScene)
     {
@@ -67,46 +68,32 @@ public class EntityManager : MonoBehaviour
         }
     }
 
-    // TODO:
-    // Refactor following two functions...
+    public int AddEntity(int prefabID, Vector3 position, Quaternion rotation, int modifier)
+    {
+        int id = GetNextEntityID();
+
+        return AddEntity(prefabID, id, position, rotation, modifier);
+    }
 
     public int AddEntity(int prefabID, Vector3 position, Quaternion rotation)
     {
         int id = GetNextEntityID();
 
-        GameObject gameObject = Instantiate(prefabs[prefabID], position, rotation);
-        SceneManager.MoveGameObjectToScene(gameObject, targetScene);
-
-        if(mode == RaceControllerMode.SERVER)
-        {
-            MeshRenderer[] meshRenders = gameObject.GetComponentsInChildren<MeshRenderer>();
-            foreach (MeshRenderer mr in meshRenders)
-            {
-                mr.enabled = false;
-            }
-
-            ParticleSystem[] particleSystems = gameObject.GetComponentsInChildren<ParticleSystem>();
-            foreach (ParticleSystem ps in particleSystems)
-            {
-                ps.Stop();
-            }
-
-            AudioSource[] audioSources = gameObject.GetComponentsInChildren<AudioSource>();
-            foreach (AudioSource adS in audioSources)
-            {
-                adS.Stop();
-                adS.enabled = false;
-            }
-        }
-
-        entities.Add(new Entity(id, prefabID, gameObject));
-
-        return id;
+        return AddEntity(prefabID, id, position, rotation, -1);
     }
 
-    public int AddEntity(int prefabID, int id, Vector3 position, Quaternion rotation)
+    public int AddEntity(int prefabID, int id, Vector3 position, Quaternion rotation, int modifier)
     {
-        GameObject gameObject = Instantiate(prefabs[prefabID], position, rotation);
+        GameObject prefabObject = prefabs[prefabID];
+
+        // Car
+        // If spawning car use modifier with car model manager...
+        if (prefabID == 0)
+        {
+            prefabObject = cmm.models[modifier % cmm.models.Count].prefab;
+        }
+
+        GameObject gameObject = Instantiate(prefabObject, position, rotation);
         SceneManager.MoveGameObjectToScene(gameObject, targetScene);
 
         if (mode == RaceControllerMode.SERVER)
@@ -131,12 +118,10 @@ public class EntityManager : MonoBehaviour
             }
         }
 
-        entities.Add(new Entity(id, prefabID, gameObject));
+        entities.Add(new Entity(id, prefabID, gameObject, modifier));
 
         return id;
     }
-
-    // END REFACTOR
 
     public void RemoveEntity(int id)
     {
@@ -186,8 +171,10 @@ public class EntityManager : MonoBehaviour
             // Todo:
             // Handle prefab types?
 
+            // TODO
+            // depending on car model set modifier value
             Vector3 rot = state.rotation.GetValue();
-            int id = AddEntity(state.prefabID, state.id, state.position.GetValue(), Quaternion.Euler(rot.x, rot.y, rot.z));
+            int id = AddEntity(state.prefabID, state.id, state.position.GetValue(), Quaternion.Euler(rot.x, rot.y, rot.z), state.modifier);
 
             if(clientMode)
             {
@@ -307,7 +294,7 @@ public class EntityManager : MonoBehaviour
             CarController cc = entity.GetGameObject().GetComponent<CarController>();
             List<float> extraValues = cc.GetWheelCompressionValues();
             extraValues.AddRange(new float[] { cc.accelerationInput, cc.steeringInput, cc.brakingInput });
-            entityState = new EntityState(entity.GetID(), entity.GetPrefabID(), rb.velocity, rb.position, rb.angularVelocity, rb.rotation.eulerAngles, extraValues);
+            entityState = new EntityState(entity.GetID(), entity.GetPrefabID(), rb.velocity, rb.position, rb.angularVelocity, rb.rotation.eulerAngles, extraValues, entity.GetModifier());
         }
         else if (entity.GetPrefabID() == 2)
         {
@@ -385,12 +372,22 @@ public class Entity
     private int prefabID;
     [SerializeField]
     private GameObject gameObject;
+    [SerializeField]
+    private int modifier;
 
     public Entity(int id, int prefabID, GameObject gameObject)
     {
         this.id = id;
         this.prefabID = prefabID;
         this.gameObject = gameObject;
+    }
+
+    public Entity(int id, int prefabID, GameObject gameObject, int modifier)
+    {
+        this.id = id;
+        this.prefabID = prefabID;
+        this.gameObject = gameObject;
+        this.modifier = modifier;
     }
 
     public int GetID()
@@ -407,6 +404,11 @@ public class Entity
     {
         return gameObject;
     }
+
+    public int GetModifier()
+    {
+        return modifier;
+    }
 }
 
 
@@ -421,6 +423,7 @@ public class EntityState
     public SVector3 rotation;
     public bool set;
     public bool created;
+    public int modifier = -1;
 
     public List<float> extraValues = new List<float>();
 
@@ -448,5 +451,17 @@ public class EntityState
         this.angularVelocity = new SVector3(angularVelocity);
         this.rotation = new SVector3(rotation);
         this.extraValues = extraValues;
+    }
+
+    public EntityState(int id, int prefabID, Vector3 velocity, Vector3 position, Vector3 angularVelocity, Vector3 rotation, List<float> extraValues, int modifier)
+    {
+        this.id = id;
+        this.prefabID = prefabID;
+        this.velocity = new SVector3(velocity);
+        this.position = new SVector3(position);
+        this.angularVelocity = new SVector3(angularVelocity);
+        this.rotation = new SVector3(rotation);
+        this.extraValues = extraValues;
+        this.modifier = modifier;
     }
 }

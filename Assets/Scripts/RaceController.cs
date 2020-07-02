@@ -53,8 +53,6 @@ public class RaceController : MonoBehaviour
     public RaceControllerStateEnum raceControllerState = RaceControllerStateEnum.PRACTICE;
     public RaceControllerMode raceControllerMode = RaceControllerMode.CLIENT;
 
-    public GameObject carPrefab;
-
     [Header("Audio")]
 
     public AudioSource fastestLaptimeSound;
@@ -1113,7 +1111,7 @@ public class RaceController : MonoBehaviour
     {
         Debug.Assert(pe.carID == -1, "Player already assigned car... " + raceControllerMode.ToString() + " " + pe.carID);
 
-        int carID = em.AddEntity(0, currentTrack.carStarts[gridPos % currentTrack.carStarts.Count].position, currentTrack.carStarts[gridPos % currentTrack.carStarts.Count].rotation);
+        int carID = em.AddEntity(0, currentTrack.carStarts[gridPos % currentTrack.carStarts.Count].position, currentTrack.carStarts[gridPos % currentTrack.carStarts.Count].rotation, pe.carModel);
 
         pe.carID = carID;
 
@@ -1239,9 +1237,7 @@ public class RaceController : MonoBehaviour
 
         if(p == null)
         {
-
             p = CreatePlayer(inputState.networkID);
-            
         }
 
         p.UpdateLastInputReceivedFrom();
@@ -1286,6 +1282,7 @@ public class RaceController : MonoBehaviour
 public class PlayerEntity
 {
     public int carID = -1;
+    public int carModel = 0;
     public bool ready = false;
     public int lap = 0;
     public int checkpoint = 0;
@@ -1302,10 +1299,11 @@ public class PlayerEntity
 
     private float lastInputReceivedFrom = 0.0f;
 
-    public PlayerEntity(int networkID, int carID)
+    public PlayerEntity(int networkID, int carID, int carModel)
     {
         this.networkID = networkID;
         this.carID = carID;
+        this.carModel = carModel;
     }
 
     public PlayerEntity (int networkID)
