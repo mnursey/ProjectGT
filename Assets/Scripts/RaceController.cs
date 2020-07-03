@@ -87,7 +87,8 @@ public class RaceController : MonoBehaviour
     [Header("Misc")]
 
     public bool ready;
-
+    public int selectedCarModel = 0;
+    public bool sentSelectedCarModel = false;
     private int frame = 0;
 
     public float idleTime = 5.0f;
@@ -181,7 +182,7 @@ public class RaceController : MonoBehaviour
         cameraController.targetObject = null;
         frame = 0;
         clientFastestLapTime = float.MaxValue;
-
+        sentSelectedCarModel = false;
         cameraController.GetComponent<AudioListener>().enabled = true;
 
         raceControllerState = RaceControllerStateEnum.IDLE;
@@ -829,6 +830,12 @@ public class RaceController : MonoBehaviour
             cc.SendInput(input);
 
             RewardForPersonalBestTime();
+
+            if(!sentSelectedCarModel)
+            {
+                cc.SendCarModel(selectedCarModel);
+                sentSelectedCarModel = true;
+            }
         }
 
         if (raceControllerMode == RaceControllerMode.SERVER && sc.ServerActive())
@@ -1085,7 +1092,7 @@ public class RaceController : MonoBehaviour
         }
     }
 
-    PlayerEntity CreatePlayer(int networkID)
+    public PlayerEntity CreatePlayer(int networkID)
     {
         PlayerEntity pe = new PlayerEntity(networkID);
         players.Add(pe);

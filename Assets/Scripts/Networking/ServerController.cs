@@ -179,6 +179,7 @@ public class ServerController : MonoBehaviour
                         clients.Add(newConnection);
 
                         rc.um.AddUser(jr.username, newConnection.clientID);
+                        rc.CreatePlayer(newConnection.clientID);
 
                         // Send Accept Connect msg
                         newConnection.BeginSend(NetworkingMessageTranslator.GenerateServerJoinResponseMessage(new JoinRequestResponce(newConnection.clientID)), SendUserManagerState);

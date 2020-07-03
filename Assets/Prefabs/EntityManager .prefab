@@ -71,13 +71,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   models:
   - name: Speedster
-    description: Light, nimble, and quick on its feet. Had a "slight" bit of oversteer
+    description: Light, nimble, and quick on its feet. Has a "slight" bit of oversteer
       providing many thrills... Definitely a pedal to the metal car.
     prefab: {fileID: 4261872027723047873, guid: 79fcae859fdeebe45ad20a44f9403132,
       type: 3}
   - name: Rotary
     description: Equipped with a unique high power rotary engine this car is designed
       for one thing only... SPEED. A decently balanced car, provided that you can
-      modulate the break the throttle correctly when apporaching corners.
+      modulate the brake and throttle correctly when apporaching corners.
     prefab: {fileID: 4261872027723047873, guid: fe93f4455d55928498f407a72f9a5328,
       type: 3}

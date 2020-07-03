@@ -83,7 +83,7 @@ public static class NetworkingMessageTranslator
     public static string GenerateCarModelMessage(int carModel, int clientID)
     {
         NetworkingMessage msg = new NetworkingMessage(NetworkingMessageType.CAR_MODEL, clientID);
-        msg.content = ToJson(carModel);
+        msg.content = carModel.ToString();
         return ToJson(msg);
     }
 
@@ -117,9 +117,9 @@ public static class NetworkingMessageTranslator
         return JsonUtility.FromJson<InputState>(json);
     }
 
-    public static int ParseCarModel(string json)
+    public static int ParseCarModel(string carModelString)
     {
-        return JsonUtility.FromJson<int>(json);
+        return int.Parse(carModelString);
     }
 }
 

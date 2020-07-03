@@ -31,6 +31,11 @@ public class MenuController : MonoBehaviour
     public GameObject popupMenu;
     public TextMeshProUGUI popupMenuText;
 
+    public TextMeshProUGUI carSelectMenuCarModelText;
+    public TextMeshProUGUI carSelectMenuCarDescText;
+
+    public TextMeshProUGUI gameMenuPlay;
+
     [Header("Menu GameObjects")]
 
     public GameObject mainMenu;
@@ -40,8 +45,7 @@ public class MenuController : MonoBehaviour
     public RaceMenu duringRaceMenu;
     public RaceMenu postRaceMenu;
 
-    public TextMeshProUGUI gameMenuPlay;
-
+    public GameObject carSelectMenu;
     public GameObject optionsMenu;
     public GameObject gameUI;
 
@@ -266,6 +270,16 @@ public class MenuController : MonoBehaviour
     public void MainMenuQuit()
     {
         Application.Quit();
+    }
+
+    public void UpdateSelectedCar(int change)
+    {
+        rc.selectedCarModel += change;
+
+        carSelectMenuCarModelText.text = rc.em.cmm.models[rc.selectedCarModel % rc.em.cmm.models.Count].name;
+        carSelectMenuCarDescText.text = rc.em.cmm.models[rc.selectedCarModel % rc.em.cmm.models.Count].description;
+
+        // Todo update where camera is looking....
     }
 
     public void OnScreenModeChange(TMP_Dropdown dropdown)
