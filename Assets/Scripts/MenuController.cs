@@ -274,7 +274,15 @@ public class MenuController : MonoBehaviour
 
     public void UpdateSelectedCar(int change)
     {
+
         rc.selectedCarModel += change;
+
+        if(rc.selectedCarModel < 0)
+        {
+            rc.selectedCarModel = rc.em.cmm.models.Count - 1;
+        }
+
+        rc.selectedCarModel = rc.selectedCarModel % rc.em.cmm.models.Count;
 
         carSelectMenuCarModelText.text = rc.em.cmm.models[rc.selectedCarModel % rc.em.cmm.models.Count].name;
         carSelectMenuCarDescText.text = rc.em.cmm.models[rc.selectedCarModel % rc.em.cmm.models.Count].description;
