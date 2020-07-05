@@ -304,11 +304,15 @@ public class MenuController : MonoBehaviour
             RemoveSelectedCar();
         }
 
+        selectedCarSpawn.gameObject.SetActive(true);
+
         GameObject gameObject = Instantiate(rc.em.cmm.models[rc.selectedCarModel % rc.em.cmm.models.Count].prefab, selectedCarSpawn.position, selectedCarSpawn.rotation);
         SceneManager.MoveGameObjectToScene(gameObject, rc.targetScene);
 
         selectedCar = gameObject.GetComponent<CarController>();
         selectedCar.DisableUsernameText();
+
+        ShowRaceTrack(false);
     }
 
     public void RemoveSelectedCar()
@@ -318,6 +322,14 @@ public class MenuController : MonoBehaviour
             selectedCar.CleanUpSounds();
             Destroy(selectedCar.gameObject);
         }
+
+        ShowRaceTrack(true);
+        selectedCarSpawn.gameObject.SetActive(false);
+    }
+
+    public void ShowRaceTrack(bool value)
+    {
+        rc.currentTrack.track.SetActive(value);
     }
 
     public void OnScreenModeChange(TMP_Dropdown dropdown)
@@ -444,6 +456,11 @@ public class MenuController : MonoBehaviour
     {
         rc.cameraController.transform.position = t.position;
         rc.cameraController.transform.rotation = t.rotation;
+    }
+
+    public void PlayClickSound()
+    {
+        clickSoundEffect.Play();
     }
 }
 
