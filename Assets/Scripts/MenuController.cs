@@ -7,6 +7,7 @@ using System.Linq;
 using UnityEngine.UI;
 using UnityEngine.InputSystem;
 using static UnityEngine.InputSystem.InputActionRebindingExtensions;
+using UnityEngine.SceneManagement;
 
 public class MenuController : MonoBehaviour
 {
@@ -65,6 +66,9 @@ public class MenuController : MonoBehaviour
 
     public bool inGameMode = false;
 
+    public CarController selectedCar;
+    public Transform selectedCarSpawn;
+
     public void Awake()
     {
         controls = new InputMaster();
@@ -101,6 +105,11 @@ public class MenuController : MonoBehaviour
                     lm.UpdateLeaderboard(rc.GetPlayersByPosition(), rc.um);
                 }
             }
+        }
+
+        if(selectedCar != null)
+        {
+            selectedCar.UpdatePhysics();
         }
     }
 
@@ -287,7 +296,28 @@ public class MenuController : MonoBehaviour
         carSelectMenuCarModelText.text = rc.em.cmm.models[rc.selectedCarModel % rc.em.cmm.models.Count].name;
         carSelectMenuCarDescText.text = rc.em.cmm.models[rc.selectedCarModel % rc.em.cmm.models.Count].description;
 
-        // Todo update where camera is looking....
+
+        // Spawn selected car...
+
+        if(selectedCar != null)
+        {
+            RemoveSelectedCar();
+        }
+
+        GameObject gameObject = Instantiate(rc.em.cmm.models[rc.selectedCarModel % rc.em.cmm.models.Count].prefab, selectedCarSpawn.position, selectedCarSpawn.rotation);
+        SceneManager.MoveGameObjectToScene(gameObject, rc.targetScene);
+
+        selectedCar = gameObject.GetComponent<CarController>();
+        selectedCar.DisableUsernameText();
+    }
+
+    public void RemoveSelectedCar()
+    {
+        if(selectedCar != null)
+        {
+            selectedCar.CleanUpSounds();
+            Destroy(selectedCar.gameObject);
+        }
     }
 
     public void OnScreenModeChange(TMP_Dropdown dropdown)
@@ -408,6 +438,12 @@ public class MenuController : MonoBehaviour
                 }
             }
         }
+    }
+
+    public void SetCameraLocation(Transform t)
+    {
+        rc.cameraController.transform.position = t.position;
+        rc.cameraController.transform.rotation = t.rotation;
     }
 }
 
