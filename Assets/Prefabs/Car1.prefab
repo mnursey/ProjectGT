@@ -1071,7 +1071,7 @@ MonoBehaviour:
   - width: 1.44
     offset: {x: -2, y: -0.5}
     wheelRadius: 0.3
-    laterialFriction: 0.1
+    laterialFriction: 0.13
     rollingFriction: 0.1
     suspensionStiffness: 9500
     suspensionDampining: 3000
@@ -1096,7 +1096,7 @@ MonoBehaviour:
   resetCheckpoint:
     t: {fileID: 0}
     raduis: 0
-  enginePower: 2500
+  enginePower: 2200
   steeringPower: 1500
   brakingPower: 800
   carVisualZRoll: 0
