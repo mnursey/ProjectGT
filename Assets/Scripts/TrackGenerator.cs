@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public enum TrackPeiceType { EMPTY, START, STRAIGHT, LEFT, RIGHT };
+public enum TrackPeiceType { EMPTY, START, STRAIGHT, TURN };
 
 public class TrackGenerator : MonoBehaviour
 {
@@ -48,9 +48,10 @@ public class TrackGenerator : MonoBehaviour
             List<GameObject> c = new List<GameObject>();
             for(int y = 0; y < generationWidth; ++y)
             {
-                TrackPeice pt =  trackPeicePrefabs.Find(j => j.type == worldType[x][y]);
+                List<TrackPeice> pt =  trackPeicePrefabs.FindAll(j => j.type == worldType[x][y]);
+                int ptIndex = r.Next(0, pt.Count);
 
-                c.Add((GameObject)Instantiate(pt.prefab, new Vector3(trackSpawnWidth * x, 0.0f, trackSpawnWidth * y), Quaternion.Euler(0f, 0f, -90f), this.transform));
+                c.Add((GameObject)Instantiate(pt[ptIndex].prefab, new Vector3(trackSpawnWidth * x, 0.0f, trackSpawnWidth * y), Quaternion.Euler(-90f, 90f * rotations[x][y], 0f), this.transform));
             }
 
             trackPeices.Add(c);
@@ -77,7 +78,50 @@ public class TrackGenerator : MonoBehaviour
             if(!(path[prevIndex][0] == path[i][0] && path[nextIndex][0] == path[i][0]) && !(path[prevIndex][1] == path[i][1] && path[nextIndex][1] == path[i][1]))
             {
                 // is corner
-                worldType[path[i][0]][path[i][1]] = TrackPeiceType.LEFT;
+                worldType[path[i][0]][path[i][1]] = TrackPeiceType.TURN;
+
+                // get correct rotation...
+
+                if(path[prevIndex][0] < path[i][0] && path[nextIndex][1] < path[i][1])
+                {
+                    rotations[path[i][0]][path[i][1]] = 3;
+                }
+
+                if (path[prevIndex][1] < path[i][1] && path[nextIndex][0] > path[i][0])
+                {
+                    rotations[path[i][0]][path[i][1]] = 2;
+                }
+
+                if (path[prevIndex][0] > path[i][0] && path[nextIndex][1] > path[i][1])
+                {
+                    rotations[path[i][0]][path[i][1]] = 1;
+                }
+
+                if (path[prevIndex][0] > path[i][0] && path[nextIndex][1] < path[i][1])
+                {
+                    rotations[path[i][0]][path[i][1]] = 2;
+                }
+
+                if (path[prevIndex][1] < path[i][1] && path[nextIndex][0] < path[i][0])
+                {
+                    rotations[path[i][0]][path[i][1]] = 3;
+                }
+
+                if (path[prevIndex][1] > path[i][1] && path[nextIndex][0] > path[i][0])
+                {
+                    rotations[path[i][0]][path[i][1]] = 1;
+                }
+
+            } else
+            {
+                // is straight
+
+                // get correct rotation...
+
+                if(path[prevIndex][1] == path[i][1] && path[nextIndex][1] == path[i][1])
+                {
+                    rotations[path[i][0]][path[i][1]] = 1;
+                }
             }
         }
 
