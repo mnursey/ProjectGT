@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public enum TrackPeiceType { EMPTY, START, STRAIGHT, TURN };
+public enum TrackPeiceType { EMPTY, START, STRAIGHT, TURN, PIT };
 
 public class TrackGenerator : MonoBehaviour
 {
@@ -15,6 +15,7 @@ public class TrackGenerator : MonoBehaviour
     public List<List<int>> worldCosts = new List<List<int>>();
     public List<List<TrackPeiceType>> worldType = new List<List<TrackPeiceType>>();
     public List<List<int>> rotations = new List<List<int>>();
+    public List<List<int>> prefabIndex = new List<List<int>>();
     public List<List<GameObject>> trackPeices = new List<List<GameObject>>();
 
     public System.Random r = new System.Random();
@@ -48,10 +49,7 @@ public class TrackGenerator : MonoBehaviour
             List<GameObject> c = new List<GameObject>();
             for(int y = 0; y < generationWidth; ++y)
             {
-                List<TrackPeice> pt =  trackPeicePrefabs.FindAll(j => j.type == worldType[x][y]);
-                int ptIndex = r.Next(0, pt.Count);
-
-                c.Add((GameObject)Instantiate(pt[ptIndex].prefab, new Vector3(trackSpawnWidth * x, 0.0f, trackSpawnWidth * y), Quaternion.Euler(-90f, 90f * rotations[x][y], 0f), this.transform));
+                c.Add((GameObject)Instantiate(trackPeicePrefabs[prefabIndex[x][y]].prefab, new Vector3(trackSpawnWidth * x, 0.0f, trackSpawnWidth * y), Quaternion.Euler(-90f, 90f * rotations[x][y], 0f), this.transform));
             }
 
             trackPeices.Add(c);
@@ -120,11 +118,47 @@ public class TrackGenerator : MonoBehaviour
 
                 if(path[prevIndex][1] == path[i][1] && path[nextIndex][1] == path[i][1])
                 {
-                    rotations[path[i][0]][path[i][1]] = 1;
+                    if(path[prevIndex][0] < path[i][0])
+                    {
+                        rotations[path[i][0]][path[i][1]] = 3;
+                    }
+                    else
+                    {
+                        rotations[path[i][0]][path[i][1]] = 1;
+                    }
+                } else
+                {
+                    if (path[prevIndex][1] < path[i][1])
+                    {
+                        rotations[path[i][0]][path[i][1]] = 2;
+                    }
                 }
             }
         }
 
+        // Design empty spots
+        for(int x = 0; x < worldType.Count; ++x)
+        {
+            for(int y = 0; y < worldType[x].Count; ++y)
+            {
+                if(worldType[x][y] == TrackPeiceType.EMPTY)
+                {
+                    // Randomize rotation
+                    rotations[x][y] = r.Next(4);
+                }
+            }
+        }
+
+        // Select type instance
+        for (int x = 0; x < worldType.Count; ++x)
+        {
+            for (int y = 0; y < worldType[x].Count; ++y)
+            {
+                List<TrackPeice> pt = trackPeicePrefabs.FindAll(j => j.type == worldType[x][y]);
+                int ptIndex = r.Next(0, pt.Count);
+                prefabIndex[x][y] = trackPeicePrefabs.FindIndex(j => j == pt[ptIndex]);   
+            }
+        }
     }
 
     public List<int[]> TracePath(List<List<int[]>> paths, int[] t)
@@ -161,7 +195,8 @@ public class TrackGenerator : MonoBehaviour
         // Mark Path from A to B as traveled...
         for (int i = 0; i < trackPath.Count; ++i)
         {
-            worldType[trackPath[i][0]][trackPath[i][1]] = TrackPeiceType.STRAIGHT;
+            if(worldType[trackPath[i][0]][trackPath[i][1]] == TrackPeiceType.EMPTY)
+                worldType[trackPath[i][0]][trackPath[i][1]] = TrackPeiceType.STRAIGHT;
         }
 
         // Get Path from B to C, but not overlapping path A to B...
@@ -173,7 +208,8 @@ public class TrackGenerator : MonoBehaviour
         // Mark Path from B to C as traveled...
         for (int i = 0; i < b_c_Path.Count; ++i)
         {
-            worldType[b_c_Path[i][0]][b_c_Path[i][1]] = TrackPeiceType.STRAIGHT;
+            if (worldType[b_c_Path[i][0]][b_c_Path[i][1]] == TrackPeiceType.EMPTY)
+                worldType[b_c_Path[i][0]][b_c_Path[i][1]] = TrackPeiceType.STRAIGHT;
         }
 
         if (b_c_Path.Count == 0 || b_c_Path[b_c_Path.Count - 1][0] != pointC[0] || b_c_Path[b_c_Path.Count - 1][1] != pointC[1])
@@ -224,6 +260,7 @@ public class TrackGenerator : MonoBehaviour
         worldCosts = new List<List<int>>();
         worldType = new List<List<TrackPeiceType>>();
         rotations = new List<List<int>>();
+        prefabIndex = new List<List<int>>();
         trackPeices = new List<List<GameObject>>();
 
         for (int x = 0; x < generationWidth; ++x)
@@ -231,21 +268,24 @@ public class TrackGenerator : MonoBehaviour
             List<int> c = new List<int>();
             List<TrackPeiceType> t = new List<TrackPeiceType>();
             List<int> rots = new List<int>();
+            List<int> index = new List<int>();
 
             for (int y = 0; y < generationWidth; ++y)
             {
                 c.Add(r.Next());
                 t.Add(TrackPeiceType.EMPTY);
                 rots.Add(0);
+                index.Add(0);
             }
 
             worldCosts.Add(c);
             worldType.Add(t);
             rotations.Add(rots);
+            prefabIndex.Add(index);
         }
 
         worldType[generationWidth / 2][generationWidth / 2] = TrackPeiceType.START;
-        worldType[generationWidth / 2][generationWidth / 2 - 1] = TrackPeiceType.STRAIGHT;
+        worldType[generationWidth / 2][generationWidth / 2 - 1] = TrackPeiceType.PIT;
 
         // Path from start to target
         // Convert all tiles on path from start to target into tiles...
