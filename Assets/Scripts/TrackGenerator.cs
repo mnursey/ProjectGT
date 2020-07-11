@@ -5,7 +5,6 @@ using UnityEngine;
 
 public enum TrackPeiceType { EMPTY, START, STRAIGHT, LEFT, RIGHT };
 
-[ExecuteInEditMode]
 public class TrackGenerator : MonoBehaviour
 {
 
@@ -15,9 +14,12 @@ public class TrackGenerator : MonoBehaviour
 
     public List<List<int>> worldCosts = new List<List<int>>();
     public List<List<TrackPeiceType>> worldType = new List<List<TrackPeiceType>>();
+    public List<List<int>> rotations = new List<List<int>>();
+    public List<List<GameObject>> trackPeices = new List<List<GameObject>>();
 
     public System.Random r = new System.Random();
 
+    /*
     [TextArea(6, 20)]
     [Tooltip("WorldCosts View")]
     public string worldCostDebug = "";
@@ -25,15 +27,137 @@ public class TrackGenerator : MonoBehaviour
     [TextArea(6, 20)]
     [Tooltip("WorldType View")]
     public string worldTypeDebug = "";
+    */
 
     public bool generateTrack = false;
 
     public int targetX = 10;
     public int targetY = 10;
 
+    public float trackSpawnWidth = 10.0f;
+
     public void Start()
     {
 
+    }
+
+    public void InstantiateTrack()
+    {
+        for(int x = 0; x < generationWidth; ++x)
+        {
+            List<GameObject> c = new List<GameObject>();
+            for(int y = 0; y < generationWidth; ++y)
+            {
+                TrackPeice pt =  trackPeicePrefabs.Find(j => j.type == worldType[x][y]);
+
+                c.Add((GameObject)Instantiate(pt.prefab, new Vector3(trackSpawnWidth * x, 0.0f, trackSpawnWidth * y), Quaternion.Euler(0f, 0f, -90f), this.transform));
+            }
+
+            trackPeices.Add(c);
+        }
+    }
+
+    public void DesignRoad(List<int[]> path)
+    {
+        // Assume first road piece must start y+
+        // Assume last road peice must end y+
+
+        // find corners...
+
+        for(int i = 0; i < path.Count; ++i)
+        {
+            int prevIndex = (i - 1) % path.Count;
+            int nextIndex = (i + 1) % path.Count;
+
+            if(prevIndex < 0)
+            {
+                prevIndex += path.Count;
+            }
+
+            if(!(path[prevIndex][0] == path[i][0] && path[nextIndex][0] == path[i][0]) && !(path[prevIndex][1] == path[i][1] && path[nextIndex][1] == path[i][1]))
+            {
+                // is corner
+                worldType[path[i][0]][path[i][1]] = TrackPeiceType.LEFT;
+            }
+        }
+
+    }
+
+    public List<int[]> TracePath(List<List<int[]>> paths, int[] t)
+    {
+        List<int[]> p = new List<int[]>();
+
+        int[] target = new int[] { t[0], t[1] };
+
+        while (!(target[0] == -1 && target[1] == -1))
+        {
+            p.Add(new int[] { target[0], target[1] });
+            target = paths[target[0]][target[1]];
+        }
+
+        p.Reverse();
+
+        return p;
+    }
+
+    public void GenerateTrack()
+    {
+        InitializeTrack();
+
+        int[] pointA = new int[] { generationWidth / 2, (generationWidth / 2) + 1 };
+        int[] pointB = new int[] { targetX, targetY };
+        int[] pointC = new int[] { generationWidth / 2, (generationWidth / 2) - 2 };
+
+        List<int[]> trackPath = new List<int[]>();
+
+        // Get Path from A to B...
+        List<List<int[]>> paths = GetMinPaths(pointA);
+        trackPath = TracePath(paths, pointB);
+
+        // Mark Path from A to B as traveled...
+        for (int i = 0; i < trackPath.Count; ++i)
+        {
+            worldType[trackPath[i][0]][trackPath[i][1]] = TrackPeiceType.STRAIGHT;
+        }
+
+        // Get Path from B to C, but not overlapping path A to B...
+        paths = GetMinPaths(pointB);
+        List<int[]> b_c_Path = TracePath(paths, pointC);
+        b_c_Path.RemoveAt(0); // Remove Duplicate element... we already have B from path A to B
+        trackPath.AddRange(b_c_Path);
+
+        // Mark Path from B to C as traveled...
+        for (int i = 0; i < b_c_Path.Count; ++i)
+        {
+            worldType[b_c_Path[i][0]][b_c_Path[i][1]] = TrackPeiceType.STRAIGHT;
+        }
+
+        if (b_c_Path.Count == 0 || b_c_Path[b_c_Path.Count - 1][0] != pointC[0] || b_c_Path[b_c_Path.Count - 1][1] != pointC[1])
+        {
+            if (b_c_Path.Count != 0) Debug.Log(b_c_Path[b_c_Path.Count - 1][0] + " " + b_c_Path[b_c_Path.Count - 1][1]);
+            Debug.Log("Couldn't find a path back!");
+
+            // Retry!
+            GenerateTrack();
+            return;
+        }
+
+        /*
+        Debug.Log("--- Paths ---");
+        for (int i = 0; i < trackPath.Count; ++i)
+        {
+            Debug.Log(trackPath[i][0] + " " + trackPath[i][1]);
+        }
+        */
+
+        DesignRoad(trackPath);
+
+        InstantiateTrack();
+
+        /*
+        DebugWorldCosts();
+        DebugWorldType();
+        */
     }
 
     public void Update()
@@ -42,38 +166,38 @@ public class TrackGenerator : MonoBehaviour
         {
             GenerateTrack();
 
-            List<List<int[]>> paths = GetMinPaths(new int[] { generationWidth / 2, generationWidth / 2 });
-
-            int[] target = new int[] { 5, 5 };
-            while(paths[target[0]][target[1]][0] != generationWidth / 2 && paths[target[0]][target[1]][1] != generationWidth / 2)
-            {
-                worldType[target[0]][target[1]] = TrackPeiceType.STRAIGHT;
-                target = paths[target[0]][target[1]];
-                Debug.Log("new : " + target[0] + " " + target[1]);
-            }
-
-            DebugWorldCosts();
-            DebugWorldType();
-
             generateTrack = false;
         }
     }
 
-    public void GenerateTrack()
+    public void InitializeTrack()
     {
-        for(int x = 0; x < generationWidth; ++x)
+        foreach (Transform child in transform)
+        {
+            Destroy(child.gameObject);
+        }
+
+        worldCosts = new List<List<int>>();
+        worldType = new List<List<TrackPeiceType>>();
+        rotations = new List<List<int>>();
+        trackPeices = new List<List<GameObject>>();
+
+        for (int x = 0; x < generationWidth; ++x)
         {
             List<int> c = new List<int>();
             List<TrackPeiceType> t = new List<TrackPeiceType>();
+            List<int> rots = new List<int>();
 
             for (int y = 0; y < generationWidth; ++y)
             {
                 c.Add(r.Next());
                 t.Add(TrackPeiceType.EMPTY);
+                rots.Add(0);
             }
 
             worldCosts.Add(c);
             worldType.Add(t);
+            rotations.Add(rots);
         }
 
         worldType[generationWidth / 2][generationWidth / 2] = TrackPeiceType.START;
@@ -130,20 +254,14 @@ public class TrackGenerator : MonoBehaviour
         return index;
     }
 
-    int GetPathCost(int[] end, List<List<int[]>> parentNodes, int depth)
+    int GetPathCost(int[] end, List<List<int[]>> parentNodes)
     {
-        if(depth > 100)
-        {
-            Debug.Log("Deep depth");
-            return depth;
-        }
-
         if(parentNodes[end[0]][end[1]][0] == -1 && parentNodes[end[0]][end[1]][1] == -1)
         {
             return 0;
         } else
         {
-            return worldCosts[end[0]][end[1]] + GetPathCost(parentNodes[end[0]][end[1]], parentNodes, depth + 1);
+            return worldCosts[end[0]][end[1]] + GetPathCost(parentNodes[end[0]][end[1]], parentNodes);
         }
     }
 
@@ -175,10 +293,10 @@ public class TrackGenerator : MonoBehaviour
 
         frontier.Add(pointA);
 
-        int iter = 0;
+        //int iter = 0;
         while(frontier.Count > 0)
         {
-
+            /*
             string posOutput = "";
             string output = "";
             string simpleOutput = "";
@@ -231,9 +349,9 @@ public class TrackGenerator : MonoBehaviour
             Debug.Log(posOutput);
             Debug.Log(simpleOutput);
 
-            Debug.Log(iter++);
+            Debug.Log(iter++); */
 
-            int lowestIndex = FindLowestPointInFrontier(frontier);
+        int lowestIndex = FindLowestPointInFrontier(frontier);
             int[] lowest = frontier[lowestIndex];
             frontier.RemoveAt(lowestIndex);
 
@@ -241,6 +359,11 @@ public class TrackGenerator : MonoBehaviour
 
             for(int i = 0; i < neighbours.Count; ++i)
             {
+                if(worldType[neighbours[i][0]][neighbours[i][1]] != TrackPeiceType.EMPTY)
+                {
+                    continue;
+                }
+
                 bool inFrontier = frontier.Exists(x => x[0] == neighbours[i][0] && x[1] == neighbours[i][1]);
 
                 if (!inFrontier && !seenNodes[neighbours[i][0]][neighbours[i][1]])
@@ -253,7 +376,7 @@ public class TrackGenerator : MonoBehaviour
                     if(inFrontier)
                     {
                         // if neighbour in frontier update it's parent if new cost is lower
-                        if (GetPathCost(neighbours[i], parentNodes, 0) > GetPathCost(lowest, parentNodes, 0) + worldCosts[neighbours[i][0]][neighbours[i][1]])
+                        if (GetPathCost(neighbours[i], parentNodes) > GetPathCost(lowest, parentNodes) + worldCosts[neighbours[i][0]][neighbours[i][1]])
                         {
                             parentNodes[neighbours[i][0]][neighbours[i][1]] = new int[] { lowest[0], lowest[1] };
                         }
@@ -261,15 +384,56 @@ public class TrackGenerator : MonoBehaviour
                 }
             }
 
-            if(iter > 600)
+            /*if(iter > 600)
             {
                 break;
-            }
+            }*/
         }
+
+        string simpleOutput = "";
+        for (int x = 0; x < parentNodes.Count; ++x)
+        {
+
+            for (int y = 0; y < parentNodes.Count; ++y)
+            {
+                if (parentNodes[y][x][0] < y && parentNodes[y][x][0] != -1)
+                {
+                    simpleOutput += "<";
+                }
+
+                if (parentNodes[y][x][0] > y && parentNodes[y][x][0] != -1)
+                {
+                    simpleOutput += ">";
+                }
+
+                if (parentNodes[y][x][1] < x && parentNodes[y][x][0] != -1)
+                {
+                    simpleOutput += "^";
+                }
+
+                if (parentNodes[y][x][1] > x && parentNodes[y][x][0] != -1)
+                {
+                    simpleOutput += "v";
+                }
+
+                if (parentNodes[y][x][0] == -1)
+                {
+                    simpleOutput += 0;
+
+                }
+
+                simpleOutput += "    ";
+            }
+
+            simpleOutput += "\n";
+        }
+
+        Debug.Log(simpleOutput);
 
         return parentNodes;
     }
 
+    /*
     public void DebugWorldCosts()
     {
         worldCostDebug = "";
@@ -297,6 +461,7 @@ public class TrackGenerator : MonoBehaviour
             worldTypeDebug += "\n";
         }
     }
+    */
 
     public void LoadTrack(string data)
     {
