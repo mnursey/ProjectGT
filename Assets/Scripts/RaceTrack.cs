@@ -21,19 +21,23 @@ public class RaceTrack : MonoBehaviour
     void SetupCheckpoints()
     {
         checkPoints = new List<CheckPoint>();
-        foreach (Transform c in checkpointTransform)
-        {
-            CheckPoint child = new CheckPoint();
-            child.t = c;
-            child.raduis = defaultRadius;
 
-            RaycastHit hit;
-            if (Physics.Raycast(child.t.position + (Vector3.up * 100.0f), Vector3.down, out hit))
+        if(checkpointTransform != null)
+        {
+            foreach (Transform c in checkpointTransform)
             {
-                Debug.Log("Hit " + hit.point.y);
-                child.t.position = new Vector3(child.t.position.x, hit.point.y + 2.0f, child.t.position.z);
+                CheckPoint child = new CheckPoint();
+                child.t = c;
+                child.raduis = defaultRadius;
+
+                RaycastHit hit;
+                if (Physics.Raycast(child.t.position + (Vector3.up * 100.0f), Vector3.down, out hit))
+                {
+                    Debug.Log("Hit " + hit.point.y);
+                    child.t.position = new Vector3(child.t.position.x, hit.point.y + 2.0f, child.t.position.z);
+                }
+                checkPoints.Add(child);
             }
-            checkPoints.Add(child);
         }
     }
 
@@ -71,6 +75,14 @@ public class CheckPoint
 {
     public Transform t;
     public float raduis;
+
+    public CheckPoint() { }
+
+    public CheckPoint(Transform t, float raduis)
+    {
+        this.t = t;
+        this.raduis = raduis;
+    }
 }
 
 [Serializable]

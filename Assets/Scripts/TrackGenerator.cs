@@ -17,8 +17,12 @@ public class TrackGenerator : MonoBehaviour
     public List<List<int>> rotations = new List<List<int>>();
     public List<List<int>> prefabIndex = new List<List<int>>();
     public List<List<GameObject>> trackPeices = new List<List<GameObject>>();
+    public List<Transform> trackStarts = new List<Transform>();
+    public List<CheckPoint> checkPoints = new List<CheckPoint>();
 
     public System.Random r = new System.Random();
+
+    public RaceTrack raceTrackController;
 
     /*
     [TextArea(6, 20)]
@@ -36,6 +40,7 @@ public class TrackGenerator : MonoBehaviour
     public int targetY = 10;
 
     public float trackSpawnWidth = 10.0f;
+    public bool debugCheckPoints = false;
 
     public void Start()
     {
@@ -182,15 +187,17 @@ public class TrackGenerator : MonoBehaviour
     {
         InitializeTrack();
 
+
         int[] pointA = new int[] { generationWidth / 2, (generationWidth / 2) + 1 };
         int[] pointB = new int[] { targetX, targetY };
         int[] pointC = new int[] { generationWidth / 2, (generationWidth / 2) - 2 };
 
-        List<int[]> trackPath = new List<int[]>();
+        rotations[generationWidth / 2][generationWidth / 2] = 2;
 
+        List<int[]> trackPath = new List<int[]>();
         // Get Path from A to B...
         List<List<int[]>> paths = GetMinPaths(pointA);
-        trackPath = TracePath(paths, pointB);
+        trackPath.AddRange(TracePath(paths, pointB));
 
         // Mark Path from A to B as traveled...
         for (int i = 0; i < trackPath.Count; ++i)
@@ -238,6 +245,83 @@ public class TrackGenerator : MonoBehaviour
         DebugWorldCosts();
         DebugWorldType();
         */
+
+        SetupStartPositions();
+        SetupCheckpoints(trackPath);
+        SetupRaceTrackController();
+    }
+
+    public void SetupStartPositions()
+    {
+        trackStarts = new List<Transform>();
+
+        foreach(Transform t in trackPeices[generationWidth / 2][generationWidth / 2].transform)
+        {
+            if(t.name.ToLower() != "checkpoint")
+            {
+                trackStarts.Add(t);
+            }
+        }
+    }
+
+    public void SetupCheckpoints(List<int[]> trackPath)
+    {
+        checkPoints = new List<CheckPoint>();
+
+        foreach (Transform t in trackPeices[generationWidth / 2][generationWidth / 2].transform)
+        {
+            if (t.name.ToLower() == "checkpoint")
+            {
+                float radius = trackSpawnWidth / 2f;
+
+                if (t.localScale.x > 0.01f)
+                {
+                    radius = t.localScale.x;
+                }
+
+                checkPoints.Add(new CheckPoint(t, trackSpawnWidth / 2f));
+            }
+        }
+
+        foreach (int[] tp in trackPath)
+        {
+            foreach (Transform t in trackPeices[tp[0]][tp[1]].transform)
+            {
+                if (t.name.ToLower() == "checkpoint")
+                {
+                    float radius = trackSpawnWidth / 2f;
+
+                    if(t.localScale.x > 0.01f)
+                    {
+                        radius = t.localScale.x;
+                    }
+
+                    checkPoints.Add(new CheckPoint(t, trackSpawnWidth / 2f));
+                }
+            }
+        }
+
+        foreach (Transform t in trackPeices[generationWidth / 2][generationWidth / 2 - 1].transform)
+        {
+            if (t.name.ToLower() == "checkpoint")
+            {
+                float radius = trackSpawnWidth / 2f;
+
+                if (t.localScale.x > 0.01f)
+                {
+                    radius = t.localScale.x;
+                }
+
+                checkPoints.Add(new CheckPoint(t, trackSpawnWidth / 2f));
+            }
+        }
+    }
+
+    public void SetupRaceTrackController()
+    {
+        raceTrackController.checkPoints = checkPoints;
+        raceTrackController.carStarts = trackStarts;
+        raceTrackController.track = this.gameObject;
     }
 
     public void Update()
@@ -550,6 +634,19 @@ public class TrackGenerator : MonoBehaviour
     public void LoadTrack(string data)
     {
 
+    }
+
+    void OnDrawGizmos()
+    {
+        if (debugCheckPoints)
+        {
+            foreach (CheckPoint c in checkPoints)
+            {
+                // Draw a yellow sphere at the transform's position
+                Gizmos.color = new Color(242 / 255f, 245 / 255f, 66 / 255f, 190 / 255f);
+                Gizmos.DrawSphere(c.t.position, c.raduis);
+            }
+        }
     }
 }
 
