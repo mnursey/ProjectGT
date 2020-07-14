@@ -130,13 +130,19 @@ public class RaceController : MonoBehaviour
         if (raceControllerMode == RaceControllerMode.CLIENT)
         {
             targetScene = SceneManager.GetSceneByName("ClientScene");
-            currentTrack.serverObjects.SetActive(false);
+            if(currentTrack.serverObjects != null)
+            {
+                currentTrack.serverObjects.SetActive(false);
+            }
         }
         
         if(raceControllerMode == RaceControllerMode.SERVER)
         {
             targetScene = SceneManager.GetSceneByName("ServerScene");
-            currentTrack.serverObjects.SetActive(true);
+            if (currentTrack.serverObjects != null)
+            {
+                currentTrack.serverObjects.SetActive(true);
+            }
         }
 
         targetPhysicsScene = targetScene.GetPhysicsScene();

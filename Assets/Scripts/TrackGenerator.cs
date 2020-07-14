@@ -24,6 +24,8 @@ public class TrackGenerator : MonoBehaviour
 
     public RaceTrack raceTrackController;
 
+    public bool serverMode = false;
+
     /*
     [TextArea(6, 20)]
     [Tooltip("WorldCosts View")]
@@ -249,6 +251,29 @@ public class TrackGenerator : MonoBehaviour
         SetupStartPositions();
         SetupCheckpoints(trackPath);
         SetupRaceTrackController();
+
+        if(serverMode)
+        {
+            GameObject track = this.gameObject;
+            MeshRenderer[] meshRenders = track.GetComponentsInChildren<MeshRenderer>();
+            foreach (MeshRenderer mr in meshRenders)
+            {
+                mr.enabled = false;
+            }
+
+            ParticleSystem[] particleSystems = track.GetComponentsInChildren<ParticleSystem>();
+            foreach (ParticleSystem ps in particleSystems)
+            {
+                ps.Stop();
+            }
+
+            AudioSource[] audioSources = track.GetComponentsInChildren<AudioSource>();
+            foreach (AudioSource ass in audioSources)
+            {
+                ass.Stop();
+                ass.enabled = false;
+            }
+        }
     }
 
     public void SetupStartPositions()
@@ -314,6 +339,11 @@ public class TrackGenerator : MonoBehaviour
 
                 checkPoints.Add(new CheckPoint(t, trackSpawnWidth / 2f));
             }
+        }
+
+        for(int i = 0; i < checkPoints.Count; ++i)
+        {
+            checkPoints[i].t.LookAt(checkPoints[(i + 1) % checkPoints.Count].t);
         }
     }
 
