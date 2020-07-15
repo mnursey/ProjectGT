@@ -14,8 +14,11 @@ public class TrackGenerator : MonoBehaviour
 
     public List<List<int>> worldCosts = new List<List<int>>();
     public List<List<TrackPeiceType>> worldType = new List<List<TrackPeiceType>>();
+
     public List<List<int>> rotations = new List<List<int>>();
     public List<List<int>> prefabIndex = new List<List<int>>();
+    List<int[]> trackPath = new List<int[]>();
+
     public List<List<GameObject>> trackPeices = new List<List<GameObject>>();
     public List<Transform> trackStarts = new List<Transform>();
     public List<CheckPoint> checkPoints = new List<CheckPoint>();
@@ -196,7 +199,8 @@ public class TrackGenerator : MonoBehaviour
 
         rotations[generationWidth / 2][generationWidth / 2] = 2;
 
-        List<int[]> trackPath = new List<int[]>();
+        trackPath = new List<int[]>();
+
         // Get Path from A to B...
         List<List<int[]>> paths = GetMinPaths(pointA);
         trackPath.AddRange(TracePath(paths, pointB));
@@ -289,7 +293,7 @@ public class TrackGenerator : MonoBehaviour
         }
     }
 
-    public void SetupCheckpoints(List<int[]> trackPath)
+    public void SetupCheckpoints(List<int[]> path)
     {
         checkPoints = new List<CheckPoint>();
 
@@ -308,7 +312,7 @@ public class TrackGenerator : MonoBehaviour
             }
         }
 
-        foreach (int[] tp in trackPath)
+        foreach (int[] tp in path)
         {
             foreach (Transform t in trackPeices[tp[0]][tp[1]].transform)
             {
@@ -375,6 +379,7 @@ public class TrackGenerator : MonoBehaviour
         worldType = new List<List<TrackPeiceType>>();
         rotations = new List<List<int>>();
         prefabIndex = new List<List<int>>();
+        trackPath = new List<int[]>();
         trackPeices = new List<List<GameObject>>();
 
         for (int x = 0; x < generationWidth; ++x)
@@ -685,4 +690,119 @@ public class TrackPeice
 {
     public TrackPeiceType type; 
     public GameObject prefab;
+}
+
+[Serializable]
+public class GeneratedTrackData
+{
+    public SerializableList<SerializableList<int>> rotations = new SerializableList<SerializableList<int>>();
+    public SerializableList<SerializableList<int>> prefabIndex = new SerializableList<SerializableList<int>>();
+    public SerializableList<Point> trackPath = new SerializableList<Point>();
+
+    public void Serialize(List<List<int>> rotations, List<List<int>> prefabIndex, List<int[]> trackPath)
+    {
+
+        this.rotations = new SerializableList<SerializableList<int>>();
+        this.prefabIndex = new SerializableList<SerializableList<int>>();
+        this.trackPath = new SerializableList<Point>();
+
+        for(int x = 0; x < rotations.Count; ++x)
+        {
+            SerializableList<int> yHat = new SerializableList<int>();
+
+            for(int y = 0; y < rotations[x].Count; ++y)
+            {
+                yHat.list.Add(rotations[x][y]);
+            }
+
+            this.rotations.list.Add(yHat);
+        }
+
+        for(int x = 0; x < prefabIndex.Count; ++x)
+        {
+            SerializableList<int> yHat = new SerializableList<int>();
+
+            for (int y = 0; y < prefabIndex[x].Count; ++y)
+            {
+                yHat.list.Add(prefabIndex[x][y]);
+            }
+
+            this.prefabIndex.list.Add(yHat);
+        }
+
+        foreach(int[] a in trackPath)
+        {
+            this.trackPath.list.Add(new Point(a[0], a[1]));
+        }
+    }
+
+    public void Deserialize(out List<List<int>> rotations, out List<List<int>> prefabIndex, out List<int[]> trackPath)
+    {
+
+        rotations = new List<List<int>>();
+        prefabIndex = new List<List<int>>();
+        trackPath = new List<int[]>();
+
+        for (int x = 0; x < this.rotations.list.Count; ++x)
+        {
+            List<int> yHat = new List<int>();
+
+            for (int y = 0; y < this.rotations[x].list.Count; ++y)
+            {
+                yHat.Add(this.rotations[x][y]);
+            }
+
+            rotations.Add(yHat);
+        }
+
+        for (int x = 0; x < this.prefabIndex.list.Count; ++x)
+        {
+            List<int> yHat = new List<int>();
+
+            for (int y = 0; y < this.prefabIndex[x].list.Count; ++y)
+            {
+                yHat.Add(this.prefabIndex[x][y]);
+            }
+
+            prefabIndex.Add(yHat);
+        }
+
+        foreach (Point p in this.trackPath.list)
+        {
+            trackPath.Add(new int[] { p.x, p.y });
+        }
+    }
+}
+
+[Serializable]
+public class SerializableList<t>
+{
+    public List<t> list;
+
+    public t this[int key]
+    {
+        get
+        {
+            return list[key];
+        }
+        set
+        {
+            list[key] = value;
+        }
+    }
+}
+
+[Serializable]
+public class Point
+{
+    public int x = 0;
+    public int y = 0;
+
+    public Point() { }
+
+    public Point(int x, int y)
+    {
+        this.x = x;
+        this.y = y;
+    }
 }
