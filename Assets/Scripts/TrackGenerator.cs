@@ -29,23 +29,14 @@ public class TrackGenerator : MonoBehaviour
 
     public bool serverMode = false;
 
-    /*
-    [TextArea(6, 20)]
-    [Tooltip("WorldCosts View")]
-    public string worldCostDebug = "";
-
-    [TextArea(6, 20)]
-    [Tooltip("WorldType View")]
-    public string worldTypeDebug = "";
-    */
-
     public bool generateTrack = false;
 
     public int targetX = 10;
     public int targetY = 10;
 
     public float trackSpawnWidth = 10.0f;
-    public bool debugCheckPoints = false;
+
+    public string serializedTrack = "";
 
     public void Start()
     {
@@ -54,10 +45,10 @@ public class TrackGenerator : MonoBehaviour
 
     public void InstantiateTrack()
     {
-        for(int x = 0; x < generationWidth; ++x)
+        for(int x = 0; x < rotations.Count; ++x)
         {
             List<GameObject> c = new List<GameObject>();
-            for(int y = 0; y < generationWidth; ++y)
+            for(int y = 0; y < rotations[x].Count; ++y)
             {
                 c.Add((GameObject)Instantiate(trackPeicePrefabs[prefabIndex[x][y]].prefab, new Vector3(trackSpawnWidth * x, 0.0f, trackSpawnWidth * y), Quaternion.Euler(-90f, 90f * rotations[x][y], 0f), this.transform));
             }
@@ -228,29 +219,16 @@ public class TrackGenerator : MonoBehaviour
         if (b_c_Path.Count == 0 || b_c_Path[b_c_Path.Count - 1][0] != pointC[0] || b_c_Path[b_c_Path.Count - 1][1] != pointC[1])
         {
             if (b_c_Path.Count != 0) Debug.Log(b_c_Path[b_c_Path.Count - 1][0] + " " + b_c_Path[b_c_Path.Count - 1][1]);
-            Debug.Log("Couldn't find a path back!");
+            //Debug.Log("Couldn't find a path back!");
 
             // Retry!
             GenerateTrack();
             return;
         }
 
-        /*
-        Debug.Log("--- Paths ---");
-        for (int i = 0; i < trackPath.Count; ++i)
-        {
-            Debug.Log(trackPath[i][0] + " " + trackPath[i][1]);
-        }
-        */
-
         DesignRoad(trackPath);
 
         InstantiateTrack();
-
-        /*
-        DebugWorldCosts();
-        DebugWorldType();
-        */
 
         SetupStartPositions();
         SetupCheckpoints(trackPath);
@@ -277,6 +255,8 @@ public class TrackGenerator : MonoBehaviour
                 ass.Stop();
                 ass.enabled = false;
             }
+
+            serializedTrack = JsonUtility.ToJson(Serialize());
         }
     }
 
@@ -284,7 +264,7 @@ public class TrackGenerator : MonoBehaviour
     {
         trackStarts = new List<Transform>();
 
-        foreach(Transform t in trackPeices[generationWidth / 2][generationWidth / 2].transform)
+        foreach(Transform t in trackPeices[trackPeices.Count / 2][trackPeices[0].Count / 2].transform)
         {
             if(t.name.ToLower() != "checkpoint")
             {
@@ -297,7 +277,7 @@ public class TrackGenerator : MonoBehaviour
     {
         checkPoints = new List<CheckPoint>();
 
-        foreach (Transform t in trackPeices[generationWidth / 2][generationWidth / 2].transform)
+        foreach (Transform t in trackPeices[trackPeices.Count / 2][trackPeices[0].Count / 2].transform)
         {
             if (t.name.ToLower() == "checkpoint")
             {
@@ -330,7 +310,7 @@ public class TrackGenerator : MonoBehaviour
             }
         }
 
-        foreach (Transform t in trackPeices[generationWidth / 2][generationWidth / 2 - 1].transform)
+        foreach (Transform t in trackPeices[trackPeices.Count / 2][(trackPeices[0].Count / 2) - 1].transform)
         {
             if (t.name.ToLower() == "checkpoint")
             {
@@ -496,63 +476,8 @@ public class TrackGenerator : MonoBehaviour
 
         frontier.Add(pointA);
 
-        //int iter = 0;
         while(frontier.Count > 0)
         {
-            /*
-            string posOutput = "";
-            string output = "";
-            string simpleOutput = "";
-            for (int x = 0; x < parentNodes.Count; ++x)
-            {
-
-                for (int y = 0; y < parentNodes.Count; ++y)
-                {
-                    output += parentNodes[y][x][0] + "," + parentNodes[y][x][1] + "    ";
-                    posOutput += y + "," + x + "    ";
-
-                    if (parentNodes[y][x][0] < y && parentNodes[y][x][0] != -1)
-                    {
-                        simpleOutput += "<";
-                    }
-
-                    if (parentNodes[y][x][0] > y && parentNodes[y][x][0] != -1)
-                    {
-                        simpleOutput += ">";
-                    }
-
-                    if (parentNodes[y][x][1] < x && parentNodes[y][x][0] != -1)
-                    {
-                        simpleOutput += "^";
-                    }
-
-                    if (parentNodes[y][x][1] > x && parentNodes[y][x][0] != -1)
-                    {
-                        simpleOutput += "v";
-                    }
-
-                    if(parentNodes[y][x][0] == -1)
-                    {
-                        simpleOutput += 0;
-
-                    } else
-                    {
-                        //simpleOutput += ":" + (parentNodes[y][x][1] - x) + "," + (parentNodes[y][x][0] - y);
-                    }
-
-                    simpleOutput += "    ";
-                }
-
-                output += "\n";
-                posOutput += "\n";
-                simpleOutput += "\n";
-            }
-
-            Debug.Log(output);
-            Debug.Log(posOutput);
-            Debug.Log(simpleOutput);
-
-            Debug.Log(iter++); */
 
         int lowestIndex = FindLowestPointInFrontier(frontier);
             int[] lowest = frontier[lowestIndex];
@@ -586,13 +511,9 @@ public class TrackGenerator : MonoBehaviour
                     }
                 }
             }
-
-            /*if(iter > 600)
-            {
-                break;
-            }*/
         }
 
+        /*
         string simpleOutput = "";
         for (int x = 0; x < parentNodes.Count; ++x)
         {
@@ -632,56 +553,31 @@ public class TrackGenerator : MonoBehaviour
         }
 
         Debug.Log(simpleOutput);
+        */
 
         return parentNodes;
     }
 
-    /*
-    public void DebugWorldCosts()
+    public GeneratedTrackData Serialize()
     {
-        worldCostDebug = "";
-        for (int x = 0; x < generationWidth; ++x)
-        {
-            for (int y = 0; y < generationWidth; ++y)
-            {
-                worldCostDebug += worldCosts[y][x] + " ";
-            }
+        GeneratedTrackData data = new GeneratedTrackData();
 
-            worldCostDebug += "\n";
-        }
+        data.Serialize(rotations, prefabIndex, trackPath);
+
+        return data;
     }
 
-    public void DebugWorldType()
+    public void LoadTrackData(GeneratedTrackData data)
     {
-        worldTypeDebug = "";
-        for (int x = 0; x < generationWidth; ++x)
-        {
-            for (int y = 0; y < generationWidth; ++y)
-            {
-                worldTypeDebug += worldType[y][x] + " ";
-            }
+        InitializeTrack();
 
-            worldTypeDebug += "\n";
-        }
-    }
-    */
+        data.Deserialize(out rotations, out prefabIndex, out trackPath);
 
-    public void LoadTrack(string data)
-    {
+        InstantiateTrack();
 
-    }
-
-    void OnDrawGizmos()
-    {
-        if (debugCheckPoints)
-        {
-            foreach (CheckPoint c in checkPoints)
-            {
-                // Draw a yellow sphere at the transform's position
-                Gizmos.color = new Color(242 / 255f, 245 / 255f, 66 / 255f, 190 / 255f);
-                Gizmos.DrawSphere(c.t.position, c.raduis);
-            }
-        }
+        SetupStartPositions();
+        SetupCheckpoints(trackPath);
+        SetupRaceTrackController();
     }
 }
 
@@ -695,44 +591,44 @@ public class TrackPeice
 [Serializable]
 public class GeneratedTrackData
 {
-    public SerializableList<SerializableList<int>> rotations = new SerializableList<SerializableList<int>>();
-    public SerializableList<SerializableList<int>> prefabIndex = new SerializableList<SerializableList<int>>();
-    public SerializableList<Point> trackPath = new SerializableList<Point>();
+    public List<IntList> rotations = new List<IntList>();
+    public List<IntList> prefabIndex = new List<IntList>();
+    public List<Point> trackPath = new List<Point>();
 
     public void Serialize(List<List<int>> rotations, List<List<int>> prefabIndex, List<int[]> trackPath)
     {
 
-        this.rotations = new SerializableList<SerializableList<int>>();
-        this.prefabIndex = new SerializableList<SerializableList<int>>();
-        this.trackPath = new SerializableList<Point>();
+        this.rotations = new List<IntList>();
+        this.prefabIndex = new List<IntList>();
+        this.trackPath = new List<Point>();
 
-        for(int x = 0; x < rotations.Count; ++x)
+        for (int x = 0; x < rotations.Count; ++x)
         {
-            SerializableList<int> yHat = new SerializableList<int>();
+            IntList yHat = new IntList();
 
             for(int y = 0; y < rotations[x].Count; ++y)
             {
                 yHat.list.Add(rotations[x][y]);
             }
 
-            this.rotations.list.Add(yHat);
+            this.rotations.Add(yHat);
         }
 
         for(int x = 0; x < prefabIndex.Count; ++x)
         {
-            SerializableList<int> yHat = new SerializableList<int>();
+            IntList yHat = new IntList();
 
             for (int y = 0; y < prefabIndex[x].Count; ++y)
             {
                 yHat.list.Add(prefabIndex[x][y]);
             }
 
-            this.prefabIndex.list.Add(yHat);
+            this.prefabIndex.Add(yHat);
         }
 
         foreach(int[] a in trackPath)
         {
-            this.trackPath.list.Add(new Point(a[0], a[1]));
+            this.trackPath.Add(new Point(a[0], a[1]));
         }
     }
 
@@ -743,7 +639,7 @@ public class GeneratedTrackData
         prefabIndex = new List<List<int>>();
         trackPath = new List<int[]>();
 
-        for (int x = 0; x < this.rotations.list.Count; ++x)
+        for (int x = 0; x < this.rotations.Count; ++x)
         {
             List<int> yHat = new List<int>();
 
@@ -755,7 +651,7 @@ public class GeneratedTrackData
             rotations.Add(yHat);
         }
 
-        for (int x = 0; x < this.prefabIndex.list.Count; ++x)
+        for (int x = 0; x < this.prefabIndex.Count; ++x)
         {
             List<int> yHat = new List<int>();
 
@@ -767,7 +663,7 @@ public class GeneratedTrackData
             prefabIndex.Add(yHat);
         }
 
-        foreach (Point p in this.trackPath.list)
+        foreach (Point p in this.trackPath)
         {
             trackPath.Add(new int[] { p.x, p.y });
         }
@@ -775,11 +671,11 @@ public class GeneratedTrackData
 }
 
 [Serializable]
-public class SerializableList<t>
+public class IntList
 {
-    public List<t> list;
+    public List<int> list = new List<int>();
 
-    public t this[int key]
+    public int this[int key]
     {
         get
         {

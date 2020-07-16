@@ -24,6 +24,7 @@ public class RaceController : MonoBehaviour
     public UserManager um;
     public CameraController cameraController;
     public RaceTrack currentTrack;
+    public TrackGenerator trackGenerator;
     public ControlManager cm;
     public List<PlayerEntity> players = new List<PlayerEntity>();
 
@@ -646,6 +647,13 @@ public class RaceController : MonoBehaviour
                     {
                         ResetRaceMode();
                         ShowPreRaceMenu();
+                    }
+
+                    if (raceControllerMode == RaceControllerMode.SERVER)
+                    {
+                        // setup new track
+                        trackGenerator.GenerateTrack();
+                        sc.SendTrackData();
                     }
 
                     prevRaceModeState = RaceModeState.PRERACE;

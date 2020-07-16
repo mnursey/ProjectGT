@@ -87,6 +87,13 @@ public static class NetworkingMessageTranslator
         return ToJson(msg);
     }
 
+    public static string GenerateTrackDataMessage(string serializedTrackData, int clientID)
+    {
+        NetworkingMessage msg = new NetworkingMessage(NetworkingMessageType.TRACK_DATA, clientID);
+        msg.content = serializedTrackData;
+        return ToJson(msg);
+    }
+
     public static NetworkingMessage ParseMessage(string json)
     {
         return JsonUtility.FromJson<NetworkingMessage>(json);
@@ -121,10 +128,15 @@ public static class NetworkingMessageTranslator
     {
         return int.Parse(carModelString);
     }
+
+    public static GeneratedTrackData ParseGenerateTrackData(string json)
+    {
+        return JsonUtility.FromJson<GeneratedTrackData>(json);
+    }
 }
 
 [Serializable]
-public enum NetworkingMessageType { CLIENT_JOIN, SERVER_JOIN_RESPONSE, DISCONNECT, PING, PING_RESPONSE, GAME_STATE, INPUT_STATE, USER_MANAGER_STATE, CAR_MODEL };
+public enum NetworkingMessageType { CLIENT_JOIN, SERVER_JOIN_RESPONSE, DISCONNECT, PING, PING_RESPONSE, GAME_STATE, INPUT_STATE, USER_MANAGER_STATE, CAR_MODEL, TRACK_DATA };
 
 [Serializable]
 public class NetworkingMessage

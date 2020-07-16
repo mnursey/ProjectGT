@@ -138,6 +138,15 @@ public class ServerController : MonoBehaviour
         }
     }
 
+    public void SendTrackData()
+    {
+        foreach (ServerConnection sc in clients.ToArray())
+        {
+            string s = NetworkingMessageTranslator.GenerateTrackDataMessage(rc.trackGenerator.serializedTrack, sc.clientID);
+            sc.BeginSend(s);
+        }
+    }
+
     void BeginReceive()
     {
         MessageObject receiveObject = new MessageObject();
@@ -183,6 +192,7 @@ public class ServerController : MonoBehaviour
 
                         // Send Accept Connect msg
                         newConnection.BeginSend(NetworkingMessageTranslator.GenerateServerJoinResponseMessage(new JoinRequestResponce(newConnection.clientID)), SendUserManagerState);
+                        newConnection.BeginSend(NetworkingMessageTranslator.GenerateTrackDataMessage(rc.trackGenerator.serializedTrack, newConnection.clientID));
 
                     } else {
                         Debug.Log("Server Rejected client connection due to version mismatch... Client Version " + jr.version);

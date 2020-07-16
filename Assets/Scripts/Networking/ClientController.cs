@@ -324,6 +324,19 @@ public class ClientController : MonoBehaviour
 
                         break;
 
+                    case NetworkingMessageType.TRACK_DATA:
+
+                        UnityMainThreadDispatcher.Instance().Enqueue(() => {
+
+                            GeneratedTrackData gtd = NetworkingMessageTranslator.ParseGenerateTrackData(msg.content);
+
+                            rc.trackGenerator.LoadTrackData(gtd);
+
+                        });
+
+
+                        break;
+
                     default:
                         break;
                 }

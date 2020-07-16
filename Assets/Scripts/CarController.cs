@@ -99,6 +99,8 @@ public class CarController : MonoBehaviour
     public float shakeAmount = 0.01f;
     public float maxShakeImpule = 4000.0f;
 
+    private bool movementLocked = false;
+
     void Awake()
     {
         carSoundManagers[0].onAudioPlay = exhaust.Puff;
@@ -118,11 +120,13 @@ public class CarController : MonoBehaviour
     public void LockMovement()
     {
         rb.constraints = RigidbodyConstraints.FreezeAll;
+        movementLocked = true;
     }
 
     public void UnlockMovement()
     {
         rb.constraints = RigidbodyConstraints.None;
+        movementLocked = false;
     }
 
     public void ResetToCheckpoint()
@@ -244,7 +248,7 @@ public class CarController : MonoBehaviour
             hornInput = false;
         }
 
-        if(resetInput)
+        if(resetInput && !movementLocked)
         {
             rb.velocity = new Vector3();
             rb.angularVelocity = new Vector3();
@@ -254,7 +258,7 @@ public class CarController : MonoBehaviour
             resetInput = false;
         }
 
-        if(resetToCheckpointInput)
+        if(resetToCheckpointInput && !movementLocked)
         {
             rb.velocity = new Vector3();
             rb.angularVelocity = new Vector3();
