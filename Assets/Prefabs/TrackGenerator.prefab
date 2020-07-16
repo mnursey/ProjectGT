@@ -1,0 +1,147 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &5337012155297989966
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 5337012155297989952}
+  - component: {fileID: 5337012155297989953}
+  - component: {fileID: 5337012155297989955}
+  m_Layer: 0
+  m_Name: TrackGenerator
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &5337012155297989952
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5337012155297989966}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_RootOrder: 0
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &5337012155297989953
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5337012155297989966}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f307e9793818aca46a420ced2ffbaf65, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  trackPeicePrefabs:
+  - type: 1
+    prefab: {fileID: 4732334817661378973, guid: ee813d924301766439c076f9874a12ed,
+      type: 3}
+  - type: 0
+    prefab: {fileID: 3747090962397192214, guid: c83ba91650dfaab41a1dfb2e6abbaba5,
+      type: 3}
+  - type: 0
+    prefab: {fileID: 5691122574158358379, guid: 628b6fddb4c859e4fbfe46b295535061,
+      type: 3}
+  - type: 0
+    prefab: {fileID: 5691122574158358379, guid: 5151b271f2d968b4db1bb38829b81b9c,
+      type: 3}
+  - type: 2
+    prefab: {fileID: 4454764041570004665, guid: 10217ff0230a3bc4385a3eff494c2188,
+      type: 3}
+  - type: 2
+    prefab: {fileID: 1557698554331177871, guid: 7cf8fc266e2721e4b9934e48dfe0541f,
+      type: 3}
+  - type: 2
+    prefab: {fileID: 8825513840368862300, guid: 3451ba86016b8d04cb886f5c0018f42e,
+      type: 3}
+  - type: 2
+    prefab: {fileID: 6670929847867414898, guid: 98b370bd7ec2d4b498230132bcc3b3f9,
+      type: 3}
+  - type: 3
+    prefab: {fileID: 5980534405059048180, guid: 87f23d5ba8410e3449592fdd2adfab62,
+      type: 3}
+  - type: 3
+    prefab: {fileID: 4338775768554391120, guid: b6dba13087753734d93dce2d8b01db26,
+      type: 3}
+  - type: 0
+    prefab: {fileID: 5691122574158358379, guid: 85d1893c0fb9ec7408911ea74089398c,
+      type: 3}
+  - type: 0
+    prefab: {fileID: 5691122574158358379, guid: 04a16065ee039494fa04d18f51e72936,
+      type: 3}
+  - type: 0
+    prefab: {fileID: 5691122574158358379, guid: 39561770b356e124cbb68eb8504e3216,
+      type: 3}
+  - type: 0
+    prefab: {fileID: 5691122574158358379, guid: b8ff7bab608ebc345ad0bdbd4ae0218d,
+      type: 3}
+  - type: 2
+    prefab: {fileID: 1557698554331177871, guid: c813b2cfa36a9854eb5e4a2bc616e872,
+      type: 3}
+  - type: 2
+    prefab: {fileID: 1557698554331177871, guid: 40e96ab2ca6b9ab4aa59bbc9e1068146,
+      type: 3}
+  - type: 2
+    prefab: {fileID: 6670929847867414898, guid: 8738aa63087ed9b418b6c803dd0e9d22,
+      type: 3}
+  - type: 4
+    prefab: {fileID: 6670929847867414898, guid: 98b370bd7ec2d4b498230132bcc3b3f9,
+      type: 3}
+  - type: 2
+    prefab: {fileID: 1557698554331177871, guid: d75d24379d452754bbf10ea64f950c2f,
+      type: 3}
+  - type: 5
+    prefab: {fileID: 6638033786677637244, guid: 720c616d63f4f92409636732ded4cbf9,
+      type: 3}
+  - type: 5
+    prefab: {fileID: 8392944567628146564, guid: b8a9b38919a2a9743bf7042fdbc1ccf9,
+      type: 3}
+  - type: 6
+    prefab: {fileID: 6638033786677637244, guid: 8aa6bbf461d91cd41a95cb30e1ab8ebc,
+      type: 3}
+  - type: 5
+    prefab: {fileID: 5162340405626663344, guid: 53836b4d1fd0fd843bdd9f85ec76784a,
+      type: 3}
+  generationWidth: 16
+  trackStarts: []
+  checkPoints: []
+  raceTrackController: {fileID: 5337012155297989955}
+  serverMode: 0
+  generateTrack: 1
+  targetX: 13
+  targetY: 13
+  trackSpawnWidth: 30
+  serializedTrack: 
+--- !u!114 &5337012155297989955
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5337012155297989966}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d55ca0b6e93aa2c49bf257e2e54b380e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  track: {fileID: 0}
+  serverObjects: {fileID: 0}
+  carStarts: []
+  checkPoints: []
+  debugCheckPoints: 0
+  checkpointTransform: {fileID: 0}
+  setupCheckpoints: 0
+  defaultRadius: 0
+  trackNetworkEntities: []

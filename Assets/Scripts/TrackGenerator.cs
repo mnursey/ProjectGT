@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public enum TrackPeiceType { EMPTY, START, STRAIGHT, TURN, PIT };
+public enum TrackPeiceType { EMPTY, START, STRAIGHT, TURN, PIT, CLIFF, CLIFF_CORNER };
 
 public class TrackGenerator : MonoBehaviour
 {
@@ -386,11 +386,37 @@ public class TrackGenerator : MonoBehaviour
         worldType[generationWidth / 2][generationWidth / 2] = TrackPeiceType.START;
         worldType[generationWidth / 2][generationWidth / 2 - 1] = TrackPeiceType.PIT;
 
-        // Path from start to target
-        // Convert all tiles on path from start to target into tiles...
+        // Create edge cliffs
 
-        // Path from target to straight behind start
-        // Convert all tiles on path from start to target into tiles...
+        for (int x = 0; x < generationWidth; ++x)
+        {
+            worldType[x][0] = TrackPeiceType.CLIFF;
+
+            worldType[x][generationWidth - 1] = TrackPeiceType.CLIFF;
+            rotations[x][generationWidth - 1] = 2;
+        }
+
+        for (int y = 0; y < generationWidth; ++y)
+        {
+            worldType[0][y] = TrackPeiceType.CLIFF;
+            rotations[0][y] = 1;
+
+            worldType[generationWidth - 1][y] = TrackPeiceType.CLIFF;
+            rotations[generationWidth - 1][y] = 3;
+        }
+
+        worldType[0][0] = TrackPeiceType.CLIFF_CORNER;
+        rotations[0][0] = 0;
+
+        worldType[0][generationWidth - 1] = TrackPeiceType.CLIFF_CORNER;
+        rotations[0][generationWidth - 1] = 1;
+
+        worldType[generationWidth - 1][0] = TrackPeiceType.CLIFF_CORNER;
+        rotations[generationWidth - 1][0] = 3;
+
+        worldType[generationWidth - 1][generationWidth - 1] = TrackPeiceType.CLIFF_CORNER;
+        rotations[generationWidth - 1][generationWidth - 1] = 2;
+
     }
 
     List<int[]> GetNeighbours(int[] point) {
