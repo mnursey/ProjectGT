@@ -149,7 +149,7 @@ public class ClientController : MonoBehaviour
 
         BeginReceive();
 
-        BeginSend(NetworkingMessageTranslator.GenerateClientJoinMessage(new JoinRequest(username, version)));
+        BeginSend(NetworkingMessageTranslator.GenerateClientJoinMessage(new JoinRequest(username, version, rc.selectedCarModel)));
     }
 
     public void Disconnect()

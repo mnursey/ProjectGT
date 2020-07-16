@@ -89,7 +89,6 @@ public class RaceController : MonoBehaviour
 
     public bool ready;
     public int selectedCarModel = 0;
-    public bool sentSelectedCarModel = false;
     private int frame = 0;
 
     public float idleTime = 5.0f;
@@ -189,7 +188,6 @@ public class RaceController : MonoBehaviour
         cameraController.targetObject = null;
         frame = 0;
         clientFastestLapTime = float.MaxValue;
-        sentSelectedCarModel = false;
         cameraController.GetComponent<AudioListener>().enabled = true;
 
         raceControllerState = RaceControllerStateEnum.IDLE;
@@ -844,12 +842,6 @@ public class RaceController : MonoBehaviour
             cc.SendInput(input);
 
             RewardForPersonalBestTime();
-
-            if(!sentSelectedCarModel)
-            {
-                cc.SendCarModel(selectedCarModel);
-                sentSelectedCarModel = true;
-            }
         }
 
         if (raceControllerMode == RaceControllerMode.SERVER && sc.ServerActive())
@@ -912,6 +904,12 @@ public class RaceController : MonoBehaviour
     {
         foreach (PlayerEntity player in players)
         {
+
+            if(player.GetLastInputReceivedFrom() < 0.0f)
+            {
+                player.UpdateLastInputReceivedFrom();
+            }
+
             if(Time.time - player.GetLastInputReceivedFrom() > idleTime)
             {
                 QueueRemovePlayer(player.networkID);
@@ -1113,6 +1111,14 @@ public class RaceController : MonoBehaviour
         return pe;
     }
 
+    public PlayerEntity CreatePlayer(int networkID, int carModel)
+    {
+        PlayerEntity pe = new PlayerEntity(networkID);
+        pe.carModel = carModel;
+        players.Add(pe);
+        return pe;
+    }
+
     void AttachCamera(Transform t)
     {
         if(cameraController != null)
@@ -1120,11 +1126,6 @@ public class RaceController : MonoBehaviour
             cameraController.mode = CameraModeEnum.SafeCamera;
             cameraController.targetObject = t;
         }
-    }
-
-    int SpawnCar(PlayerEntity pe)
-    {
-        return SpawnCar(pe, 0);
     }
 
 
@@ -1258,6 +1259,7 @@ public class RaceController : MonoBehaviour
 
         if(p == null)
         {
+            Debug.Log("Creating new player entity... how did this happen tho?");
             p = CreatePlayer(inputState.networkID);
         }
 
@@ -1318,7 +1320,7 @@ public class PlayerEntity
     public float fastestLapTime = float.MaxValue;
     public float elapsedTime = 0.0f;
 
-    private float lastInputReceivedFrom = 0.0f;
+    private float lastInputReceivedFrom = -1.0f;
 
     public PlayerEntity(int networkID, int carID, int carModel)
     {
@@ -1480,10 +1482,13 @@ public class JoinRequest
 {
     public string username;
     public string version;
-    public JoinRequest(string username, string version)
+    public int carModel;
+
+    public JoinRequest(string username, string version, int carModel)
     {
         this.username = username;
         this.version = version;
+        this.carModel = carModel;
     }
 }
 

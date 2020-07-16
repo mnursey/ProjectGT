@@ -171,7 +171,6 @@ public class EntityManager : MonoBehaviour
             // Todo:
             // Handle prefab types?
 
-            // TODO
             // depending on car model set modifier value
             Vector3 rot = state.rotation.GetValue();
             int id = AddEntity(state.prefabID, state.id, state.position.GetValue(), Quaternion.Euler(rot.x, rot.y, rot.z), state.modifier);

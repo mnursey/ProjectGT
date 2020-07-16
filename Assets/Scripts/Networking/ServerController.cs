@@ -188,7 +188,7 @@ public class ServerController : MonoBehaviour
                         clients.Add(newConnection);
 
                         rc.um.AddUser(jr.username, newConnection.clientID);
-                        rc.CreatePlayer(newConnection.clientID);
+                        rc.CreatePlayer(newConnection.clientID, jr.carModel);
 
                         // Send Accept Connect msg
                         newConnection.BeginSend(NetworkingMessageTranslator.GenerateServerJoinResponseMessage(new JoinRequestResponce(newConnection.clientID)), SendUserManagerState);
@@ -259,10 +259,11 @@ public class ServerController : MonoBehaviour
 
                             if(pe != null)
                             {
+                                Debug.Log("Set car model for " + pe.networkID + " to " + carModel);
                                 pe.carModel = carModel;
                             } else
                             {
-                                Debug.Log("SOFT WARNING! Could not find matching player entity to set car model...");
+                                Debug.Log("SOFT WARNING! Could not find matching player entity to set car model... Received client id was " + msg.clientID);
                             }
 
                             break;
