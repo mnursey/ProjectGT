@@ -11,7 +11,7 @@ public class TrackGenerator : MonoBehaviour
     public List<TrackPeice> trackPeicePrefabs = new List<TrackPeice>();
 
     public int generationWidth = 6;
-
+    public float defaultCheckpointRadius = 25f;
     public List<List<int>> worldCosts = new List<List<int>>();
     public List<List<TrackPeiceType>> worldType = new List<List<TrackPeiceType>>();
 
@@ -281,14 +281,14 @@ public class TrackGenerator : MonoBehaviour
         {
             if (t.name.ToLower() == "checkpoint")
             {
-                float radius = trackSpawnWidth / 2f;
+                float radius = defaultCheckpointRadius;
 
                 if (t.localScale.x > 0.01f)
                 {
-                    radius = t.localScale.x;
+                    //radius = t.localScale.x;
                 }
 
-                checkPoints.Add(new CheckPoint(t, trackSpawnWidth / 2f));
+                checkPoints.Add(new CheckPoint(t, radius));
             }
         }
 
@@ -298,14 +298,14 @@ public class TrackGenerator : MonoBehaviour
             {
                 if (t.name.ToLower() == "checkpoint")
                 {
-                    float radius = trackSpawnWidth / 2f;
+                    float radius = defaultCheckpointRadius;
 
                     if(t.localScale.x > 0.01f)
                     {
-                        radius = t.localScale.x;
+                        //radius = t.localScale.x;
                     }
 
-                    checkPoints.Add(new CheckPoint(t, trackSpawnWidth / 2f));
+                    checkPoints.Add(new CheckPoint(t, radius));
                 }
             }
         }
@@ -314,14 +314,14 @@ public class TrackGenerator : MonoBehaviour
         {
             if (t.name.ToLower() == "checkpoint")
             {
-                float radius = trackSpawnWidth / 2f;
+                float radius = defaultCheckpointRadius;
 
                 if (t.localScale.x > 0.01f)
                 {
-                    radius = t.localScale.x;
+                    //radius = t.localScale.x;
                 }
 
-                checkPoints.Add(new CheckPoint(t, trackSpawnWidth / 2f));
+                checkPoints.Add(new CheckPoint(t, radius));
             }
         }
 

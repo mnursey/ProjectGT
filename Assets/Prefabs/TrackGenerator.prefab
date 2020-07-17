@@ -115,6 +115,7 @@ MonoBehaviour:
     prefab: {fileID: 5162340405626663344, guid: 53836b4d1fd0fd843bdd9f85ec76784a,
       type: 3}
   generationWidth: 16
+  defaultCheckpointRadius: 25
   trackStarts: []
   checkPoints: []
   raceTrackController: {fileID: 5337012155297989955}
