@@ -126,6 +126,12 @@ MonoBehaviour:
   - type: 6
     prefab: {fileID: 6638033786677637244, guid: 1f5ac29dd94a7e341ba3c8bf5ffc3c20,
       type: 3}
+  - type: 2
+    prefab: {fileID: 4409933064841954170, guid: f9ca859fd6950f64bbf3cdfbc7bc3f21,
+      type: 3}
+  - type: 2
+    prefab: {fileID: 4409933064841954170, guid: 814c98f8baa06e84692a489962ff26a5,
+      type: 3}
   generationWidth: 16
   defaultCheckpointRadius: 25
   trackStarts: []
