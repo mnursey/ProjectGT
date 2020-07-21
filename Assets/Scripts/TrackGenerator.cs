@@ -12,6 +12,7 @@ public class TrackGenerator : MonoBehaviour
 
     public int generationWidth = 6;
     public float defaultCheckpointRadius = 25f;
+    public int holeChance = 2;
     public List<List<int>> worldCosts = new List<List<int>>();
     public List<List<TrackPeiceType>> worldType = new List<List<TrackPeiceType>>();
 
@@ -155,11 +156,56 @@ public class TrackGenerator : MonoBehaviour
         {
             for (int y = 0; y < worldType[x].Count; ++y)
             {
-                List<TrackPeice> pt = trackPeicePrefabs.FindAll(j => j.type == worldType[x][y]);
+                List<TrackPeice> pt = trackPeicePrefabs.FindAll(j => j.type == worldType[x][y] && !IsHole(j));
                 int ptIndex = r.Next(0, pt.Count);
                 prefabIndex[x][y] = trackPeicePrefabs.FindIndex(j => j == pt[ptIndex]);   
             }
         }
+
+        // Add holes after jump
+        {
+            List<TrackPeice> pt = trackPeicePrefabs.FindAll(j => j.type == TrackPeiceType.STRAIGHT && IsHole(j));
+            for (int i = 0; i < path.Count - 1; ++i)
+            {
+                TrackPeice currentPeice = trackPeicePrefabs[prefabIndex[path[i][0]][path[i][1]]];
+                TrackPeice nextPeice = trackPeicePrefabs[prefabIndex[path[i + 1][0]][path[i + 1][1]]];
+
+                // if peice is straight && jump && next peice is straight
+                if(currentPeice.type == TrackPeiceType.STRAIGHT && nextPeice.type == TrackPeiceType.STRAIGHT && HasTag(currentPeice, TrackPeiceTags.JUMP))
+                {
+                    // random chance
+                    int c = r.Next(0, holeChance);
+
+                    // postive chance -> make nextpeice a pit
+                    if (c == 0)
+                    {
+                        int ptIndex = r.Next(0, pt.Count);
+                        prefabIndex[path[i + 1][0]][path[i + 1][1]] = trackPeicePrefabs.FindIndex(j => j == pt[ptIndex]);
+                    }
+                }
+            }
+        }
+    }
+
+    bool IsHole(TrackPeice tp)
+    {
+        return HasTag(tp, TrackPeiceTags.HOLE);
+    }
+
+    bool HasTag(TrackPeice tp, TrackPeiceTags tag)
+    {
+        bool hasTag = false;
+
+        foreach (TrackPeiceTags t in tp.tags)
+        {
+            if (t == tag)
+            {
+                hasTag = true;
+                break;
+            }
+        }
+
+        return hasTag;
     }
 
     public List<int[]> TracePath(List<List<int[]>> paths, int[] t)
@@ -607,11 +653,14 @@ public class TrackGenerator : MonoBehaviour
     }
 }
 
+public enum TrackPeiceTags { HOLE, JUMP, OBSTACLE, BRIDGE, ANIMAL, LANDMARK };
+
 [Serializable]
 public class TrackPeice
 {
     public TrackPeiceType type; 
     public GameObject prefab;
+    public List<TrackPeiceTags> tags = new List<TrackPeiceTags>();
 }
 
 [Serializable]
