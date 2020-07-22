@@ -13,6 +13,7 @@ public class TrackGenerator : MonoBehaviour
     public int generationWidth = 6;
     public float defaultCheckpointRadius = 25f;
     public int holeChance = 2;
+    public int landmarkChance = 15;
     public List<List<int>> worldCosts = new List<List<int>>();
     public List<List<TrackPeiceType>> worldType = new List<List<TrackPeiceType>>();
 
@@ -156,9 +157,28 @@ public class TrackGenerator : MonoBehaviour
         {
             for (int y = 0; y < worldType[x].Count; ++y)
             {
-                List<TrackPeice> pt = trackPeicePrefabs.FindAll(j => j.type == worldType[x][y] && !IsHole(j));
+                List<TrackPeice> pt = trackPeicePrefabs.FindAll(j => j.type == worldType[x][y] && !IsHole(j) && !HasTag(j, TrackPeiceTags.LANDMARK));
                 int ptIndex = r.Next(0, pt.Count);
                 prefabIndex[x][y] = trackPeicePrefabs.FindIndex(j => j == pt[ptIndex]);   
+            }
+        }
+
+        // Add landmarks to empty spots
+        for (int x = 0; x < worldType.Count; ++x)
+        {
+            for (int y = 0; y < worldType[x].Count; ++y)
+            {
+                if(worldType[x][y] == TrackPeiceType.EMPTY)
+                {
+                    int c = r.Next(0, 100);
+
+                    if(c < landmarkChance)
+                    {
+                        List<TrackPeice> pt = trackPeicePrefabs.FindAll(j => j.type == worldType[x][y] && HasTag(j, TrackPeiceTags.LANDMARK));
+                        int ptIndex = r.Next(0, pt.Count);
+                        prefabIndex[x][y] = trackPeicePrefabs.FindIndex(j => j == pt[ptIndex]);
+                    }
+                }
             }
         }
 
@@ -174,10 +194,10 @@ public class TrackGenerator : MonoBehaviour
                 if(currentPeice.type == TrackPeiceType.STRAIGHT && nextPeice.type == TrackPeiceType.STRAIGHT && HasTag(currentPeice, TrackPeiceTags.JUMP))
                 {
                     // random chance
-                    int c = r.Next(0, holeChance);
+                    int c = r.Next(0, 100);
 
                     // postive chance -> make nextpeice a pit
-                    if (c == 0)
+                    if (c < holeChance)
                     {
                         int ptIndex = r.Next(0, pt.Count);
                         prefabIndex[path[i + 1][0]][path[i + 1][1]] = trackPeicePrefabs.FindIndex(j => j == pt[ptIndex]);

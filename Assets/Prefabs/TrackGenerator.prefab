@@ -165,9 +165,14 @@ MonoBehaviour:
     prefab: {fileID: 4409933064841954170, guid: 389a8251e929385409000f34b8dd587c,
       type: 3}
     tags: 00000000
+  - type: 0
+    prefab: {fileID: 5691122574158358379, guid: 27ed3a2d03db48b45986528fb81283ac,
+      type: 3}
+    tags: 05000000
   generationWidth: 16
   defaultCheckpointRadius: 25
-  holeChance: 2
+  holeChance: 50
+  landmarkChance: 2
   trackStarts: []
   checkPoints: []
   raceTrackController: {fileID: 5337012155297989955}
