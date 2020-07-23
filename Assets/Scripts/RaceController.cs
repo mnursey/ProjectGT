@@ -982,7 +982,7 @@ public class RaceController : MonoBehaviour
             pe.elapsedTime += Time.fixedDeltaTime;
             pe.currentLapTime += Time.fixedDeltaTime;
 
-            c.resetCheckpoint = GetCurrentCheckpoint(pe);
+            c.resetCheckpoint = GetCheckpointToResetTo(pe);
 
             // Check if at next checkpoint...
             int nextCheckPointID = (pe.checkpoint + 1) % currentTrack.checkPoints.Count;
@@ -1005,7 +1005,7 @@ public class RaceController : MonoBehaviour
                 pe.elapsedTime += Time.fixedDeltaTime;
                 pe.currentLapTime += Time.fixedDeltaTime;
 
-                c.resetCheckpoint = GetCurrentCheckpoint(pe);
+                c.resetCheckpoint = GetCheckpointToResetTo(pe);
 
                 // Check if at next checkpoint...
                 int nextCheckPointID = (pe.checkpoint + 1) % currentTrack.checkPoints.Count;
@@ -1101,6 +1101,15 @@ public class RaceController : MonoBehaviour
     CheckPoint GetCurrentCheckpoint(PlayerEntity pe)
     {
         return currentTrack.checkPoints[pe.checkpoint];
+    }
+
+    CheckPoint GetCheckpointToResetTo(PlayerEntity pe)
+    {
+        int index = (pe.checkpoint - 2) % currentTrack.checkPoints.Count;
+
+        if (index < 0) index += currentTrack.checkPoints.Count;
+
+        return currentTrack.checkPoints[index];
     }
 
     public void MarkReady()
