@@ -801,6 +801,7 @@ public class RaceController : MonoBehaviour
         {
             pe.ready = false;
             pe.currentLapTime = 0.0f;
+            pe.fastestLapTime = float.MaxValue;
             pe.elapsedTime = 0.0f;
             pe.finishedTime = -1.0f;
             pe.lapScore = 0.0f;
