@@ -36,6 +36,8 @@ public class RaceController : MonoBehaviour
 
     public MenuController mc;
 
+    public Transform spectatorPosition;
+
     [Header("UI")]
 
     public GameUI gameUI = new GameUI();
@@ -739,7 +741,11 @@ public class RaceController : MonoBehaviour
                         if(leadingCar != null)
                         {
                             cameraController.targetObject = leadingCar.transform;
-                            cameraController.transform.position = GetNextCheckpoint(leadingPlayer).t.position + (Vector3.up * 4);
+
+                            if(spectatorPosition != null)
+                            {
+                                cameraController.transform.position = spectatorPosition.position;
+                            }
                         }
                     }
                 }
