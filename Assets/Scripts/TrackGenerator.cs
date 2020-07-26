@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public enum TrackPeiceType { EMPTY, START, STRAIGHT, TURN, PIT, CLIFF, CLIFF_CORNER };
+public enum TrackPeiceType { EMPTY, START, STRAIGHT, TURN, PIT, CLIFF, CLIFF_CORNER, WATER, WATER_CLIFF, WATER_CORNER, WATER_NARROW, WATER_END, WATER_POND };
 
 public class TrackGenerator : MonoBehaviour
 {
@@ -14,7 +14,12 @@ public class TrackGenerator : MonoBehaviour
     public float defaultCheckpointRadius = 25f;
     public int holeChance = 2;
     public int landmarkChance = 15;
+
+    public float biomeFrequency = 2.0f;
+    public float waterRange = 0.5f;
+
     public List<List<int>> worldCosts = new List<List<int>>();
+    public List<List<float>> biomeCosts = new List<List<float>>();
     public List<List<TrackPeiceType>> worldType = new List<List<TrackPeiceType>>();
 
     public List<List<int>> rotations = new List<List<int>>();
@@ -146,20 +151,39 @@ public class TrackGenerator : MonoBehaviour
             {
                 if(worldType[x][y] == TrackPeiceType.EMPTY)
                 {
-                    // Randomize rotation
-                    rotations[x][y] = r.Next(4);
+
+                    if(biomeCosts[x][y] < waterRange)
+                    {
+                        worldType[x][y] = TrackPeiceType.WATER;
+
+                        List<int[]> n = GetNeighbours(new int[] { x, y });
+
+                    } else
+                    {
+                        // Randomize rotation
+                        rotations[x][y] = r.Next(4);
+                    }
                 }
             }
         }
+
+        // Handle water tile rotation and types
+
+        for (int x = 0; x < worldType.Count; ++x)
+        {
+            for (int y = 0; y < worldType[x].Count; ++y)
+            {
+                HandleWaterTile(x, y);
+            }
+        }
+
 
         // Select type instance
         for (int x = 0; x < worldType.Count; ++x)
         {
             for (int y = 0; y < worldType[x].Count; ++y)
             {
-                List<TrackPeice> pt = trackPeicePrefabs.FindAll(j => j.type == worldType[x][y] && !IsHole(j) && !HasTag(j, TrackPeiceTags.LANDMARK));
-                int ptIndex = r.Next(0, pt.Count);
-                prefabIndex[x][y] = trackPeicePrefabs.FindIndex(j => j == pt[ptIndex]);   
+                HandleTileInstancePicking(x, y);
             }
         }
 
@@ -193,18 +217,206 @@ public class TrackGenerator : MonoBehaviour
                 // if peice is straight && jump && next peice is straight
                 if(currentPeice.type == TrackPeiceType.STRAIGHT && nextPeice.type == TrackPeiceType.STRAIGHT && HasTag(currentPeice, TrackPeiceTags.JUMP))
                 {
-                    // random chance
-                    int c = r.Next(0, 100);
-
-                    // postive chance -> make nextpeice a pit
-                    if (c < holeChance)
+                    //check if next peice could of been water.
+                    // if so gen water spot instead...
+                    if (biomeCosts[path[i + 1][0]][path[i + 1][1]] < waterRange)
                     {
-                        int ptIndex = r.Next(0, pt.Count);
-                        prefabIndex[path[i + 1][0]][path[i + 1][1]] = trackPeicePrefabs.FindIndex(j => j == pt[ptIndex]);
+                        int oldRot = rotations[path[i + 1][0]][path[i + 1][1]];
+                        worldType[path[i + 1][0]][path[i + 1][1]] = TrackPeiceType.WATER;
+                        bool isWater = HandleWaterTile(path[i + 1][0], path[i + 1][1]);
+
+                        // Check if water is narrow...
+                        if(isWater && worldType[path[i + 1][0]][path[i + 1][1]] == TrackPeiceType.WATER_NARROW)
+                        {
+                            HandleTileInstancePicking(path[i + 1][0], path[i + 1][1]);
+
+                            // Update neighbour water tiles to account for new water tile.
+                            List<int[]> neighbours =  GetNeighbours(new int[] { path[i + 1][0], path[i + 1][1] });
+
+                            foreach(int[] n in neighbours)
+                            {
+                                bool neighbourIsWater = HandleWaterTile(n[0], n[1]);
+                                
+                                if(neighbourIsWater)
+                                {
+                                    HandleTileInstancePicking(n[0], n[1]);
+                                }
+                            }
+
+                        } else
+                        {
+                            rotations[path[i + 1][0]][path[i + 1][1]] = oldRot;
+                            worldType[path[i + 1][0]][path[i + 1][1]] = TrackPeiceType.STRAIGHT;
+                        }
+                    } else
+                    {
+                        // if not water spot have a chance to make random hole...
+                        // random chance
+                        int c = r.Next(0, 100);
+
+                        // postive chance -> make nextpeice a hole
+                        if (c < holeChance)
+                        {
+                            int ptIndex = r.Next(0, pt.Count);
+                            prefabIndex[path[i + 1][0]][path[i + 1][1]] = trackPeicePrefabs.FindIndex(j => j == pt[ptIndex]);
+                        }
                     }
                 }
             }
         }
+    }
+
+    void HandleTileInstancePicking(int x, int y)
+    {
+        List<TrackPeice> pt = trackPeicePrefabs.FindAll(j => j.type == worldType[x][y] && !IsHole(j) && !HasTag(j, TrackPeiceTags.LANDMARK));
+        int ptIndex = r.Next(0, pt.Count);
+        prefabIndex[x][y] = trackPeicePrefabs.FindIndex(j => j == pt[ptIndex]);
+    }
+
+    bool HandleWaterTile(int x, int y)
+    {
+        if (worldType[x][y] == TrackPeiceType.WATER || worldType[x][y] == TrackPeiceType.WATER_CLIFF || worldType[x][y] == TrackPeiceType.WATER_CORNER || worldType[x][y] == TrackPeiceType.WATER_END || worldType[x][y] == TrackPeiceType.WATER_NARROW || worldType[x][y] == TrackPeiceType.WATER_POND)
+        {
+            int numberOfWaterNeighbours = 0;
+            string neighboursPattern = "";
+            List<int[]> neighbours = GetNeighbours(new int[] { x, y });
+
+            foreach (int[] n in neighbours)
+            {
+                if (worldType[n[0]][n[1]] == TrackPeiceType.WATER || worldType[n[0]][n[1]] == TrackPeiceType.WATER_CLIFF || worldType[n[0]][n[1]] == TrackPeiceType.WATER_CORNER || worldType[n[0]][n[1]] == TrackPeiceType.WATER_NARROW || worldType[n[0]][n[1]] == TrackPeiceType.WATER_END || worldType[n[0]][n[1]] == TrackPeiceType.WATER_POND)
+                {
+                    numberOfWaterNeighbours++;
+                    neighboursPattern += "W";
+                }
+                else
+                {
+                    neighboursPattern += "L";
+                }
+            }
+
+            // If all neighbours water then regular water.
+            // If 3 neighbours is water then cliff water.
+            // If 2 neighbours is water then corner or narrow water.
+            // If 1 neighbours is water then end water.
+            // If 0 neighbours is water then pond water.
+
+            switch (numberOfWaterNeighbours)
+            {
+                case 4:
+                    worldType[x][y] = TrackPeiceType.WATER;
+                    break;
+
+                case 3:
+                    worldType[x][y] = TrackPeiceType.WATER_CLIFF;
+
+                    if (neighboursPattern == "LWWW")
+                    {
+                        rotations[x][y] = 1;
+                    }
+
+                    if (neighboursPattern == "WLWW")
+                    {
+                        rotations[x][y] = 3;
+                    }
+
+                    if (neighboursPattern == "WWLW")
+                    {
+                        rotations[x][y] = 0;
+                    }
+
+                    if (neighboursPattern == "WWWL")
+                    {
+                        rotations[x][y] = 2;
+                    }
+
+                    break;
+
+                case 2:
+
+                    if (neighboursPattern == "LLWW")
+                    {
+                        rotations[x][y] = 1;
+                        worldType[x][y] = TrackPeiceType.WATER_NARROW;
+                    }
+
+                    if (neighboursPattern == "WWLL")
+                    {
+                        rotations[x][y] = 0;
+                        worldType[x][y] = TrackPeiceType.WATER_NARROW;
+                    }
+
+                    if (neighboursPattern == "LWWL")
+                    {
+                        rotations[x][y] = 1;
+                        worldType[x][y] = TrackPeiceType.WATER_CORNER;
+                    }
+
+                    if (neighboursPattern == "WLLW")
+                    {
+                        rotations[x][y] = 3;
+                        worldType[x][y] = TrackPeiceType.WATER_CORNER;
+                    }
+
+                    if (neighboursPattern == "LWLW")
+                    {
+                        rotations[x][y] = 0;
+                        worldType[x][y] = TrackPeiceType.WATER_CORNER;
+                    }
+
+                    if (neighboursPattern == "WLWL")
+                    {
+                        rotations[x][y] = 2;
+                        worldType[x][y] = TrackPeiceType.WATER_CORNER;
+                    }
+
+                    break;
+
+                case 1:
+
+                    worldType[x][y] = TrackPeiceType.WATER_END;
+
+                    if (neighboursPattern == "LLLW")
+                    {
+                        rotations[x][y] = 3;
+
+                    }
+
+                    if (neighboursPattern == "LLWL")
+                    {
+                        rotations[x][y] = 1;
+
+                    }
+
+                    if (neighboursPattern == "LWLL")
+                    {
+                        rotations[x][y] = 0;
+
+                    }
+
+                    if (neighboursPattern == "WLLL")
+                    {
+                        rotations[x][y] = 2;
+                    }
+
+                    break;
+
+                case 0:
+                    //worldType[x][y] = TrackPeiceType.WATER_POND;
+
+                    // Remove single water spots
+                    worldType[x][y] = TrackPeiceType.EMPTY;
+                    rotations[x][y] = r.Next(4);
+
+                    return false;
+
+                default:
+                    break;
+            }
+
+            return true;
+        }
+
+        return false;
     }
 
     bool IsHole(TrackPeice tp)
@@ -422,15 +634,20 @@ public class TrackGenerator : MonoBehaviour
         }
 
         worldCosts = new List<List<int>>();
+        biomeCosts = new List<List<float>>();
         worldType = new List<List<TrackPeiceType>>();
         rotations = new List<List<int>>();
         prefabIndex = new List<List<int>>();
         trackPath = new List<int[]>();
         trackPeices = new List<List<GameObject>>();
 
+        float biomeXOffset = (float)r.NextDouble();
+        float biomeYOffset = (float)r.NextDouble();
+
         for (int x = 0; x < generationWidth; ++x)
         {
             List<int> c = new List<int>();
+            List<float> b = new List<float>();
             List<TrackPeiceType> t = new List<TrackPeiceType>();
             List<int> rots = new List<int>();
             List<int> index = new List<int>();
@@ -438,12 +655,14 @@ public class TrackGenerator : MonoBehaviour
             for (int y = 0; y < generationWidth; ++y)
             {
                 c.Add(r.Next());
+                b.Add(Mathf.PerlinNoise(biomeXOffset + x * biomeFrequency, biomeYOffset +  y * biomeFrequency));
                 t.Add(TrackPeiceType.EMPTY);
                 rots.Add(0);
                 index.Add(0);
             }
 
             worldCosts.Add(c);
+            biomeCosts.Add(b);
             worldType.Add(t);
             rotations.Add(rots);
             prefabIndex.Add(index);
