@@ -154,14 +154,6 @@ MonoBehaviour:
       type: 3}
     tags: 
   - type: 2
-    prefab: {fileID: 4409933064841954170, guid: f9ca859fd6950f64bbf3cdfbc7bc3f21,
-      type: 3}
-    tags: 03000000
-  - type: 2
-    prefab: {fileID: 4409933064841954170, guid: 814c98f8baa06e84692a489962ff26a5,
-      type: 3}
-    tags: 03000000
-  - type: 2
     prefab: {fileID: 4409933064841954170, guid: 389a8251e929385409000f34b8dd587c,
       type: 3}
     tags: 00000000
@@ -201,12 +193,28 @@ MonoBehaviour:
     prefab: {fileID: 4431686284999537807, guid: 49c088339b9598e40a3d0d8079b4187a,
       type: 3}
     tags: 
+  - type: 8
+    prefab: {fileID: 8290117427089526282, guid: b3ec4a37ac028f048966709b3d1a586a,
+      type: 3}
+    tags: 
+  - type: 8
+    prefab: {fileID: 1678765456911091851, guid: cb24aac809f6a0e4981930d91ad263c9,
+      type: 3}
+    tags: 
+  - type: 10
+    prefab: {fileID: 4409933064841954170, guid: f9ca859fd6950f64bbf3cdfbc7bc3f21,
+      type: 3}
+    tags: 0300000005000000
+  - type: 10
+    prefab: {fileID: 4409933064841954170, guid: bbfbda72cce2faf4a806da5525fce9b6,
+      type: 3}
+    tags: 0300000005000000
   generationWidth: 16
   defaultCheckpointRadius: 25
   holeChance: 50
   landmarkChance: 2
   biomeFrequency: 0.05
-  waterRange: 0.3
+  waterRange: 0.4
   trackStarts: []
   checkPoints: []
   raceTrackController: {fileID: 5337012155297989955}

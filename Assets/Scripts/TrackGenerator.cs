@@ -264,6 +264,54 @@ public class TrackGenerator : MonoBehaviour
                 }
             }
         }
+
+        // Add water bridges on straights flanked by water
+        {
+            List<TrackPeice> pt = trackPeicePrefabs.FindAll(j => j.type == TrackPeiceType.WATER_NARROW && HasTag(j, TrackPeiceTags.BRIDGE));
+            for (int i = 0; i < path.Count - 1; ++i)
+            {
+                TrackPeice currentPeice = trackPeicePrefabs[prefabIndex[path[i][0]][path[i][1]]];
+
+                // if peice is straight && regular
+                if (currentPeice.type == TrackPeiceType.STRAIGHT && currentPeice.tags.Count == 0)
+                {
+                    // check if peice could of been water && if flanked by water...
+                    // gen water spot instead...
+                    if (biomeCosts[path[i][0]][path[i][1]] < waterRange)
+                    {
+                        int oldRot = rotations[path[i][0]][path[i][1]];
+                        worldType[path[i][0]][path[i][1]] = TrackPeiceType.WATER_NARROW;
+                        bool isWater = HandleWaterTile(path[i][0], path[i][1]);
+
+                        // Check if water is narrow...
+                        if (isWater && worldType[path[i][0]][path[i][1]] == TrackPeiceType.WATER_NARROW)
+                        {
+                            int ptIndex = r.Next(0, pt.Count);
+                            prefabIndex[path[i][0]][path[i][1]] = trackPeicePrefabs.FindIndex(j => j == pt[ptIndex]);
+
+                            // Update neighbour water tiles to account for new water tile.
+                            List<int[]> neighbours = GetNeighbours(new int[] { path[i][0], path[i][1] });
+
+                            foreach (int[] n in neighbours)
+                            {
+                                bool neighbourIsWater = HandleWaterTile(n[0], n[1]);
+
+                                if (neighbourIsWater)
+                                {
+                                    HandleTileInstancePicking(n[0], n[1]);
+                                }
+                            }
+
+                        }
+                        else
+                        {
+                            rotations[path[i][0]][path[i][1]] = oldRot;
+                            worldType[path[i][0]][path[i][1]] = TrackPeiceType.STRAIGHT;
+                        }
+                    }
+                }
+            }
+        }
     }
 
     void HandleTileInstancePicking(int x, int y)
