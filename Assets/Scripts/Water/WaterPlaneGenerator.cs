@@ -16,6 +16,8 @@ public class WaterPlaneGenerator : MonoBehaviour
 
     private MeshFilter filter;
 
+    public bool updateWater = false;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -68,9 +70,12 @@ public class WaterPlaneGenerator : MonoBehaviour
 
     void Update()
     {
-        UpdateNoise();
-        offsetX += Time.deltaTime * timeScale;
-        offsetY += Time.deltaTime * timeScale;
+        if(updateWater)
+        {
+            UpdateNoise();
+            offsetX += Time.deltaTime * timeScale;
+            offsetY += Time.deltaTime * timeScale;
+        }
     }
 
     void UpdateNoise()
