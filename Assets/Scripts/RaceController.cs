@@ -935,7 +935,7 @@ public class RaceController : MonoBehaviour
             }
         }
 
-        targetPhysicsScene.Simulate(Time.fixedDeltaTime);
+        targetPhysicsScene.Simulate(Time.deltaTime);
 
         UpdateCarProgress();
 

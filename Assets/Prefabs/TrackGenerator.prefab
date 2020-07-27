@@ -209,6 +209,42 @@ MonoBehaviour:
     prefab: {fileID: 4409933064841954170, guid: bbfbda72cce2faf4a806da5525fce9b6,
       type: 3}
     tags: 0300000005000000
+  - type: 2
+    prefab: {fileID: 1557698554331177871, guid: d84c90d003c591b4caec75fd7b78a77d,
+      type: 3}
+    tags: 
+  - type: 2
+    prefab: {fileID: 1557698554331177871, guid: ef2fba17a5e76cf4d91d0e3361980d8a,
+      type: 3}
+    tags: 
+  - type: 2
+    prefab: {fileID: 1557698554331177871, guid: ffb45a7bb409d4d46874baefb732e578,
+      type: 3}
+    tags: 
+  - type: 2
+    prefab: {fileID: 1557698554331177871, guid: 6bd6e429cd675d54c918661fb5d88b3d,
+      type: 3}
+    tags: 
+  - type: 2
+    prefab: {fileID: 1557698554331177871, guid: f411b10e2787dd84580b7b562934222a,
+      type: 3}
+    tags: 
+  - type: 0
+    prefab: {fileID: 5691122574158358379, guid: 006f5111ecedeb742bf381000d34838b,
+      type: 3}
+    tags: 
+  - type: 0
+    prefab: {fileID: 5691122574158358379, guid: aed1927f4cf9bce43a4b780988a661eb,
+      type: 3}
+    tags: 
+  - type: 2
+    prefab: {fileID: 6670929847867414898, guid: 8cd2265fecc5b9f4dac67f07f9acafde,
+      type: 3}
+    tags: 01000000
+  - type: 2
+    prefab: {fileID: 4409933064841954170, guid: 48f00076ac726e545b5b278ff5ac20f0,
+      type: 3}
+    tags: 00000000
   generationWidth: 16
   defaultCheckpointRadius: 25
   holeChance: 50

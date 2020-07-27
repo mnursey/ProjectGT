@@ -314,12 +314,12 @@ public class CarController : MonoBehaviour
                 // Refactor this and remove the divide by 2. First count number of powered wheels on all axis
                 if(axle.leftWheel.isGrounded)
                 {
-                    rb.AddForce(transform.forward * enginePower * Time.fixedDeltaTime * accelerationInput / 2,  ForceMode.Acceleration);
+                    rb.AddForce(transform.forward * enginePower * Time.deltaTime * accelerationInput / 2,  ForceMode.Acceleration);
                 }
 
                 if (axle.rightWheel.isGrounded)
                 {
-                    rb.AddForce(transform.forward * enginePower * Time.fixedDeltaTime * accelerationInput / 2,  ForceMode.Acceleration);
+                    rb.AddForce(transform.forward * enginePower * Time.deltaTime * accelerationInput / 2,  ForceMode.Acceleration);
                 }
             }
         }
@@ -331,12 +331,12 @@ public class CarController : MonoBehaviour
 
         if (axle.leftWheel.isGrounded)
         {
-            rb.AddForceAtPosition(transform.right * steeringPower * Time.fixedDeltaTime * steeringInput / 2, FixToCarCentre(WheelPosition(axle, axle.rightWheel)), ForceMode.Acceleration);
+            rb.AddForceAtPosition(transform.right * steeringPower * Time.deltaTime * steeringInput / 2, FixToCarCentre(WheelPosition(axle, axle.rightWheel)), ForceMode.Acceleration);
         }
 
         if (axle.rightWheel.isGrounded)
         {
-            rb.AddForceAtPosition(transform.right * steeringPower * Time.fixedDeltaTime * steeringInput / 2, FixToCarCentre(WheelPosition(axle, axle.rightWheel)), ForceMode.Acceleration);
+            rb.AddForceAtPosition(transform.right * steeringPower * Time.deltaTime * steeringInput / 2, FixToCarCentre(WheelPosition(axle, axle.rightWheel)), ForceMode.Acceleration);
         }
     }
 
@@ -352,12 +352,12 @@ public class CarController : MonoBehaviour
             // Refactor this and remove the divide by 4. First count number of braking wheels on all axis
             if (axle.leftWheel.isGrounded)
             {
-                rb.AddForce(-transform.forward * brakingPower * Time.fixedDeltaTime * brakingInput / 4, ForceMode.Acceleration);
+                rb.AddForce(-transform.forward * brakingPower * Time.deltaTime * brakingInput / 4, ForceMode.Acceleration);
             }
 
             if (axle.rightWheel.isGrounded)
             {
-                rb.AddForce(-transform.forward * brakingPower * Time.fixedDeltaTime * brakingInput / 4, ForceMode.Acceleration);
+                rb.AddForce(-transform.forward * brakingPower * Time.deltaTime * brakingInput / 4, ForceMode.Acceleration);
             }
         }
     }
@@ -401,7 +401,7 @@ public class CarController : MonoBehaviour
 
             // Damping force (try to rest velocity to 0)
 
-            float suspensionCompressionVelocity = (wheelData.compression - wheelData.compressionPrev) / Time.fixedDeltaTime;
+            float suspensionCompressionVelocity = (wheelData.compression - wheelData.compressionPrev) / Time.deltaTime;
             wheelData.compressionPrev = wheelData.compression;
 
             float damperFoce = -suspensionCompressionVelocity * axle.suspensionDampining;
@@ -433,7 +433,7 @@ public class CarController : MonoBehaviour
             // Calculate current sliding force
             // (4 because we have 4 wheels)
             // TODO use num wheel variable
-            Vector3 slidingForce = (slideVelocity * rb.mass / Time.fixedDeltaTime) / 4;
+            Vector3 slidingForce = (slideVelocity * rb.mass / Time.deltaTime) / 4;
 
             float laterialFriciton = Mathf.Clamp01(axle.laterialFriction);
 
@@ -454,7 +454,7 @@ public class CarController : MonoBehaviour
         {
             // relax suspension
             wheelData.compressionPrev = wheelData.compression;
-            wheelData.compression = Mathf.Clamp01(wheelData.compression - axle.suspensionRelaxSpeed * Time.fixedDeltaTime);
+            wheelData.compression = Mathf.Clamp01(wheelData.compression - axle.suspensionRelaxSpeed * Time.deltaTime);
         }
     }
 
