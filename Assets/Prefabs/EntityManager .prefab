@@ -81,3 +81,11 @@ MonoBehaviour:
       modulate the brake and throttle correctly when apporaching corners.
     prefab: {fileID: 4261872027723047873, guid: fe93f4455d55928498f407a72f9a5328,
       type: 3}
+  - name: Magnus-mobile
+    description: Running on straight dairy gas
+    prefab: {fileID: 4261872027723047873, guid: 67b000525533b9349ad206cff82b61a7,
+      type: 3}
+  - name: Capt. CBae
+    description: Communism at it's finest
+    prefab: {fileID: 4261872027723047873, guid: 5b7706b858695bd4ba7e7a30d48b3d6d,
+      type: 3}
