@@ -1030,14 +1030,6 @@ public class RaceController : MonoBehaviour
                         }
                     }
                 }
-
-                // check if lap messed up....
-                CheckPoint startCheckpoint = currentTrack.checkPoints[0];
-
-                if (Vector3.Distance(c.transform.position, startCheckpoint.t.position) < startCheckpoint.raduis && pe.checkpoint != 0 )
-                {
-                    pe.checkpoint = 0;
-                }
             }
 
             pe.lapScore = GetPlayerLapScore(pe);
