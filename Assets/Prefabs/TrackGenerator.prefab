@@ -253,6 +253,10 @@ MonoBehaviour:
     prefab: {fileID: 4338775768554391120, guid: b6a8a1177e11c5c49830d32520dbb731,
       type: 3}
     tags: 
+  - type: 3
+    prefab: {fileID: 5980534405059048180, guid: 07889b7ad2434a74196d4d4e78a071a1,
+      type: 3}
+    tags: 
   generationWidth: 16
   defaultCheckpointRadius: 25
   holeChance: 50
