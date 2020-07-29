@@ -248,7 +248,10 @@ public class CarController : MonoBehaviour
             hornInput = false;
         }
 
-        if(resetInput && !movementLocked)
+        bool anyWheelGrounded = axles[Axle.REAR_AXLE_INDEX].leftWheel.isGrounded || axles[Axle.REAR_AXLE_INDEX].rightWheel.isGrounded || axles[Axle.FRONT_AXLE_INDEX].leftWheel.isGrounded || axles[Axle.FRONT_AXLE_INDEX].rightWheel.isGrounded;
+
+
+        if (resetInput && !movementLocked && anyWheelGrounded)
         {
             rb.velocity = new Vector3();
             rb.angularVelocity = new Vector3();
@@ -266,6 +269,17 @@ public class CarController : MonoBehaviour
             transform.rotation = resetCheckpoint.t.rotation;
             transform.position = resetCheckpoint.t.position;
 
+            resetToCheckpointInput = false;
+        }
+
+        if(!anyWheelGrounded)
+        {
+            resetInput = false;
+        }
+
+        if(movementLocked)
+        {
+            resetInput = false;
             resetToCheckpointInput = false;
         }
 
