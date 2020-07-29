@@ -16,6 +16,8 @@ public class CarController : MonoBehaviour
 
     public bool debugDraw = true;
 
+    public float minResetVel = 5.0f;
+
     [Header("Car Inputs")]
 
     public float steeringInput = 0.0f;
@@ -251,7 +253,7 @@ public class CarController : MonoBehaviour
         bool anyWheelGrounded = axles[Axle.REAR_AXLE_INDEX].leftWheel.isGrounded || axles[Axle.REAR_AXLE_INDEX].rightWheel.isGrounded || axles[Axle.FRONT_AXLE_INDEX].leftWheel.isGrounded || axles[Axle.FRONT_AXLE_INDEX].rightWheel.isGrounded;
 
 
-        if (resetInput && !movementLocked && anyWheelGrounded)
+        if (resetInput && !movementLocked && (anyWheelGrounded || rb.velocity.magnitude < minResetVel))
         {
             rb.velocity = new Vector3();
             rb.angularVelocity = new Vector3();
