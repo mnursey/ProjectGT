@@ -251,6 +251,15 @@ public class ClientController : MonoBehaviour
                         // CONNECTED
                         UnityMainThreadDispatcher.Instance().Enqueue(() => onConnect?.Invoke(true));
                         state = ClientState.CONNECTED;
+
+                        UnityMainThreadDispatcher.Instance().Enqueue(() => {
+
+                            GeneratedTrackData gtd = NetworkingMessageTranslator.ParseGenerateTrackData(jrr.trackSerialized);
+
+                            rc.trackGenerator.LoadTrackData(gtd);
+
+                        });
+
                     } else
                     {
                         // NOT CONNECTED

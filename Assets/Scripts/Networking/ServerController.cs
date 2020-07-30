@@ -175,7 +175,7 @@ public class ServerController : MonoBehaviour
             if (msg.type == NetworkingMessageType.CLIENT_JOIN)
             {
                 ServerConnection newConnection = new ServerConnection(GetNewClientID(), receiveObject.sender, socket);
-
+                Debug.Log("Join request");
                 if (AcceptingNewClients())
                 {
                     Debug.Log("Server Allowed connection!");
@@ -191,10 +191,9 @@ public class ServerController : MonoBehaviour
                         rc.CreatePlayer(newConnection.clientID, jr.carModel);
 
                         // Send Accept Connect msg
-                        newConnection.BeginSend(NetworkingMessageTranslator.GenerateServerJoinResponseMessage(new JoinRequestResponce(newConnection.clientID)), SendUserManagerState);
-                        newConnection.BeginSend(NetworkingMessageTranslator.GenerateTrackDataMessage(rc.trackGenerator.serializedTrack, newConnection.clientID));
-
-                    } else {
+                        newConnection.BeginSend(NetworkingMessageTranslator.GenerateServerJoinResponseMessage(new JoinRequestResponce(newConnection.clientID, rc.trackGenerator.serializedTrack)), SendUserManagerState);
+                    }
+                    else {
                         Debug.Log("Server Rejected client connection due to version mismatch... Client Version " + jr.version);
                         // Send Disconnect msg
                         newConnection.BeginSend(NetworkingMessageTranslator.GenerateServerJoinResponseMessage(new JoinRequestResponce("Version Mismatch.\nVisit itch.io to download the up-to-date client.")));
@@ -272,9 +271,12 @@ public class ServerController : MonoBehaviour
                             break;
                     }
                 }
-
-                // If not a new connecting client or not an existing client...
-                // Ignore.. if too many send msg? or block or something...
+                else
+                {
+                    // If not a new connecting client or not an existing client...
+                    // Ignore.. if too many send msg? or block or something...
+                    Debug.Log("How are we here?");
+                }
             }
         }
 
