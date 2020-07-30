@@ -246,8 +246,13 @@ public class CarController : MonoBehaviour
     {
         if(hornInput)
         {
-            hornSound.Play();
-            hornInput = false;
+            if(!hornSound.hitSound.isPlaying)
+            {
+                hornSound.Play();
+            } else
+            {
+                hornInput = false;
+            }
         }
 
         bool anyWheelGrounded = axles[Axle.REAR_AXLE_INDEX].leftWheel.isGrounded || axles[Axle.REAR_AXLE_INDEX].rightWheel.isGrounded || axles[Axle.FRONT_AXLE_INDEX].leftWheel.isGrounded || axles[Axle.FRONT_AXLE_INDEX].rightWheel.isGrounded;
