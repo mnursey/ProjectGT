@@ -156,129 +156,145 @@ public class ServerController : MonoBehaviour
 
     void EndReceive(IAsyncResult ar)
     {
-        String data = String.Empty;
+        try {
+            String data = String.Empty;
 
-        MessageObject receiveObject = (MessageObject)ar.AsyncState;
+            MessageObject receiveObject = (MessageObject)ar.AsyncState;
 
-        int bytesRead = socket.EndReceiveFrom(ar, ref receiveObject.sender);
+            int bytesRead = socket.EndReceiveFrom(ar, ref receiveObject.sender);
 
-        if(bytesRead > 0)
-        {
-            data = Encoding.UTF8.GetString(receiveObject.buffer, 0, bytesRead);
-            //Debug.Log("Server Received:" + data + " From " + receiveObject.sender.ToString());
-
-            NetworkingMessage msg = NetworkingMessageTranslator.ParseMessage(data);
-
-            int clientID = msg.clientID;
-
-            // New clients
-            if (msg.type == NetworkingMessageType.CLIENT_JOIN)
+            if (bytesRead > 0)
             {
-                ServerConnection newConnection = new ServerConnection(GetNewClientID(), receiveObject.sender, socket);
-                Debug.Log("Join request");
-                if (AcceptingNewClients())
+                data = Encoding.UTF8.GetString(receiveObject.buffer, 0, bytesRead);
+                //Debug.Log("Server Received:" + data + " From " + receiveObject.sender.ToString());
+
+                NetworkingMessage msg = NetworkingMessageTranslator.ParseMessage(data);
+
+                int clientID = msg.clientID;
+
+                // New clients
+                if (msg.type == NetworkingMessageType.CLIENT_JOIN)
                 {
-                    Debug.Log("Server Allowed connection!");
-
-                    JoinRequest jr = NetworkingMessageTranslator.ParseJoinRequest(msg.content);
-                    
-                    if(jr.version == version)
+                    ServerConnection newConnection = new ServerConnection(GetNewClientID(), receiveObject.sender, socket);
+                    Debug.Log("Join request");
+                    if (AcceptingNewClients())
                     {
-                        // Add new server connection
-                        clients.Add(newConnection);
+                        Debug.Log("Server Allowed connection!");
 
-                        rc.um.AddUser(jr.username, newConnection.clientID);
-                        rc.CreatePlayer(newConnection.clientID, jr.carModel);
+                        JoinRequest jr = NetworkingMessageTranslator.ParseJoinRequest(msg.content);
 
-                        // Send Accept Connect msg
-                        newConnection.BeginSend(NetworkingMessageTranslator.GenerateServerJoinResponseMessage(new JoinRequestResponce(newConnection.clientID, rc.trackGenerator.serializedTrack)), SendUserManagerState);
+                        if (jr.version == version)
+                        {
+                            // Add new server connection
+                            clients.Add(newConnection);
+
+                            rc.um.AddUser(jr.username, newConnection.clientID);
+                            rc.CreatePlayer(newConnection.clientID, jr.carModel);
+
+                            // Send Accept Connect msg
+                            newConnection.BeginSend(NetworkingMessageTranslator.GenerateServerJoinResponseMessage(new JoinRequestResponce(newConnection.clientID, rc.trackGenerator.serializedTrack)), SendUserManagerState);
+                        }
+                        else
+                        {
+                            Debug.Log("Server Rejected client connection due to version mismatch... Client Version " + jr.version);
+                            // Send Disconnect msg
+                            newConnection.BeginSend(NetworkingMessageTranslator.GenerateServerJoinResponseMessage(new JoinRequestResponce("Version Mismatch.\nVisit itch.io to download the up-to-date client.")));
+                        }
                     }
-                    else {
-                        Debug.Log("Server Rejected client connection due to version mismatch... Client Version " + jr.version);
+                    else
+                    {
+                        Debug.Log("Server Disallowed connection!");
                         // Send Disconnect msg
-                        newConnection.BeginSend(NetworkingMessageTranslator.GenerateServerJoinResponseMessage(new JoinRequestResponce("Version Mismatch.\nVisit itch.io to download the up-to-date client.")));
-                    }
-                } else
-                {
-                    Debug.Log("Server Disallowed connection!");
-                    // Send Disconnect msg
-                    if(forwardIPs.Count == 0)
-                    {
-                        newConnection.BeginSend(NetworkingMessageTranslator.GenerateServerJoinResponseMessage(new JoinRequestResponce("Server full.")));
-                    } else
-                    {
-                        newConnection.BeginSend(NetworkingMessageTranslator.GenerateServerJoinResponseMessage(new JoinRequestResponce(forwardIPs)));
-                    }
-                }
-            } else
-            {
-                // Check if existing server connection
-                if (clientID > -1 && clients.Exists(x => x.clientID == clientID))
-                {
-                    // Update serverConnection info
-
-                    ServerConnection serverConnection = clients.Find(x => x.clientID == clientID);
-
-                    // serverConnection.lastReceivedTime = Time.time;
-
-                    // TODO
-                    // Last msg accepted
-
-                    switch (msg.type)
-                    {
-                        case NetworkingMessageType.PING:
-                            break;
-
-                        case NetworkingMessageType.PING_RESPONSE:
-                            break;
-
-                        case NetworkingMessageType.DISCONNECT:
-                            clients.Remove(serverConnection);
-
-                            Debug.Log("Client " + serverConnection.clientID + " disconnected...");
-
-                            rc.QueueRemovePlayer(serverConnection.clientID);
-
-                            break;
-
-                        case NetworkingMessageType.GAME_STATE:
-                            break;
-
-                        case NetworkingMessageType.INPUT_STATE:
-
-                            InputState s = NetworkingMessageTranslator.ParseInputState(msg.content);
-                            rc.QueueInputState(s);
-
-                            break;
-
-                        case NetworkingMessageType.CAR_MODEL:
-
-                            int carModel = NetworkingMessageTranslator.ParseCarModel(msg.content);
-                            PlayerEntity pe = rc.players.Find(x => x.networkID == msg.clientID);
-
-                            if(pe != null)
-                            {
-                                Debug.Log("Set car model for " + pe.networkID + " to " + carModel);
-                                pe.carModel = carModel;
-                            } else
-                            {
-                                Debug.Log("SOFT WARNING! Could not find matching player entity to set car model... Received client id was " + msg.clientID);
-                            }
-
-                            break;
-
-                        default:
-                            break;
+                        if (forwardIPs.Count == 0)
+                        {
+                            newConnection.BeginSend(NetworkingMessageTranslator.GenerateServerJoinResponseMessage(new JoinRequestResponce("Server full.")));
+                        }
+                        else
+                        {
+                            newConnection.BeginSend(NetworkingMessageTranslator.GenerateServerJoinResponseMessage(new JoinRequestResponce(forwardIPs)));
+                        }
                     }
                 }
                 else
                 {
-                    // If not a new connecting client or not an existing client...
-                    // Ignore.. if too many send msg? or block or something...
-                    Debug.Log("How are we here?");
+                    // Check if existing server connection
+                    if (clientID > -1 && clients.Exists(x => x.clientID == clientID))
+                    {
+                        // Update serverConnection info
+
+                        ServerConnection serverConnection = clients.Find(x => x.clientID == clientID);
+
+                        // serverConnection.lastReceivedTime = Time.time;
+
+                        // TODO
+                        // Last msg accepted
+
+                        switch (msg.type)
+                        {
+                            case NetworkingMessageType.PING:
+                                break;
+
+                            case NetworkingMessageType.PING_RESPONSE:
+                                break;
+
+                            case NetworkingMessageType.DISCONNECT:
+
+                                UnityMainThreadDispatcher.Instance().Enqueue(() => {
+
+                                    clients.Remove(serverConnection);
+
+                                    Debug.Log("Client " + serverConnection.clientID + " disconnected...");
+
+                                    rc.QueueRemovePlayer(serverConnection.clientID);
+
+                                });
+
+                                break;
+
+                            case NetworkingMessageType.GAME_STATE:
+                                break;
+
+                            case NetworkingMessageType.INPUT_STATE:
+
+                                InputState s = NetworkingMessageTranslator.ParseInputState(msg.content);
+                                rc.QueueInputState(s);
+
+                                break;
+
+                            case NetworkingMessageType.CAR_MODEL:
+
+                                int carModel = NetworkingMessageTranslator.ParseCarModel(msg.content);
+                                PlayerEntity pe = rc.players.Find(x => x.networkID == msg.clientID);
+
+                                if (pe != null)
+                                {
+                                    Debug.Log("Set car model for " + pe.networkID + " to " + carModel);
+                                    pe.carModel = carModel;
+                                }
+                                else
+                                {
+                                    Debug.Log("SOFT WARNING! Could not find matching player entity to set car model... Received client id was " + msg.clientID);
+                                }
+
+                                break;
+
+                            default:
+                                break;
+                        }
+                    }
+                    else
+                    {
+                        // If not a new connecting client or not an existing client...
+                        // Ignore.. if too many send msg? or block or something...
+                        Debug.Log("How are we here?");
+                    }
                 }
             }
+        } catch(Exception ex)
+        {
+            Debug.LogWarning(ex.ToString());
         }
+
 
         if (serverActive)
         {
