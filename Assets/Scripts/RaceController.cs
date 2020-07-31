@@ -1057,7 +1057,15 @@ public class RaceController : MonoBehaviour
 
     public List<PlayerEntity> GetPlayersByPosition(List<PlayerEntity> ps)
     {
-        List<PlayerEntity> p = ps.OrderBy(o => -o.lapScore ).ThenBy(o => o.finishedTime).ToList();
+        List<PlayerEntity> p = ps.OrderBy(o => {
+            if (o.finishedTime > 0.0f)
+            {
+                return (-float.MaxValue * 0.9f) + o.finishedTime;
+            }
+            else {
+                return -o.lapScore;
+            };
+        }).ToList();
 
         return p;
     }
