@@ -251,7 +251,7 @@ public class CarController : MonoBehaviour
                 hornSound.Play();
             } else
             {
-                //hornInput = false;
+                hornInput = false;
             }
         }
 
