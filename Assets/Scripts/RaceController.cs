@@ -1545,6 +1545,7 @@ public class GameUI
     public TextMeshProUGUI currentLapText;
     public TextMeshProUGUI targetLapText;
     public TextMeshProUGUI lapTimeText;
+    public Animator lapAnim;
 
     public TextMeshProUGUI currentPositionText;
     public TextMeshProUGUI maxPositionText;
@@ -1578,6 +1579,11 @@ public class GameUI
     {
         if(currentLapText != null)
         {
+            if(currentLap != currentLapText.text)
+            {
+                lapAnim.SetTrigger("LapUpdated");
+            }
+
             currentLapText.SetText(currentLap);
         }
 
