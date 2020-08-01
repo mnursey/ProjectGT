@@ -1069,9 +1069,9 @@ MonoBehaviour:
       compressionPrev: 0
     isPowered: 0
   - width: 2.9
-    offset: {x: -2, y: -0.5}
+    offset: {x: -2, y: -0.4}
     wheelRadius: 0.3
-    laterialFriction: 0.13
+    laterialFriction: 0.1
     rollingFriction: 0.1
     suspensionStiffness: 9500
     suspensionDampining: 3000
