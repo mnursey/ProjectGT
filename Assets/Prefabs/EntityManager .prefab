@@ -85,7 +85,7 @@ MonoBehaviour:
     description: Running on straight dairy gas
     prefab: {fileID: 4261872027723047873, guid: 67b000525533b9349ad206cff82b61a7,
       type: 3}
-  - name: Capt. CBae
-    description: Communism at it's finest
+  - name: Pherrari
+    description: 'Red, fast, and powered by a hand built V12... '
     prefab: {fileID: 4261872027723047873, guid: 5b7706b858695bd4ba7e7a30d48b3d6d,
       type: 3}
