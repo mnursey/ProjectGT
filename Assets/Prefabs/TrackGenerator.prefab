@@ -44,6 +44,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f307e9793818aca46a420ced2ffbaf65, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  waterObject: {fileID: 0}
+  waterHeightMax: 13
+  waterHeightMin: 0.5
+  waterHeight: 0
   trackPeicePrefabs:
   - type: 1
     prefab: {fileID: 4732334817661378973, guid: ee813d924301766439c076f9874a12ed,

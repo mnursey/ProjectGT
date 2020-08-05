@@ -7,6 +7,10 @@ public enum TrackPeiceType { EMPTY, START, STRAIGHT, TURN, PIT, CLIFF, CLIFF_COR
 
 public class TrackGenerator : MonoBehaviour
 {
+    public GameObject waterObject;
+    public float waterHeightMax;
+    public float waterHeightMin;
+    public float waterHeight;
 
     public List<TrackPeice> trackPeicePrefabs = new List<TrackPeice>();
 
@@ -62,6 +66,8 @@ public class TrackGenerator : MonoBehaviour
 
             trackPeices.Add(c);
         }
+
+        SetupWater();
     }
 
     public void DesignRoad(List<int[]> path)
@@ -688,7 +694,7 @@ public class TrackGenerator : MonoBehaviour
         prefabIndex = new List<List<int>>();
         trackPath = new List<int[]>();
         trackPeices = new List<List<GameObject>>();
-
+        waterHeight = UnityEngine.Random.Range(waterHeightMin, waterHeightMax);
         float biomeXOffset = (float)r.NextDouble();
         float biomeYOffset = (float)r.NextDouble();
 
@@ -921,7 +927,7 @@ public class TrackGenerator : MonoBehaviour
     {
         GeneratedTrackData data = new GeneratedTrackData();
 
-        data.Serialize(rotations, prefabIndex, trackPath);
+        data.Serialize(rotations, prefabIndex, trackPath, waterHeight);
 
         return data;
     }
@@ -930,13 +936,21 @@ public class TrackGenerator : MonoBehaviour
     {
         InitializeTrack();
 
-        data.Deserialize(out rotations, out prefabIndex, out trackPath);
+        data.Deserialize(out rotations, out prefabIndex, out trackPath, out waterHeight);
 
         InstantiateTrack();
 
         SetupStartPositions();
         SetupCheckpoints(trackPath);
         SetupRaceTrackController();
+    }
+
+    public void SetupWater()
+    {
+        if(waterObject != null)
+        {
+            waterObject.transform.position = new Vector3(waterObject.transform.position.x, waterHeight, waterObject.transform.position.z);
+        }
     }
 }
 
@@ -956,13 +970,15 @@ public class GeneratedTrackData
     public List<IntList> rotations = new List<IntList>();
     public List<IntList> prefabIndex = new List<IntList>();
     public List<Point> trackPath = new List<Point>();
+    public float waterHeight;
 
-    public void Serialize(List<List<int>> rotations, List<List<int>> prefabIndex, List<int[]> trackPath)
+    public void Serialize(List<List<int>> rotations, List<List<int>> prefabIndex, List<int[]> trackPath, float waterHeight)
     {
 
         this.rotations = new List<IntList>();
         this.prefabIndex = new List<IntList>();
         this.trackPath = new List<Point>();
+        this.waterHeight = waterHeight;
 
         for (int x = 0; x < rotations.Count; ++x)
         {
@@ -994,12 +1010,13 @@ public class GeneratedTrackData
         }
     }
 
-    public void Deserialize(out List<List<int>> rotations, out List<List<int>> prefabIndex, out List<int[]> trackPath)
+    public void Deserialize(out List<List<int>> rotations, out List<List<int>> prefabIndex, out List<int[]> trackPath, out float waterHeight)
     {
 
         rotations = new List<List<int>>();
         prefabIndex = new List<List<int>>();
         trackPath = new List<int[]>();
+        waterHeight = this.waterHeight;
 
         for (int x = 0; x < this.rotations.Count; ++x)
         {

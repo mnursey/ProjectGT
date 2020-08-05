@@ -18,6 +18,7 @@ public class MenuController : MonoBehaviour
 
     public TMP_Dropdown resolutionDropdown;
     public TMP_Dropdown qualityDropdown;
+    public TMP_Dropdown cameraTypeDropdown;
 
     public OptionsController optionsController;
 
@@ -345,6 +346,11 @@ public class MenuController : MonoBehaviour
     public void OnQualityOptionChange(TMP_Dropdown dropdown)
     {
         optionsController.SetQuality(dropdown.value);
+    }
+
+    public void OnCameraModeOptionChange(TMP_Dropdown dropdown)
+    {
+        rc.carCameraMode = (CarCameraMode)dropdown.value;
     }
 
     public void OnMasterAudioOptionChange(Slider s)
