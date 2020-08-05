@@ -12,7 +12,7 @@ public enum RaceControllerMode { CLIENT, SERVER };
 
 public enum RaceModeState { PRERACE, RACING, POSTRACE };
 
-public enum CarCameraMode { PERSON_3RD, HOOD };
+public enum CarCameraMode { PERSON_3RD, HOOD, PERSON_1ST };
 
 public delegate void OnAction();
 
@@ -1165,6 +1165,25 @@ public class RaceController : MonoBehaviour
                 {
                     cameraController.mode = CameraModeEnum.LockTo;
                     cameraController.targetObject = hoodCamera;
+                }
+            }
+
+            if (carCameraMode == CarCameraMode.PERSON_1ST)
+            {
+                Transform driverCamera = null;
+                foreach (Transform tHat in t)
+                {
+                    if (tHat.gameObject.name == "DriverCamera")
+                    {
+                        driverCamera = tHat;
+                        break;
+                    }
+                }
+
+                if (driverCamera != null)
+                {
+                    cameraController.mode = CameraModeEnum.LockTo;
+                    cameraController.targetObject = driverCamera;
                 }
             }
         }
