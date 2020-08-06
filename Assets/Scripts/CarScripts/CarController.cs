@@ -106,9 +106,17 @@ public class CarController : MonoBehaviour
 
     private bool movementLocked = false;
 
+    float lastFixedUpdateTime;
+
+    int leftFrontLastSkid = -1;
+    int rightFrontLastSkid = -1;
+    int leftRearLastSkid = -1;
+    int rightRearLastSkid = -1;
+
     void Awake()
     {
         carSoundManagers[0].onAudioPlay = exhaust.Puff;
+        lastFixedUpdateTime = Time.time;
     }
 
     void Start()
@@ -200,7 +208,7 @@ public class CarController : MonoBehaviour
 
     void FixedUpdate()
     {
-        
+
     }
 
     public void SetUsernameText(string username)
@@ -327,6 +335,8 @@ public class CarController : MonoBehaviour
         // END REFACTOR
 
         previousFramePosition = transform.position;
+
+        lastFixedUpdateTime = Time.time;
     }
 
     void EngineForce()
@@ -454,16 +464,18 @@ public class CarController : MonoBehaviour
             Vector3 fVel = Vector3.Dot(wheelVelocity, contactForward) * contactForward;
             Vector3 slideVelocity = (lVel + fVel) * 0.5f;
 
-            if(axle == axles[Axle.FRONT_AXLE_INDEX])
+            Vector3 skidPoint = hit.point + (rb.velocity * (Time.time - lastFixedUpdateTime));
+
+            if (axle == axles[Axle.FRONT_AXLE_INDEX])
             {
                 if (wheelData == axle.leftWheel)
                 {
-                    tsc.frontLeftVel = lVel.magnitude;
+                    leftFrontLastSkid = tsc.AddSkidMark(skidPoint, hit.normal, 1.0f, leftFrontLastSkid, lVel);
                 }
 
                 if (wheelData == axle.rightWheel)
                 {
-                    tsc.frontRightVel = lVel.magnitude;
+                    rightFrontLastSkid = tsc.AddSkidMark(skidPoint, hit.normal, 1.0f, rightFrontLastSkid, lVel);
                 }
             }
 
@@ -471,12 +483,12 @@ public class CarController : MonoBehaviour
             {
                 if(wheelData == axle.leftWheel)
                 {
-                    tsc.rearLeftVel = lVel.magnitude;
+                    leftRearLastSkid = tsc.AddSkidMark(skidPoint, hit.normal, 1.0f, leftRearLastSkid, lVel);
                 }
 
                 if (wheelData == axle.rightWheel)
                 {
-                    tsc.rearRightVel = lVel.magnitude;
+                    rightRearLastSkid = tsc.AddSkidMark(skidPoint, hit.normal, 1.0f, rightRearLastSkid, lVel);
                 }
             }
 
@@ -510,12 +522,12 @@ public class CarController : MonoBehaviour
             {
                 if (wheelData == axle.leftWheel)
                 {
-                    tsc.frontLeftVel = 0.0f;
+                    leftFrontLastSkid = -1;
                 }
 
                 if (wheelData == axle.rightWheel)
                 {
-                    tsc.frontRightVel = 0.0f;
+                    rightFrontLastSkid = -1;
                 }
             }
 
@@ -523,12 +535,12 @@ public class CarController : MonoBehaviour
             {
                 if (wheelData == axle.leftWheel)
                 {
-                    tsc.rearLeftVel = 0.0f;
+                    leftRearLastSkid = -1;
                 }
 
                 if (wheelData == axle.rightWheel)
                 {
-                    tsc.rearRightVel = 0.0f;
+                    rightRearLastSkid = -1;
                 }
             }
         }

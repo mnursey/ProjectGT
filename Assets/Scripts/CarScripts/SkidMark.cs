@@ -4,8 +4,17 @@ using UnityEngine;
 
 public class SkidMark : MonoBehaviour
 {
-    public float width = 1.0f;
+
+    public MeshRenderer mr;
+    public MeshFilter mf;
+
     public float life = 1.0f;
+
+    void Awake()
+    {
+        mr = GetComponent<MeshRenderer>();
+        mf = GetComponent<MeshFilter>();
+    }
 
     // Start is called before the first frame update
     void Start()
@@ -18,18 +27,11 @@ public class SkidMark : MonoBehaviour
         gameObject.SetActive(false);
     }
 
-    public void Place(Vector3 pos, Quaternion rot, float width, float life)
+    public void Place(Mesh mesh, float life, Vector3 pos)
     {
-        transform.position = pos;
-        transform.rotation = rot;
-
-        transform.eulerAngles = new Vector3(transform.rotation.eulerAngles.x, transform.rotation.eulerAngles.y + 0.001f, transform.rotation.eulerAngles.z);
-
+        mf.mesh = mesh;
         this.life = life;
-        this.width = width;
-
-        transform.localScale = new Vector3(width, transform.lossyScale.y, width);
-
+        transform.position = pos;
         gameObject.SetActive(true);
     }
 
