@@ -40,6 +40,7 @@ public class CarController : MonoBehaviour
     public float carVisualZRoll = 0.0f;
     public float carVisualZRollMaxDegrees = 15.0f;
     public float carVisualZRollMaxSpeed = 15.0f;
+    public float carVisualZRollCompressionAmount = 0.2f;
 
     public float carVisualXRoll = 0.0f;
     public float carVisualXRollMaxDegrees = 3.0f;
@@ -533,6 +534,20 @@ public class CarController : MonoBehaviour
         // Z Roll calculation
 
         {
+           /* float zSuspensionCompression = 0.0f;
+
+            zSuspensionCompression -= axles[Axle.FRONT_AXLE_INDEX].leftWheel.compression;
+            zSuspensionCompression += axles[Axle.FRONT_AXLE_INDEX].rightWheel.compression;
+            zSuspensionCompression -= axles[Axle.REAR_AXLE_INDEX].leftWheel.compression;
+            zSuspensionCompression += axles[Axle.REAR_AXLE_INDEX].rightWheel.compression;
+
+            zSuspensionCompression = Mathf.Clamp(zSuspensionCompression, 0.0f, carVisualZRollCompressionAmount) / carVisualZRollCompressionAmount;
+
+            float newZRot = carVisualZRollMaxDegrees * zSuspensionCompression;
+            carVisual.localEulerAngles = new Vector3(carVisual.localEulerAngles.x, carVisual.localEulerAngles.y, newZRot);
+            */
+
+            
             Vector3 forward = transform.forward;
             forward = transform.InverseTransformVector(forward);
             forward.Set(forward.x, 0.0f, forward.z);
@@ -543,7 +558,7 @@ public class CarController : MonoBehaviour
 
             float directionMultiplier = 1.0f;
 
-            if (velocity.x < 0.0f)
+            if (velocity.x < -0.01f)
             {
                 directionMultiplier = -1.0f;
             }
@@ -575,7 +590,9 @@ public class CarController : MonoBehaviour
 
                 carVisual.localEulerAngles = new Vector3(carVisual.localEulerAngles.x, carVisual.localEulerAngles.y, newZRot);
             }
+            
         }
+
 
         // X Roll calculation
 

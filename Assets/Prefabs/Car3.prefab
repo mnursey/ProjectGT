@@ -812,7 +812,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 4261872027204309855}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0.4, z: 0}
+  m_LocalPosition: {x: 0, y: 0.347, z: 0}
   m_LocalScale: {x: -50, y: 50, z: 50}
   m_Children: []
   m_Father: {fileID: 4261872027879443405}
@@ -891,7 +891,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 4261872027383827557}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0.4, z: 0}
+  m_LocalPosition: {x: 0, y: 0.347, z: 0}
   m_LocalScale: {x: 50, y: 50, z: 50}
   m_Children: []
   m_Father: {fileID: 4261872027620638025}
@@ -1135,6 +1135,7 @@ MonoBehaviour:
   carVisualZRoll: 0
   carVisualZRollMaxDegrees: 5
   carVisualZRollMaxSpeed: 30
+  carVisualZRollCompressionAmount: 0.2
   carVisualXRoll: 0
   carVisualXRollMaxDegrees: 2
   carVisualXRollSpeed: 25
