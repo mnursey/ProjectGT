@@ -29,7 +29,6 @@ public class RaceController : MonoBehaviour
     public TrackGenerator trackGenerator;
     public ControlManager cm;
     public List<PlayerEntity> players = new List<PlayerEntity>();
-
     public Scene targetScene;
     public PhysicsScene targetPhysicsScene;
 
@@ -195,7 +194,6 @@ public class RaceController : MonoBehaviour
         frame = 0;
         clientFastestLapTime = float.MaxValue;
         cameraController.GetComponent<AudioListener>().enabled = true;
-
         raceControllerState = RaceControllerStateEnum.IDLE;
 
         ResetRaceMode();

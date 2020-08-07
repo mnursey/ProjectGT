@@ -6,7 +6,7 @@ using UnityEngine;
 
 public delegate void CameraEventCallback();
 
-public enum CameraModeEnum { FreeLook, MoveBehindPanTo, Locked, SafeCamera, LookAt, LockTo };
+public enum CameraModeEnum { FreeLook, MoveBehindPanTo, Locked, SafeCamera, LookAt, LockTo, RotateAround };
 
 public class CameraController : MonoBehaviour
 {
@@ -35,7 +35,15 @@ public class CameraController : MonoBehaviour
     public float minYDiff = 2.0f;
     public bool debug;
 
+    public RotateAround ra;
+
     public CameraEventCallback moveBehindPanToCallback;
+
+    void Awake()
+    {
+        ra = GetComponent<RotateAround>();
+        ra.enabled = false;
+    }
 
     void OnDrawGizmos()
     {
@@ -56,6 +64,11 @@ public class CameraController : MonoBehaviour
 
     void Update()
     {
+        if( mode != CameraModeEnum.RotateAround)
+        {
+            ra.enabled = false;
+        }
+
         switch (mode)
         {
             case CameraModeEnum.FreeLook:
@@ -89,7 +102,17 @@ public class CameraController : MonoBehaviour
                     transform.LookAt(targetObject);
                 }
                 break;
-            
+
+            case CameraModeEnum.RotateAround:
+                ra.enabled = true;
+
+                if (targetObject != null)
+                {
+                    transform.LookAt(targetObject);
+                }
+
+                break;
+
             default:
                 break;
         }

@@ -10,7 +10,7 @@ public class RotateAround : MonoBehaviour
 
     void Awake()
     {
-        transform.position = new Vector3(centreObject.position.x + distance, centreObject.position.y, centreObject.position.z);
+        Setup();
     }
 
     // Start is called before the first frame update
@@ -23,5 +23,15 @@ public class RotateAround : MonoBehaviour
     void Update()
     {
         transform.RotateAround(centreObject.position, Vector3.up, speed * Time.deltaTime);
+    }
+
+    void Setup()
+    {
+        transform.position = new Vector3(centreObject.position.x + distance, centreObject.position.y, centreObject.position.z);
+    }
+
+    void OnEnable()
+    {
+        Setup();
     }
 }

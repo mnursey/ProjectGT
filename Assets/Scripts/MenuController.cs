@@ -51,6 +51,8 @@ public class MenuController : MonoBehaviour
     public GameObject optionsMenu;
     public GameObject gameUI;
 
+    public Transform defaultCameraPos;
+
     private List<GameObject> menuStack = new List<GameObject>();
 
     [Header("Misc")]
@@ -93,6 +95,16 @@ public class MenuController : MonoBehaviour
         {
             ForwardMenu(mainMenu, false);
         }
+
+        // Setup camera
+        MainMenuCamera();
+    }
+
+    public void MainMenuCamera()
+    {
+        SetCameraLocation(defaultCameraPos);
+        rc.cameraController.mode = CameraModeEnum.RotateAround;
+        rc.cameraController.targetObject = null;
     }
 
     void Update()
@@ -142,6 +154,8 @@ public class MenuController : MonoBehaviour
         }
 
         currentMenu.SetActive(true);
+
+        MainMenuCamera();
     }
 
     void ShowConnectingUI(bool show)
@@ -462,6 +476,7 @@ public class MenuController : MonoBehaviour
     {
         rc.cameraController.transform.position = t.position;
         rc.cameraController.transform.rotation = t.rotation;
+        rc.cameraController.mode = CameraModeEnum.Locked;
     }
 
     public void PlayClickSound()
