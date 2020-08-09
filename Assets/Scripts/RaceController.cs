@@ -624,7 +624,7 @@ public class RaceController : MonoBehaviour
     {
         if(mc != null && mc.currentMenu != mc.preRaceMenu.menu)
         {
-            mc.ReturnToMainMenu();
+            mc.ReturnToMainMenu(true);
             mc.ShowPreraceMenu();
         }
     }
@@ -633,7 +633,7 @@ public class RaceController : MonoBehaviour
     {
         if (mc != null && mc.currentMenu != mc.postRaceMenu.menu)
         {
-            mc.ReturnToMainMenu();
+            mc.ReturnToMainMenu(false);
             mc.ShowPostRaceMenu();
         } 
     }

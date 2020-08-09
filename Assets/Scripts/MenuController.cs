@@ -138,7 +138,7 @@ public class MenuController : MonoBehaviour
         qualityDropdown.AddOptions(optionsController.GetQualityOptions());
     }
 
-    public void ReturnToMainMenu()
+    public void ReturnToMainMenu(bool resetCamera)
     {
         while(menuStack.Count > 0 && currentMenu != mainMenu)
         {
@@ -155,7 +155,7 @@ public class MenuController : MonoBehaviour
 
         currentMenu.SetActive(true);
 
-        MainMenuCamera();
+        if(resetCamera) MainMenuCamera();
     }
 
     void ShowConnectingUI(bool show)
@@ -233,7 +233,7 @@ public class MenuController : MonoBehaviour
 
     public void OnDisconnect()
     {
-        ReturnToMainMenu();
+        ReturnToMainMenu(true);
         ShowPopup("Disconnected");
     }
 
@@ -288,7 +288,7 @@ public class MenuController : MonoBehaviour
 
         rc.Reset();
         cc.Disconnect();
-        ReturnToMainMenu();
+        ReturnToMainMenu(true);
     }
 
     public void MainMenuQuit()
