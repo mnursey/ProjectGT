@@ -159,6 +159,7 @@ public class RaceController : MonoBehaviour
 
         em.SetTargetScene(targetScene);
         em.AddTrackNetworkEntities(currentTrack.trackNetworkEntities);
+        em.rc = this;
 
         if (raceControllerMode == RaceControllerMode.SERVER)
         {

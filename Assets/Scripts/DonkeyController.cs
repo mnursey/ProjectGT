@@ -40,7 +40,6 @@ public class DonkeyController : MonoBehaviour
 
     public PhysicsScene phs;
     public RaceController rc;
-
     public Animator parachuteAnimator;
 
     void Awake()
@@ -59,6 +58,8 @@ public class DonkeyController : MonoBehaviour
         }
 
         hitSound.enabled = true;
+
+        roamAreaCentre = transform.position;
     }
 
     // Start is called before the first frame update

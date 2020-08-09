@@ -68,6 +68,8 @@ public class TrackGenerator : MonoBehaviour
         }
 
         SetupWater();
+
+        EnableServerObjects(serverMode);
     }
 
     public void DesignRoad(List<int[]> path)
@@ -566,7 +568,7 @@ public class TrackGenerator : MonoBehaviour
         SetupCheckpoints(trackPath);
         SetupRaceTrackController();
 
-        if(serverMode)
+        if (serverMode)
         {
             GameObject track = this.gameObject;
             MeshRenderer[] meshRenders = track.GetComponentsInChildren<MeshRenderer>();
@@ -589,6 +591,18 @@ public class TrackGenerator : MonoBehaviour
             }
 
             serializedTrack = JsonUtility.ToJson(Serialize());
+        }
+    }
+
+    void EnableServerObjects(bool enable)
+    {
+        Transform[] allChildren = GetComponentsInChildren<Transform>();
+        foreach (Transform child in allChildren)
+        {
+            if (child.name == "ServerObjects")
+            {
+                child.gameObject.SetActive(enable);
+            }
         }
     }
 

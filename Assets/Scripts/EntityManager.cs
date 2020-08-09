@@ -21,6 +21,7 @@ public class EntityManager : MonoBehaviour
 
     private Scene targetScene;
     public CarModelManager cmm;
+    public RaceController rc;
 
     public void SetTargetScene(Scene targetScene)
     {
@@ -62,10 +63,15 @@ public class EntityManager : MonoBehaviour
     {
         foreach(TrackNetworkEntity tne in trackNetworkEntities)
         {
-            int id = GetNextEntityID();
-
-            entities.Add(new Entity(id, tne.prefabID, tne.gameobject));
+            AddExistingEntity(tne.prefabID, tne.gameobject);
         }
+    }
+
+    public int AddExistingEntity(int prefabID, GameObject g)
+    {
+        int id = GetNextEntityID();
+        entities.Add(new Entity(id, prefabID, g));
+        return id;
     }
 
     public int AddEntity(int prefabID, Vector3 position, Quaternion rotation, int modifier)
@@ -95,6 +101,14 @@ public class EntityManager : MonoBehaviour
 
         GameObject gameObject = Instantiate(prefabObject, position, rotation);
         SceneManager.MoveGameObjectToScene(gameObject, targetScene);
+
+        EntityManagerSubscriber ems = gameObject.GetComponent<EntityManagerSubscriber>();
+
+        if(ems != null)
+        {
+            ems.rc = rc;
+            ems.em = this;
+        }
 
         if (mode == RaceControllerMode.SERVER)
         {
@@ -277,6 +291,12 @@ public class EntityManager : MonoBehaviour
 
     public EntityState GetEntityState(Entity entity)
     {
+        if(entity.GetGameObject() == null)
+        {
+            Debug.Log("What the hell");
+            Debug.Log(entity.GetID());
+        }
+
         Rigidbody rb = entity.GetGameObject().GetComponent<Rigidbody>();
 
 
