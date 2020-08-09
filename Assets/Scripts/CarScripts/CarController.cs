@@ -60,6 +60,9 @@ public class CarController : MonoBehaviour
     public GameObject hitEffectPrefab;
     public float maxParticlesToEmmit = 25.0f;
 
+    public float skidMaxVel = 23.0f;
+    public float skidMinVel = 15.0f;
+
     [Header("Visual Transforms")]
 
     public Transform carVisual;
@@ -466,16 +469,18 @@ public class CarController : MonoBehaviour
 
             Vector3 skidPoint = hit.point + (rb.velocity * (Time.time - lastFixedUpdateTime));
 
+            float skidIntensity = Mathf.Clamp01((lVel.magnitude - skidMinVel) / (skidMaxVel - skidMinVel));
+
             if (axle == axles[Axle.FRONT_AXLE_INDEX])
             {
                 if (wheelData == axle.leftWheel)
                 {
-                    leftFrontLastSkid = tsc.AddSkidMark(skidPoint, hit.normal, 1.0f, leftFrontLastSkid, lVel);
+                    leftFrontLastSkid = tsc.AddSkidMark(skidPoint, hit.normal, skidIntensity, leftFrontLastSkid, lVel);
                 }
 
                 if (wheelData == axle.rightWheel)
                 {
-                    rightFrontLastSkid = tsc.AddSkidMark(skidPoint, hit.normal, 1.0f, rightFrontLastSkid, lVel);
+                    rightFrontLastSkid = tsc.AddSkidMark(skidPoint, hit.normal, skidIntensity, rightFrontLastSkid, lVel);
                 }
             }
 
@@ -483,12 +488,12 @@ public class CarController : MonoBehaviour
             {
                 if(wheelData == axle.leftWheel)
                 {
-                    leftRearLastSkid = tsc.AddSkidMark(skidPoint, hit.normal, 1.0f, leftRearLastSkid, lVel);
+                    leftRearLastSkid = tsc.AddSkidMark(skidPoint, hit.normal, skidIntensity, leftRearLastSkid, lVel);
                 }
 
                 if (wheelData == axle.rightWheel)
                 {
-                    rightRearLastSkid = tsc.AddSkidMark(skidPoint, hit.normal, 1.0f, rightRearLastSkid, lVel);
+                    rightRearLastSkid = tsc.AddSkidMark(skidPoint, hit.normal, skidIntensity, rightRearLastSkid, lVel);
                 }
             }
 

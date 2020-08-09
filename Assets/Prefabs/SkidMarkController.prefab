@@ -45,7 +45,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9decc43dcd7aba74c92b995c6944680e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  skidmarksMaterial: {fileID: 2100000, guid: 38acfe8bfc381394aaf43ccbfddb769b, type: 2}
+  skidmarksMaterial: {fileID: 2100000, guid: c42f3d237afdfcb4f952460e72e1b025, type: 2}
   minTyreSkidVelocity: 15
   targetCar: {fileID: 0}
 --- !u!33 &9127877113188896011

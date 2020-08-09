@@ -1143,6 +1143,8 @@ MonoBehaviour:
   hitEffectPrefab: {fileID: 6371475065235456496, guid: f06a7e8655070cd4ba462fd41d10db80,
     type: 3}
   maxParticlesToEmmit: 15
+  skidMaxVel: 23
+  skidMinVel: 15
   carVisual: {fileID: 4261872026429938361}
   frontLeftWheelHolder: {fileID: 4261872027620638025}
   frontRightWheelHolder: {fileID: 4261872027879443405}
