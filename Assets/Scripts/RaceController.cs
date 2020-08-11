@@ -102,10 +102,16 @@ public class RaceController : MonoBehaviour
 
     public bool shownCompletedReward = false;
 
+
     private ConcurrentQueue<InputState> incomingInputStates = new ConcurrentQueue<InputState>();
     private ConcurrentQueue<int> playersToRemove = new ConcurrentQueue<int>();
 
     GameState incomingGameState = new GameState();
+
+    [Header("Missed checkpoint Variables")]
+
+    public int skippedCheckpointTolerance = 2;
+    public SkippedTrackArrowController stac;
 
     CarController GetCarControllerFromID(int id)
     {
@@ -126,6 +132,11 @@ public class RaceController : MonoBehaviour
             // FIX THIS TO BE MORE DYNAMIC
             RaceTrack[] tracks = FindObjectsOfType<RaceTrack>();
             currentTrack = tracks[tracks.Length - 1];
+        }
+
+        if(stac == null)
+        {
+            stac = GetComponent<SkippedTrackArrowController>();
         }
 
         Physics.autoSimulation = false;
@@ -940,9 +951,10 @@ public class RaceController : MonoBehaviour
 
         targetPhysicsScene.Simulate(Time.deltaTime);
 
+        DetectSkippedTrack();
         UpdateCarProgress();
 
-        if(raceControllerMode == RaceControllerMode.CLIENT)
+        if (raceControllerMode == RaceControllerMode.CLIENT)
         {
             if (players.Exists(x => x.networkID == networkID))
             {
@@ -997,6 +1009,39 @@ public class RaceController : MonoBehaviour
         return null;
     }
 
+    bool DetectSkippedTrack()
+    {
+        PlayerEntity pe = players.Find(x => x.networkID == networkID);
+
+        if (pe == null) return false;
+        
+        CarController c = GetCarControllerFromID(pe.carID);
+
+        if(c != null)
+        {
+            for(int i = 0; i < currentTrack.checkPoints.Count; ++i)
+            {
+                CheckPoint nextCheckpoint = currentTrack.checkPoints[i];
+
+                if (Vector3.Distance(c.transform.position, nextCheckpoint.t.position) < nextCheckpoint.raduis)
+                {
+                    if (Mathf.Abs(i - pe.checkpoint + 1) % currentTrack.checkPoints.Count > skippedCheckpointTolerance)
+                    {
+                        // Display missed checkpoint arrow
+                        if(stac != null)
+                        {
+                            stac.EnableSkippedTrackArrow(GetNextCheckpoint(pe).t.position);
+                        }
+
+                        return true;
+                    }
+                }
+            }
+        }
+
+        return false;
+    }
+
     void UpdateCarProgress()
     {
         foreach(PlayerEntity pe in players)
@@ -1031,6 +1076,11 @@ public class RaceController : MonoBehaviour
                         {
                             pe.finishedTime = Time.time;
                         }
+                    }
+
+                    if(stac != null)
+                    {
+                        stac.DisableSkippedTrackArrow();
                     }
                 }
             }
