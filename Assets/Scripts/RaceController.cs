@@ -45,6 +45,7 @@ public class RaceController : MonoBehaviour
 
     public TextMeshProUGUI raceStartText;
     public Animator raceStartAnim;
+    public Animator skippedTrackAnim;
 
     [Header("ObjectiveUI")]
 
@@ -951,8 +952,13 @@ public class RaceController : MonoBehaviour
 
         targetPhysicsScene.Simulate(Time.deltaTime);
 
-        DetectSkippedTrack();
+        bool skippedTrack = DetectSkippedTrack();
+
+        if (skippedTrackAnim != null && skippedTrack)
+            skippedTrackAnim.SetBool("Warn", skippedTrack);
+
         UpdateCarProgress();
+
 
         if (raceControllerMode == RaceControllerMode.CLIENT)
         {
@@ -1082,6 +1088,9 @@ public class RaceController : MonoBehaviour
                     {
                         stac.DisableSkippedTrackArrow();
                     }
+
+                    if (skippedTrackAnim != null)
+                        skippedTrackAnim.SetBool("Warn", false);
                 }
             }
 
