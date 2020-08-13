@@ -838,6 +838,11 @@ public class RaceController : MonoBehaviour
 
         shownCompletedReward = false;
         ready = false;
+
+        if (stac != null)
+        {
+            stac.DisableSkippedTrackArrow();
+        }
     }
 
     void GetRaceModeState()
@@ -1023,6 +1028,8 @@ public class RaceController : MonoBehaviour
         
         CarController c = GetCarControllerFromID(pe.carID);
 
+        bool skipped = false;
+
         if(c != null)
         {
             for(int i = 0; i < currentTrack.checkPoints.Count; ++i)
@@ -1033,19 +1040,26 @@ public class RaceController : MonoBehaviour
                 {
                     if (Mathf.Abs(i - pe.checkpoint + 1) % currentTrack.checkPoints.Count > skippedCheckpointTolerance)
                     {
-                        // Display missed checkpoint arrow
-                        if(stac != null)
-                        {
-                            stac.EnableSkippedTrackArrow(GetNextCheckpoint(pe).t.position);
-                        }
-
-                        return true;
+                        skipped = true;
+                    } else
+                    {
+                        skipped = false;
+                        return skipped;
                     }
                 }
             }
         }
 
-        return false;
+        if(skipped)
+        {
+            // Display missed checkpoint arrow
+            if (stac != null)
+            {
+                stac.EnableSkippedTrackArrow(GetNextCheckpoint(pe).t.position);
+            }
+        }
+
+        return skipped;
     }
 
     void UpdateCarProgress()
