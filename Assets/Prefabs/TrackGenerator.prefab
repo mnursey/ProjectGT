@@ -268,7 +268,7 @@ MonoBehaviour:
   - type: 2
     prefab: {fileID: 4454764041570004665, guid: 13ab27fb07a642143849ec60a56c67c9,
       type: 3}
-    tags: 
+    tags: 05000000
   - type: 3
     prefab: {fileID: 5691122574158358379, guid: 3932c6db9ff35aa4f8fe968747434921,
       type: 3}
