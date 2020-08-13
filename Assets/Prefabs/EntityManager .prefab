@@ -57,6 +57,7 @@ MonoBehaviour:
   useMOEEntities: 
   ignoreUpdates: 
   cmm: {fileID: 5661802298856600150}
+  rc: {fileID: 0}
 --- !u!114 &5661802298856600150
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -81,8 +82,9 @@ MonoBehaviour:
       modulate the brake and throttle correctly when apporaching corners.
     prefab: {fileID: 4261872027723047873, guid: fe93f4455d55928498f407a72f9a5328,
       type: 3}
-  - name: Magnus-mobile
-    description: Running on straight dairy gas
+  - name: Beamer
+    description: A 80's Icon powered by a four-cylinder engine mounted on a chassis
+      built for motorsport.
     prefab: {fileID: 4261872027723047873, guid: 67b000525533b9349ad206cff82b61a7,
       type: 3}
   - name: Pherrari
