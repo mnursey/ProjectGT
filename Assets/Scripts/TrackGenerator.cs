@@ -195,20 +195,24 @@ public class TrackGenerator : MonoBehaviour
             }
         }
 
-        // Add landmarks to empty spots
+        // Add landmarks
         for (int x = 0; x < worldType.Count; ++x)
         {
             for (int y = 0; y < worldType[x].Count; ++y)
             {
-                if(worldType[x][y] == TrackPeiceType.EMPTY)
+                //if(worldType[x][y] == TrackPeiceType.EMPTY)
                 {
                     int c = r.Next(0, 100);
 
                     if(c < landmarkChance)
                     {
                         List<TrackPeice> pt = trackPeicePrefabs.FindAll(j => j.type == worldType[x][y] && HasTag(j, TrackPeiceTags.LANDMARK));
-                        int ptIndex = r.Next(0, pt.Count);
-                        prefabIndex[x][y] = trackPeicePrefabs.FindIndex(j => j == pt[ptIndex]);
+
+                        if(pt.Count > 0)
+                        {
+                            int ptIndex = r.Next(0, pt.Count);
+                            prefabIndex[x][y] = trackPeicePrefabs.FindIndex(j => j == pt[ptIndex]);
+                        }
                     }
                 }
             }
