@@ -208,11 +208,11 @@ MonoBehaviour:
   - type: 10
     prefab: {fileID: 4409933064841954170, guid: f9ca859fd6950f64bbf3cdfbc7bc3f21,
       type: 3}
-    tags: 0300000005000000
+    tags: 03000000
   - type: 10
     prefab: {fileID: 4409933064841954170, guid: bbfbda72cce2faf4a806da5525fce9b6,
       type: 3}
-    tags: 0300000005000000
+    tags: 03000000
   - type: 2
     prefab: {fileID: 1557698554331177871, guid: d84c90d003c591b4caec75fd7b78a77d,
       type: 3}
