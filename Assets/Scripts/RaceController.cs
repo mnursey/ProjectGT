@@ -946,6 +946,8 @@ public class RaceController : MonoBehaviour
 
     void RunSinglePhysicsFrame()
     {
+        PlayerEntity localPE = players.Find(x => x.networkID == networkID);
+      
         foreach (PlayerEntity player in players)
         {
             CarController c = GetCarControllerFromID(player.carID);
@@ -959,11 +961,36 @@ public class RaceController : MonoBehaviour
 
         bool skippedTrack = DetectSkippedTrack();
 
-        if (skippedTrackAnim != null && skippedTrack)
-            skippedTrackAnim.SetBool("Warn", skippedTrack);
+        if(localPE != null)
+        {
+            if (stac.currCheckpoint != GetNextCheckpoint(localPE) && stac.currCheckpoint != null)
+            {
+                // Disable skip track
+                if (stac != null)
+                {
+                    stac.DisableSkippedTrackArrow();
+                }
+
+                if (skippedTrackAnim != null)
+                    skippedTrackAnim.SetBool("Warn", false);
+            }
+            else
+            {
+                if (skippedTrack)
+                {
+                    // Enable skip track
+                    if (skippedTrackAnim != null && skippedTrack)
+                        skippedTrackAnim.SetBool("Warn", skippedTrack);
+
+                    if (stac != null && skippedTrack)
+                    {
+                        stac.EnableSkippedTrackArrow(GetNextCheckpoint(localPE));
+                    }
+                }
+            }
+        }
 
         UpdateCarProgress();
-
 
         if (raceControllerMode == RaceControllerMode.CLIENT)
         {
@@ -1038,7 +1065,7 @@ public class RaceController : MonoBehaviour
 
                 if (Vector3.Distance(c.transform.position, nextCheckpoint.t.position) < nextCheckpoint.raduis)
                 {
-                    if (Mathf.Abs(i - pe.checkpoint + 1) % currentTrack.checkPoints.Count > skippedCheckpointTolerance)
+                    if (Mathf.Abs(pe.checkpoint + 1 - i) % currentTrack.checkPoints.Count > skippedCheckpointTolerance)
                     {
                         skipped = true;
                     } else
@@ -1047,15 +1074,6 @@ public class RaceController : MonoBehaviour
                         return skipped;
                     }
                 }
-            }
-        }
-
-        if(skipped)
-        {
-            // Display missed checkpoint arrow
-            if (stac != null)
-            {
-                stac.EnableSkippedTrackArrow(GetNextCheckpoint(pe).t.position);
             }
         }
 
@@ -1080,31 +1098,35 @@ public class RaceController : MonoBehaviour
                 CheckPoint nextCheckPoint = currentTrack.checkPoints[nextCheckPointID];
                 if(Vector3.Distance(c.transform.position, nextCheckPoint.t.position) < nextCheckPoint.raduis)
                 {
-                    pe.checkpoint = nextCheckPointID;
+                    bool failedCheckpoint = false;
+
                     if(nextCheckPointID == 0)
                     {
-                        pe.lap++;
-
-                        if(pe.currentLapTime < pe.fastestLapTime)
+                        if(c.transform.position.z < nextCheckPoint.t.position.z)
                         {
-                            pe.fastestLapTime = pe.currentLapTime;
-                        }
-
-                        pe.currentLapTime = 0.0f;
-
-                        if (pe.lap > targetNumberOfLaps && pe.finishedTime < 0.0f)
+                            failedCheckpoint = true;
+                        } else
                         {
-                            pe.finishedTime = Time.time;
+                            pe.lap++;
+
+                            if (pe.currentLapTime < pe.fastestLapTime)
+                            {
+                                pe.fastestLapTime = pe.currentLapTime;
+                            }
+
+                            pe.currentLapTime = 0.0f;
+
+                            if (pe.lap > targetNumberOfLaps && pe.finishedTime < 0.0f)
+                            {
+                                pe.finishedTime = Time.time;
+                            }
                         }
                     }
 
-                    if(stac != null)
+                    if(!failedCheckpoint)
                     {
-                        stac.DisableSkippedTrackArrow();
+                        pe.checkpoint = nextCheckPointID;
                     }
-
-                    if (skippedTrackAnim != null)
-                        skippedTrackAnim.SetBool("Warn", false);
                 }
             }
 

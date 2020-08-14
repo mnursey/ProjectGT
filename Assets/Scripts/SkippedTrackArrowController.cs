@@ -9,6 +9,7 @@ public class SkippedTrackArrowController : MonoBehaviour
     public GameObject skippedTrackArrow;
     public float heightAboveCheckpoint = 20.0f;
     Animator staAnim;
+    public CheckPoint currCheckpoint = null;
 
     void Awake()
     {
@@ -21,14 +22,16 @@ public class SkippedTrackArrowController : MonoBehaviour
         DisableSkippedTrackArrow();
     }
 
-    public void EnableSkippedTrackArrow(Vector3 checkpointPosition)
+    public void EnableSkippedTrackArrow(CheckPoint cp)
     {
-        skippedTrackArrow.transform.position = checkpointPosition + (Vector3.up * heightAboveCheckpoint);
+        skippedTrackArrow.transform.position = cp.t.position + (Vector3.up * heightAboveCheckpoint);
         skippedTrackArrow.SetActive(true);
+        currCheckpoint = cp;
     }
 
     public void DisableSkippedTrackArrow()
     {
         staAnim.SetTrigger("Disable");
+        currCheckpoint = null;
     }
 }
