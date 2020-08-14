@@ -206,7 +206,7 @@ public class TrackGenerator : MonoBehaviour
 
                     if(c < landmarkChance)
                     {
-                        List<TrackPeice> pt = trackPeicePrefabs.FindAll(j => j.type == worldType[x][y] && HasTag(j, TrackPeiceTags.LANDMARK));
+                        List<TrackPeice> pt = trackPeicePrefabs.FindAll(j => j.type == worldType[x][y] && HasTag(j, TrackPeiceTags.LANDMARK) && !HasTag(j, TrackPeiceTags.BRIDGE));
 
                         if(pt.Count > 0)
                         {
