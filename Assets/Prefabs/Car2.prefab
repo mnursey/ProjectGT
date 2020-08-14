@@ -1053,13 +1053,13 @@ MonoBehaviour:
   rb: {fileID: 4261872027723047870}
   axles:
   - width: 1.8
-    offset: {x: 1.82, y: -0.4}
+    offset: {x: 1.82, y: -0.3}
     wheelRadius: 0.3
     laterialFriction: 0.1
     rollingFriction: 0.1
     suspensionStiffness: 7500
     suspensionDampining: 3000
-    suspensionHeight: 0.5
+    suspensionHeight: 0.6
     suspensionRelaxSpeed: 1
     leftWheel:
       isGrounded: 0
@@ -1176,8 +1176,8 @@ BoxCollider:
   m_IsTrigger: 0
   m_Enabled: 1
   serializedVersion: 2
-  m_Size: {x: 2.158917, y: 1.573648, z: 5.296953}
-  m_Center: {x: -0.022085428, y: 0.4984162, z: -0.17654705}
+  m_Size: {x: 2.158917, y: 1.5994327, z: 5.296953}
+  m_Center: {x: -0.022085428, y: 0.48552382, z: -0.17654705}
 --- !u!1 &4261872027879443404
 GameObject:
   m_ObjectHideFlags: 0
