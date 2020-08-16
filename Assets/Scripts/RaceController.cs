@@ -103,6 +103,7 @@ public class RaceController : MonoBehaviour
 
     public bool shownCompletedReward = false;
 
+    private int finishedPosition = 1;
 
     private ConcurrentQueue<InputState> incomingInputStates = new ConcurrentQueue<InputState>();
     private ConcurrentQueue<int> playersToRemove = new ConcurrentQueue<int>();
@@ -818,6 +819,8 @@ public class RaceController : MonoBehaviour
 
         openGridPos = 0;
 
+        finishedPosition = 1;
+
         foreach (PlayerEntity pe in players)
         {
             pe.ready = false;
@@ -1119,6 +1122,7 @@ public class RaceController : MonoBehaviour
                             if (pe.lap > targetNumberOfLaps && pe.finishedTime < 0.0f)
                             {
                                 pe.finishedTime = Time.time;
+                                pe.position = finishedPosition++;
                             }
                         }
                     }
@@ -1158,7 +1162,7 @@ public class RaceController : MonoBehaviour
         List<PlayerEntity> p = ps.OrderBy(o => {
             if (o.finishedTime > 0.0f)
             {
-                return -o.finishedTime;
+                return -o.position;
             }
             else {
                 return -o.lapScore + ((targetNumberOfLaps + 1000) * 5);

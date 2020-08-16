@@ -18,6 +18,7 @@ public class OptionsController : MonoBehaviour
         SetQuality(LoadIntSetting("quality", GetQualityOptions().Count - 1));
         SetScreenMode(LoadIntSetting("screen_mode", 0));
         SetMasterAudio(LoadFloatSetting("master_audio", 1.0f));
+        SetFOV(LoadFloatSetting("fov", 60f), Camera.main);
     }
 
     void SaveSetting(string name, int value)
@@ -108,6 +109,14 @@ public class OptionsController : MonoBehaviour
         AudioListener.volume = value;
 
         SaveSetting("master_audio", value);
+        SaveSettings();
+    }
+
+    public void SetFOV(float value, Camera c)
+    {
+        c.fieldOfView = value;
+
+        SaveSetting("fov", value);
         SaveSettings();
     }
 }

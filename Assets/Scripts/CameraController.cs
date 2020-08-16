@@ -37,12 +37,14 @@ public class CameraController : MonoBehaviour
 
     public RotateAround ra;
 
+    public Camera camera;
     public CameraEventCallback moveBehindPanToCallback;
 
     void Awake()
     {
         ra = GetComponent<RotateAround>();
         ra.enabled = false;
+        camera = GetComponentInChildren<Camera>();
     }
 
     void OnDrawGizmos()

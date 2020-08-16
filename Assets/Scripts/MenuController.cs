@@ -373,6 +373,13 @@ public class MenuController : MonoBehaviour
         clickSoundEffect.Play();
     }
 
+    public void OnFOVOptionChange(Slider s)
+    {
+        s.gameObject.GetComponentInChildren<TMP_Text>().text = "FOV - " + s.value;
+        optionsController.SetFOV(s.value, rc.cameraController.camera);
+        clickSoundEffect.Play();
+    }
+
     public void EnableGameUI()
     {
         gameUI.gameObject.SetActive(true);
