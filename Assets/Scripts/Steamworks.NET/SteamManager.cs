@@ -42,6 +42,8 @@ public class SteamManager : MonoBehaviour
     }
 
     protected bool m_bInitialized = false;
+    public bool failedSteamConnection = false;
+
     public static bool Initialized
     {
         get
@@ -132,8 +134,8 @@ public class SteamManager : MonoBehaviour
         m_bInitialized = SteamAPI.Init();
         if (!m_bInitialized)
         {
-            Debug.LogError("[Steamworks.NET] SteamAPI_Init() failed. Refer to Valve's documentation or the comment above this line for more information.", this);
-
+            Debug.LogWarning("[Steamworks.NET] SteamAPI_Init() failed. Refer to Valve's documentation or the comment above this line for more information.", this);
+            failedSteamConnection = true;
             return;
         }
 
