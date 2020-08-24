@@ -94,6 +94,20 @@ public static class NetworkingMessageTranslator
         return ToJson(msg);
     }
 
+    public static string GenerateNewAccountMessage()
+    {
+        NetworkingMessage msg = new NetworkingMessage(NetworkingMessageType.NEW_ACCOUNT, -1);
+        msg.content = ToJson(new NewAccountMsg(-1, 1));
+        return ToJson(msg);
+    }
+
+    public static string GenerateNewAccountMessageResponce(NewAccountMsg accountMsg)
+    {
+        NetworkingMessage msg = new NetworkingMessage(NetworkingMessageType.NEW_ACCOUNT_RESPONCE, -1);
+        msg.content = ToJson(accountMsg);
+        return ToJson(msg);
+    }
+
     public static NetworkingMessage ParseMessage(string json)
     {
         return JsonUtility.FromJson<NetworkingMessage>(json);
@@ -133,10 +147,15 @@ public static class NetworkingMessageTranslator
     {
         return JsonUtility.FromJson<GeneratedTrackData>(json);
     }
+
+    public static NewAccountMsg ParseNewAccountMsg(string json)
+    {
+        return JsonUtility.FromJson<NewAccountMsg>(json);
+    }
 }
 
 [Serializable]
-public enum NetworkingMessageType { CLIENT_JOIN, SERVER_JOIN_RESPONSE, DISCONNECT, PING, PING_RESPONSE, GAME_STATE, INPUT_STATE, USER_MANAGER_STATE, CAR_MODEL, TRACK_DATA };
+public enum NetworkingMessageType { CLIENT_JOIN, SERVER_JOIN_RESPONSE, DISCONNECT, PING, PING_RESPONSE, GAME_STATE, INPUT_STATE, USER_MANAGER_STATE, CAR_MODEL, TRACK_DATA, NEW_ACCOUNT, NEW_ACCOUNT_RESPONCE, LOGIN };
 
 [Serializable]
 public class NetworkingMessage
@@ -161,6 +180,19 @@ public class NetworkingMessage
         this.type = type;
         this.clientID = clientID;
         this.content = content;
+    }
+}
+
+[Serializable]
+public class NewAccountMsg
+{
+    public int accountID;
+    public int accountType;
+
+    public NewAccountMsg(int accountID, int accountType)
+    {
+        this.accountID = accountID;
+        this.accountType = accountType;
     }
 }
 

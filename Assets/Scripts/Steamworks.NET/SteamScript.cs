@@ -70,4 +70,18 @@ public class SteamScript : MonoBehaviour
             Debug.Log("The number of players playing your game: " + pCallback.m_cPlayers);
         }
     }
+
+    public static bool GetSteamLocalAccount(out CSteamID account)
+    {
+        account = CSteamID.Nil;
+
+        if (SteamManager.Initialized)
+        {
+            account = SteamUser.GetSteamID();
+            return true;
+        } else
+        {
+            return false;
+        }
+    }
 }

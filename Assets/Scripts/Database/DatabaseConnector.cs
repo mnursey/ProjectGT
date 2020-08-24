@@ -67,4 +67,10 @@ public class DatabaseConnector : MonoBehaviour
 
         return true;
     }
+
+    public void AddAccount(int accountID, int accountType)
+    {
+        string cmd = String.Format("INSERT INTO [ProjectGT].[dbo].[Accounts] (AccountID, AccountType) VALUES ({0}, {1});", accountID, accountType);
+        Query(cmd);
+    }
 }

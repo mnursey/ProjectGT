@@ -6,6 +6,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 using System.Text;
+using System.Threading.Tasks;
 
 public class ServerController : MonoBehaviour
 {
@@ -28,6 +29,8 @@ public class ServerController : MonoBehaviour
     public bool disconnectAll = false;
 
     public List<string> forwardIPs = new List<string>();
+
+    public DatabaseConnector db;
 
     // Start is called before the first frame update
     void Start()
@@ -284,9 +287,29 @@ public class ServerController : MonoBehaviour
                     }
                     else
                     {
-                        // If not a new connecting client or not an existing client...
-                        // Ignore.. if too many send msg? or block or something...
-                        Debug.Log("How are we here?");
+                        // Create new account
+                        // This is for local accounts only
+                        if (msg.type == NetworkingMessageType.NEW_ACCOUNT)
+                        {
+                            ServerConnection newConnection = new ServerConnection(GetNewClientID(), receiveObject.sender, socket);
+
+                            NewAccountMsg newAccountMsg = NetworkingMessageTranslator.ParseNewAccountMsg(msg.content);
+
+                            System.Random rnd = new System.Random();
+
+                            // TODO
+                            // Check if account already exists with ID
+
+                            int newAccountID = rnd.Next();
+
+                            Debug.Log("Server creating new local account");
+
+                            Parallel.Invoke(() =>
+                            {
+                                db.AddAccount(newAccountID, 1);
+                                newConnection.BeginSend(NetworkingMessageTranslator.GenerateNewAccountMessageResponce(new NewAccountMsg(newAccountID, 1)));
+                            });
+                        }
                     }
                 }
             }

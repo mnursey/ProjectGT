@@ -13,6 +13,7 @@ public enum ClientState { IDLE, CONNECTING, CONNECTED, DISCONNECTING, ERROR };
 public delegate void OnConnect(bool connected);
 public delegate void OnDisconnect();
 public delegate void OnReject(string reason);
+public delegate void OnAccountCreate(int accountID, int accountType);
 
 public class ClientController : MonoBehaviour
 {
@@ -40,6 +41,7 @@ public class ClientController : MonoBehaviour
     public OnConnect onConnect;
     public OnDisconnect onDisconnect;
     public OnReject onReject;
+    public OnAccountCreate onAccountCreate;
 
     public List<string> forwardIPs = new List<string>();
     public int connectionServerIPIndex = 0;
@@ -150,6 +152,30 @@ public class ClientController : MonoBehaviour
         BeginReceive();
 
         BeginSend(NetworkingMessageTranslator.GenerateClientJoinMessage(new JoinRequest(username, version, rc.selectedCarModel)));
+    }
+
+    // TODO 
+    // Refactor this with ConnectToServer
+    public void CreateNewAccount(OnAccountCreate onAccountCreate)
+    {
+        this.onAccountCreate = onAccountCreate;
+
+        Reset();
+
+        state = ClientState.CONNECTING;
+
+        socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
+
+        socket.Bind(new IPEndPoint(IPAddress.Any, 0));
+
+        address = socket.LocalEndPoint.ToString();
+
+        IPAddress serverAddress = IPAddress.Parse(serverIP);
+        serverEndPoint = new IPEndPoint(serverAddress, serverport);
+
+        BeginReceive();
+
+        BeginSend(NetworkingMessageTranslator.GenerateNewAccountMessage());
     }
 
     public void Disconnect()
@@ -294,6 +320,16 @@ public class ClientController : MonoBehaviour
                             ConnectToServer(connection_username, onConnect, onDisconnect, onReject);
                         }
                     }
+                }
+
+                if(msg.type == NetworkingMessageType.NEW_ACCOUNT_RESPONCE)
+                {
+                    NewAccountMsg newAccountMsg = NetworkingMessageTranslator.ParseNewAccountMsg(msg.content);
+
+                    UnityMainThreadDispatcher.Instance().Enqueue(() => onAccountCreate?.Invoke(newAccountMsg.accountID, newAccountMsg.accountType));
+
+                    Close();
+                    Reset();
                 }
             }
 
