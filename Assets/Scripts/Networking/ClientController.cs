@@ -13,7 +13,8 @@ public enum ClientState { IDLE, CONNECTING, CONNECTED, DISCONNECTING, ERROR };
 public delegate void OnConnect(bool connected);
 public delegate void OnDisconnect();
 public delegate void OnReject(string reason);
-public delegate void OnAccountCreate(int accountID, int accountType);
+public delegate void OnAccountCreate(ulong accountID, int accountType);
+public delegate void OnLogin(AccountData ac);
 
 public class ClientController : MonoBehaviour
 {
@@ -42,6 +43,7 @@ public class ClientController : MonoBehaviour
     public OnDisconnect onDisconnect;
     public OnReject onReject;
     public OnAccountCreate onAccountCreate;
+    public OnLogin onLogin;
 
     public List<string> forwardIPs = new List<string>();
     public int connectionServerIPIndex = 0;
@@ -136,30 +138,29 @@ public class ClientController : MonoBehaviour
         this.onReject = onReject;
         connection_username = username;
 
-        Reset();
-
-        state = ClientState.CONNECTING;
-
-        socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
-
-        socket.Bind(new IPEndPoint(IPAddress.Any, 0));
-
-        address = socket.LocalEndPoint.ToString();
-
-        IPAddress serverAddress = IPAddress.Parse(serverIP);
-        serverEndPoint = new IPEndPoint(serverAddress, serverport);
-
-        BeginReceive();
-
-        BeginSend(NetworkingMessageTranslator.GenerateClientJoinMessage(new JoinRequest(username, version, rc.selectedCarModel)));
+        ConnectHelper(NetworkingMessageTranslator.GenerateClientJoinMessage(new JoinRequest(username, version, rc.selectedCarModel)));
     }
 
-    // TODO 
-    // Refactor this with ConnectToServer
     public void CreateNewAccount(OnAccountCreate onAccountCreate)
     {
         this.onAccountCreate = onAccountCreate;
 
+        // Todo handle failed to connect
+
+        ConnectHelper(NetworkingMessageTranslator.GenerateNewAccountMessage());
+    }
+
+    public void Login(ulong accountID, int accountType, OnLogin onLogin)
+    {
+        this.onLogin = onLogin;
+
+        // Todo handle failed to connect
+
+        ConnectHelper(NetworkingMessageTranslator.GenerateLoginMessage(accountID, accountType));
+    }
+
+    void ConnectHelper(string data)
+    {
         Reset();
 
         state = ClientState.CONNECTING;
@@ -175,7 +176,7 @@ public class ClientController : MonoBehaviour
 
         BeginReceive();
 
-        BeginSend(NetworkingMessageTranslator.GenerateNewAccountMessage());
+        BeginSend(data);
     }
 
     public void Disconnect()
@@ -327,6 +328,16 @@ public class ClientController : MonoBehaviour
                     NewAccountMsg newAccountMsg = NetworkingMessageTranslator.ParseNewAccountMsg(msg.content);
 
                     UnityMainThreadDispatcher.Instance().Enqueue(() => onAccountCreate?.Invoke(newAccountMsg.accountID, newAccountMsg.accountType));
+
+                    Close();
+                    Reset();
+                }
+
+                if (msg.type == NetworkingMessageType.LOGIN_RESPONCE)
+                {
+                    AccountData ad = NetworkingMessageTranslator.ParseAccountData(msg.content);
+
+                    UnityMainThreadDispatcher.Instance().Enqueue(() => onLogin?.Invoke(ad));
 
                     Close();
                     Reset();

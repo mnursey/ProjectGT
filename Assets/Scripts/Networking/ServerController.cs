@@ -7,6 +7,8 @@ using System.Net.Sockets;
 using System.Threading;
 using System.Text;
 using System.Threading.Tasks;
+using System.Data.SqlClient;
+using System.Data;
 
 public class ServerController : MonoBehaviour
 {
@@ -300,7 +302,7 @@ public class ServerController : MonoBehaviour
                             // TODO
                             // Check if account already exists with ID
 
-                            int newAccountID = rnd.Next();
+                            ulong newAccountID = (ulong)rnd.Next();
 
                             Debug.Log("Server creating new local account");
 
@@ -308,6 +310,54 @@ public class ServerController : MonoBehaviour
                             {
                                 db.AddAccount(newAccountID, 1);
                                 newConnection.BeginSend(NetworkingMessageTranslator.GenerateNewAccountMessageResponce(new NewAccountMsg(newAccountID, 1)));
+                            });
+                        }
+
+                        if (msg.type == NetworkingMessageType.LOGIN)
+                        {
+                            ServerConnection newConnection = new ServerConnection(GetNewClientID(), receiveObject.sender, socket);
+
+                            NewAccountMsg newAccountMsg = NetworkingMessageTranslator.ParseNewAccountMsg(msg.content);
+
+                            Parallel.Invoke(() =>
+                            {
+                                Debug.Log("Server logging in user");
+
+                                AccountData accountData = null;
+
+                                // Get account
+                                DataSet ds = db.GetAccount(newAccountMsg.accountID, newAccountMsg.accountType);
+
+                                if (!(ds.Tables[0].Rows.Count > 0))
+                                {
+                                    // If no account exists and is type 0 (steam) create new account
+                                    if (newAccountMsg.accountType == 0)
+                                    {
+                                        // Create new steam account
+                                        db.AddAccount(newAccountMsg.accountID, 0);
+
+                                        // Get account
+                                        ds = db.GetAccount(newAccountMsg.accountID, 0);
+                                    }
+                                    else
+                                    {
+                                        // Todo handle this...
+                                        // If local account error
+                                        Debug.LogWarning("Attempting to login into account that does not exist...");
+                                    }
+                                }
+
+                                if(ds.Tables[0].Rows.Count > 0)
+                                {
+                                    accountData = new AccountData((ulong)(long)ds.Tables[0].Rows[0]["AccountID"], (int)ds.Tables[0].Rows[0]["AccountType"], ds.Tables[0].Rows[0]["AccountName"].ToString(), (int)ds.Tables[0].Rows[0]["Coins"], (int)ds.Tables[0].Rows[0]["NumRaces"], (int)ds.Tables[0].Rows[0]["NumWins"], (int)ds.Tables[0].Rows[0]["SelectedCarID"], (int)ds.Tables[0].Rows[0]["Score"]);
+                                } else
+                                {
+                                    // Todo handle this...
+                                    Debug.LogWarning("Attempting to login into account that does not exist...");
+                                }
+
+                                // return account info
+                                newConnection.BeginSend(NetworkingMessageTranslator.GenerateLoginMessageResponce(accountData));
                             });
                         }
                     }

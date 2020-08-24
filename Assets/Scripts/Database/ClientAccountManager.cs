@@ -6,7 +6,7 @@ using UnityEngine;
 public class ClientAccountManager : MonoBehaviour
 {
     public int accountType = -1; // 0 -> steam, 1 -> local
-    public int accountID = -1; 
+    public ulong accountID = 0; 
     public bool loggedIn;
 
     private string localAccountDataLocation = "localAccount.data";
@@ -69,7 +69,7 @@ public class ClientAccountManager : MonoBehaviour
 
         if(result)
         {
-            accountID = int.Parse(data);
+            accountID = ulong.Parse(data);
             accountType = 1;
         }
 
@@ -83,7 +83,7 @@ public class ClientAccountManager : MonoBehaviour
 
         if(result)
         {
-            accountID = int.Parse(id.ToString());
+            accountID = ulong.Parse(id.ToString());
             accountType = 0;
         }
 
@@ -96,7 +96,7 @@ public class ClientAccountManager : MonoBehaviour
         return true;
     }
 
-    void CreateLocalAccountCallback(int accountID, int accountType)
+    void CreateLocalAccountCallback(ulong accountID, int accountType)
     {
         this.accountID = accountID;
         this.accountType = accountType;
@@ -106,7 +106,19 @@ public class ClientAccountManager : MonoBehaviour
 
     void Login()
     {
-        // Todo
-        // Send request to login server...
+        cc.Login(accountID, accountType, LoginCallback);
+    }
+
+    void LoginCallback(AccountData ad)
+    {
+        if(ad != null)
+        {
+            Debug.Log("Logged in as " + ad.accountID + " " + ad.accountType + " Coins " + ad.coins);
+            loggedIn = true;
+        } else
+        {
+            // Todo handle this...
+            Debug.LogWarning("Account data was null...");
+        }
     }
 }

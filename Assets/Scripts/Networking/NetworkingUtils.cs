@@ -97,7 +97,7 @@ public static class NetworkingMessageTranslator
     public static string GenerateNewAccountMessage()
     {
         NetworkingMessage msg = new NetworkingMessage(NetworkingMessageType.NEW_ACCOUNT, -1);
-        msg.content = ToJson(new NewAccountMsg(-1, 1));
+        msg.content = ToJson(new NewAccountMsg(0, 1));
         return ToJson(msg);
     }
 
@@ -105,6 +105,20 @@ public static class NetworkingMessageTranslator
     {
         NetworkingMessage msg = new NetworkingMessage(NetworkingMessageType.NEW_ACCOUNT_RESPONCE, -1);
         msg.content = ToJson(accountMsg);
+        return ToJson(msg);
+    }
+
+    public static string GenerateLoginMessage(ulong id, int type)
+    {
+        NetworkingMessage msg = new NetworkingMessage(NetworkingMessageType.LOGIN, -1);
+        msg.content = ToJson(new NewAccountMsg(id, type));
+        return ToJson(msg);
+    }
+
+    public static string GenerateLoginMessageResponce(AccountData ac)
+    {
+        NetworkingMessage msg = new NetworkingMessage(NetworkingMessageType.LOGIN_RESPONCE, -1);
+        msg.content = ToJson(ac);
         return ToJson(msg);
     }
 
@@ -152,10 +166,15 @@ public static class NetworkingMessageTranslator
     {
         return JsonUtility.FromJson<NewAccountMsg>(json);
     }
+
+    public static AccountData ParseAccountData(string json)
+    {
+        return JsonUtility.FromJson<AccountData>(json);
+    }
 }
 
 [Serializable]
-public enum NetworkingMessageType { CLIENT_JOIN, SERVER_JOIN_RESPONSE, DISCONNECT, PING, PING_RESPONSE, GAME_STATE, INPUT_STATE, USER_MANAGER_STATE, CAR_MODEL, TRACK_DATA, NEW_ACCOUNT, NEW_ACCOUNT_RESPONCE, LOGIN };
+public enum NetworkingMessageType { CLIENT_JOIN, SERVER_JOIN_RESPONSE, DISCONNECT, PING, PING_RESPONSE, GAME_STATE, INPUT_STATE, USER_MANAGER_STATE, CAR_MODEL, TRACK_DATA, NEW_ACCOUNT, NEW_ACCOUNT_RESPONCE, LOGIN, LOGIN_RESPONCE };
 
 [Serializable]
 public class NetworkingMessage
@@ -186,13 +205,38 @@ public class NetworkingMessage
 [Serializable]
 public class NewAccountMsg
 {
-    public int accountID;
+    public ulong accountID;
     public int accountType;
 
-    public NewAccountMsg(int accountID, int accountType)
+    public NewAccountMsg(ulong accountID, int accountType)
     {
         this.accountID = accountID;
         this.accountType = accountType;
+    }
+}
+
+[Serializable]
+public class AccountData
+{
+    public ulong accountID;
+    public int accountType;
+    public string accountName;
+    public int coins;
+    public int numRaces;
+    public int numWins;
+    public int selectedCarID;
+    public int score;
+
+    public AccountData(ulong accountID, int accountType, string accountName, int coins, int numRaces, int numWins, int selectedCarID, int score)
+    {
+        this.accountID = accountID;
+        this.accountType = accountType;
+        this.accountName = accountName;
+        this.coins = coins;
+        this.numRaces = numRaces;
+        this.numWins = numWins;
+        this.selectedCarID = selectedCarID;
+        this.score = score;
     }
 }
 

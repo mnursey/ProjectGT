@@ -4,32 +4,16 @@ using UnityEngine;
 using System;
 using System.Text;
 using System.Data.SqlClient;
+using System.Data;
 
 public class DatabaseConnector : MonoBehaviour
 {
-    public bool test;
     public string host;
     public string user;
     public string password;
 
-    // Start is called before the first frame update
-    void Start()
-    {
-        
-    }
 
-    // Update is called once per frame
-    void Update()
-    {
-        if(test)
-        {
-            string testQuery = "SELECT TOP (1000) * FROM[ProjectGT].[dbo].[Accounts]";
-            Query(testQuery);
-            test = false;
-        }
-    }
-
-    public bool Query(string cmd)
+    public bool Query(string cmd, out DataSet ds)
     {
         try
         {
@@ -40,6 +24,9 @@ public class DatabaseConnector : MonoBehaviour
             builder.Password = password;
             builder.InitialCatalog = "master";
 
+            SqlDataAdapter adapter = new SqlDataAdapter();
+            ds = new DataSet();
+
             // Connect to SQL
             Debug.Log("Connecting to SQL Server ... ");
             using (SqlConnection connection = new SqlConnection(builder.ConnectionString))
@@ -49,28 +36,38 @@ public class DatabaseConnector : MonoBehaviour
 
                 using (SqlCommand command = new SqlCommand(cmd, connection))
                 {
-                    using (SqlDataReader reader = command.ExecuteReader())
-                    {
-                        while (reader.Read())
-                        {
-                            Debug.Log("Row: " + reader.GetInt32(0) + " AccountID: " + reader.GetInt32(1));
-                        }
-                    }
+                    adapter.SelectCommand = command;
+                    adapter.Fill(ds);
+                    adapter.Dispose();
                 }
             }
         }
         catch (SqlException e)
         {
             Debug.LogWarning(e.ToString());
+            ds = null;
             return false;
         }
 
         return true;
     }
 
-    public void AddAccount(int accountID, int accountType)
+    public void AddAccount(ulong accountID, int accountType)
     {
         string cmd = String.Format("INSERT INTO [ProjectGT].[dbo].[Accounts] (AccountID, AccountType) VALUES ({0}, {1});", accountID, accountType);
-        Query(cmd);
+
+        DataSet ds;
+
+        Query(cmd, out ds);
+    }
+
+    public DataSet GetAccount(ulong accountID, int accountType)
+    {
+        string cmd = String.Format("select * from [ProjectGT].[dbo].[Accounts] where AccountID = {0} and AccountType = {1};", accountID, accountType);
+
+        DataSet ds;
+
+        Query(cmd, out ds);
+        return ds;
     }
 }
