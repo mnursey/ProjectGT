@@ -30,6 +30,8 @@ public class RaceController : MonoBehaviour
     public TrackGenerator trackGenerator;
     public ControlManager cm;
     public List<PlayerEntity> players = new List<PlayerEntity>();
+    public List<PlayerEntity> removedPlayers = new List<PlayerEntity>();
+
     public Scene targetScene;
     public PhysicsScene targetPhysicsScene;
 
@@ -622,18 +624,51 @@ public class RaceController : MonoBehaviour
 
         if (raceControllerMode == RaceControllerMode.SERVER && CheckReadyTimeout())
         {
-            // Todo refactor speed of this
+            ScorePlayers();
+            ResetRaceMode();
+            RemoveAllPlayersCars();
+        }
+    }
 
-            int numberOfPlayers = GetRacingPlayers().Count;
+    void ScorePlayers()
+    {
+        // Todo refactor speed of this
 
-            foreach (PlayerEntity pe in GetRacingPlayers()) {
+        int numberOfPlayers = GetTotalNumberOfRacers();
 
+        // Current Players
+        foreach (PlayerEntity pe in GetRacingPlayers())
+        {
+
+            ulong accountID = pe.accountID;
+            int accountType = pe.accountType;
+
+            int numWinsDelta = pe.position == 1 ? 1 : 0;
+            int scoreDelta = -(pe.position - numberOfPlayers / 2) + 1;
+
+            Parallel.Invoke(() =>
+            {
+                Debug.Log("player -> " + pe.accountID + " scoreDelta -> " + scoreDelta);
+                sc.db.UpdateAccountStats(accountID, accountType, numWinsDelta, scoreDelta);
+            });
+        }
+
+        // Disconnected Players
+        foreach (PlayerEntity pe in removedPlayers)
+        {
+
+            if (pe.elapsedTime > 0)
+            {
                 ulong accountID = pe.accountID;
                 int accountType = pe.accountType;
 
-                // Todo wins and score
                 int numWinsDelta = pe.position == 1 ? 1 : 0;
                 int scoreDelta = -(pe.position - numberOfPlayers / 2) + 1;
+
+                if (pe.finishedTime < 0.0f)
+                {
+                    scoreDelta = -25;
+                }
 
                 Parallel.Invoke(() =>
                 {
@@ -641,9 +676,6 @@ public class RaceController : MonoBehaviour
                     sc.db.UpdateAccountStats(accountID, accountType, numWinsDelta, scoreDelta);
                 });
             }
-
-            ResetRaceMode();
-            RemoveAllPlayersCars();
         }
     }
 
@@ -844,7 +876,9 @@ public class RaceController : MonoBehaviour
             pe.SetLapState(0, 0);
         }
 
-        if(raceStartText != null)
+        removedPlayers = new List<PlayerEntity>();
+
+        if (raceStartText != null)
         {
             raceStartText.text = "";
         }
@@ -927,6 +961,7 @@ public class RaceController : MonoBehaviour
                 if(raceControllerMode == RaceControllerMode.SERVER && players.Count == 0)
                 {
                     raceControllerState = RaceControllerStateEnum.IDLE;
+                    ScorePlayers();
                     ResetRaceMode();
                 } else
                 {
@@ -1039,6 +1074,21 @@ public class RaceController : MonoBehaviour
         }
 
         return racers;
+    }
+
+    int GetTotalNumberOfRacers()
+    {
+        int c = GetRacingPlayers().Count;
+
+        foreach (PlayerEntity pe in removedPlayers)
+        {
+            if (pe.carID > -1)
+            {
+                c++;
+            }
+        }
+
+        return c;
     }
 
     CheckPoint GetNextCheckpoint(PlayerEntity pe)
@@ -1345,6 +1395,7 @@ public class RaceController : MonoBehaviour
     {
         RemoveCar(pe);
         players.Remove(pe);
+        removedPlayers.Add(pe);
     }
 
     void RemoveAllPlayersCars()
