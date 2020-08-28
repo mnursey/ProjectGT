@@ -79,4 +79,24 @@ public class DatabaseConnector : MonoBehaviour
         Query(cmd, out ds);
         return ds;
     }
+
+    public DataSet UpdateSelectedCar(ulong accountID, int accountType, int carID)
+    {
+        string cmd = String.Format("update [ProjectGT].[dbo].[Accounts] set SelectedCarID = {2} where AccountID = {0} and AccountType = {1};", accountID, accountType, carID);
+
+        DataSet ds;
+
+        Query(cmd, out ds);
+        return ds;
+    }
+
+    public DataSet GetUsersOrderedByScore(int row, int depth)
+    {
+        string cmd = String.Format("select * from[ProjectGT].[dbo].[Accounts] order by score desc offset {0} rows fetch next {1} rows only; ", row, depth);
+
+        DataSet ds;
+
+        Query(cmd, out ds);
+        return ds;
+    }
 }

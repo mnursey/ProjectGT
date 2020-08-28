@@ -122,6 +122,13 @@ public static class NetworkingMessageTranslator
         return ToJson(msg);
     }
 
+    public static string GenerateSaveSelectedCarMessage(ulong id, int type, int carID)
+    {
+        NetworkingMessage msg = new NetworkingMessage(NetworkingMessageType.SAVE_SELECTED_CAR, -1);
+        msg.content = ToJson(new SelectedCarData(id, type, carID));
+        return ToJson(msg);
+    }
+
     public static NetworkingMessage ParseMessage(string json)
     {
         return JsonUtility.FromJson<NetworkingMessage>(json);
@@ -171,10 +178,15 @@ public static class NetworkingMessageTranslator
     {
         return JsonUtility.FromJson<AccountData>(json);
     }
+
+    public static SelectedCarData ParseSelectedCarData(string json)
+    {
+        return JsonUtility.FromJson<SelectedCarData>(json);
+    }
 }
 
 [Serializable]
-public enum NetworkingMessageType { CLIENT_JOIN, SERVER_JOIN_RESPONSE, DISCONNECT, PING, PING_RESPONSE, GAME_STATE, INPUT_STATE, USER_MANAGER_STATE, CAR_MODEL, TRACK_DATA, NEW_ACCOUNT, NEW_ACCOUNT_RESPONCE, LOGIN, LOGIN_RESPONCE };
+public enum NetworkingMessageType { CLIENT_JOIN, SERVER_JOIN_RESPONSE, DISCONNECT, PING, PING_RESPONSE, GAME_STATE, INPUT_STATE, USER_MANAGER_STATE, CAR_MODEL, TRACK_DATA, NEW_ACCOUNT, NEW_ACCOUNT_RESPONCE, LOGIN, LOGIN_RESPONCE, SAVE_SELECTED_CAR };
 
 [Serializable]
 public class NetworkingMessage
@@ -237,6 +249,21 @@ public class AccountData
         this.numWins = numWins;
         this.selectedCarID = selectedCarID;
         this.score = score;
+    }
+}
+
+[Serializable]
+public class SelectedCarData
+{
+    public ulong accountID;
+    public int accountType;
+    public int selectedCarID;
+
+    public SelectedCarData(ulong accountID, int accountType, int selectedCarID)
+    {
+        this.accountID = accountID;
+        this.accountType = accountType;
+        this.selectedCarID = selectedCarID;
     }
 }
 

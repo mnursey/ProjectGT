@@ -119,6 +119,7 @@ public class ClientAccountManager : MonoBehaviour
             // Todo
             // Refactor this...
             mc.usernameOption.text = ad.accountName;
+            mc.rc.selectedCarModel = accountData.selectedCarID;
 
             loggedIn = true;
         } else

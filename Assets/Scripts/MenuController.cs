@@ -350,6 +350,11 @@ public class MenuController : MonoBehaviour
         selectedCarSpawn.gameObject.SetActive(false);
     }
 
+    public void SaveSelectedCar()
+    {
+        cc.UpdateSelectedCar(cam.accountID, cam.accountType, rc.selectedCarModel);
+    }
+
     public void ShowRaceTrack(bool value)
     {
         rc.currentTrack.track.SetActive(value);

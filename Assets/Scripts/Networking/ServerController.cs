@@ -371,6 +371,24 @@ public class ServerController : MonoBehaviour
                                 newConnection.BeginSend(NetworkingMessageTranslator.GenerateLoginMessageResponce(accountData));
                             });
                         }
+
+                        if (msg.type == NetworkingMessageType.SAVE_SELECTED_CAR)
+                        {
+                            ServerConnection newConnection = new ServerConnection(GetNewClientID(), receiveObject.sender, socket);
+
+                            SelectedCarData scd = NetworkingMessageTranslator.ParseSelectedCarData(msg.content);
+
+                            Parallel.Invoke(() =>
+                            {
+                                Debug.Log("Updated selected car");
+
+                                // Get account
+                                DataSet ds = db.UpdateSelectedCar(scd.accountID, scd.accountType, scd.selectedCarID);
+
+                                // return account info
+                                newConnection.BeginSend(NetworkingMessageTranslator.GenerateDisconnectMessage(-1));
+                            });
+                        }
                     }
                 }
             }

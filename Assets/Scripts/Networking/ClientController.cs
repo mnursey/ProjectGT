@@ -131,6 +131,9 @@ public class ClientController : MonoBehaviour
         this.onConnect = onConnect;
         this.onDisconnect = onDisconnect;
         this.onReject = onReject;
+        this.onAccountCreate = null;
+        this.onLogin = null;
+
         connection_username = username;
         connection_accountID = accountID;
         connection_accountType = accountType;
@@ -140,7 +143,11 @@ public class ClientController : MonoBehaviour
 
     public void CreateNewAccount(OnAccountCreate onAccountCreate)
     {
+        this.onConnect = null;
+        this.onDisconnect = null;
+        this.onReject = null;
         this.onAccountCreate = onAccountCreate;
+        this.onLogin = null;
 
         // Todo handle failed to connect
 
@@ -149,11 +156,27 @@ public class ClientController : MonoBehaviour
 
     public void Login(ulong accountID, int accountType, OnLogin onLogin)
     {
+        this.onConnect = null;
+        this.onDisconnect = null;
+        this.onReject = null;
+        this.onAccountCreate = null;
         this.onLogin = onLogin;
 
         // Todo handle failed to connect
 
         ConnectHelper(NetworkingMessageTranslator.GenerateLoginMessage(accountID, accountType));
+    }
+
+    public void UpdateSelectedCar(ulong accountID, int accountType, int carID)
+    {
+        // Todo handle failed to connect
+        this.onConnect = null;
+        this.onDisconnect = null;
+        this.onReject = null;
+        this.onAccountCreate = null;
+        this.onLogin = null;
+
+        ConnectHelper(NetworkingMessageTranslator.GenerateSaveSelectedCarMessage(accountID, accountType, carID));
     }
 
     void ConnectHelper(string data)
@@ -335,6 +358,14 @@ public class ClientController : MonoBehaviour
                     AccountData ad = NetworkingMessageTranslator.ParseAccountData(msg.content);
 
                     UnityMainThreadDispatcher.Instance().Enqueue(() => onLogin?.Invoke(ad));
+
+                    Close();
+                    Reset();
+                }
+
+                if (msg.type == NetworkingMessageType.DISCONNECT)
+                {
+                    UnityMainThreadDispatcher.Instance().Enqueue(() => onDisconnect?.Invoke());
 
                     Close();
                     Reset();
