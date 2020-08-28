@@ -1169,10 +1169,10 @@ public class RaceController : MonoBehaviour
         List<PlayerEntity> p = ps.OrderBy(o => {
             if (o.finishedTime > 0.0f)
             {
-                return o.finishedTime;
+                return o.finishedTime + -100000000;
             }
             else {
-                return -o.lapScore + (float.MaxValue * 0.95f);
+                return -o.lapScore;
             };
         }).ToList();
 
