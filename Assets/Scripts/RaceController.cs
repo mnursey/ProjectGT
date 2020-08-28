@@ -623,17 +623,21 @@ public class RaceController : MonoBehaviour
         if (raceControllerMode == RaceControllerMode.SERVER && CheckReadyTimeout())
         {
             // Todo refactor speed of this
+
+            int numberOfPlayers = GetRacingPlayers().Count;
+
             foreach (PlayerEntity pe in GetRacingPlayers()) {
 
                 ulong accountID = pe.accountID;
                 int accountType = pe.accountType;
 
                 // Todo wins and score
-                int numWinsDelta = 1;
-                int scoreDelta = 10;
+                int numWinsDelta = pe.position == 1 ? 1 : 0;
+                int scoreDelta = -(pe.position - numberOfPlayers / 2) + 1;
 
                 Parallel.Invoke(() =>
                 {
+                    Debug.Log("player -> " + pe.accountID + " scoreDelta -> " + scoreDelta);
                     sc.db.UpdateAccountStats(accountID, accountType, numWinsDelta, scoreDelta);
                 });
             }
