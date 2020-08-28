@@ -37,7 +37,7 @@ public class ServerController : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-
+        Debug.Log(Application.persistentDataPath);
     }
 
     // Update is called once per frame
@@ -193,8 +193,11 @@ public class ServerController : MonoBehaviour
                             // Add new server connection
                             clients.Add(newConnection);
 
+                            // Todo
+                            // Verify account info... accountID, accountType
+
                             rc.um.AddUser(jr.username, newConnection.clientID);
-                            rc.CreatePlayer(newConnection.clientID, jr.carModel);
+                            rc.CreatePlayer(newConnection.clientID, jr.carModel, jr.accountID, jr.accountType);
 
                             // Send Accept Connect msg
                             newConnection.BeginSend(NetworkingMessageTranslator.GenerateServerJoinResponseMessage(new JoinRequestResponce(newConnection.clientID, rc.trackGenerator.serializedTrack)), SendUserManagerState);
@@ -299,16 +302,22 @@ public class ServerController : MonoBehaviour
 
                             System.Random rnd = new System.Random();
 
-                            // TODO
-                            // Check if account already exists with ID
-
                             ulong newAccountID = (ulong)rnd.Next();
+
+                            DataSet ds = db.GetAccount(newAccountID, 1);
+
+                            // Check if account with ID already exists
+                            while (ds.Tables[0].Rows.Count > 0)
+                            {
+                                newAccountID = (ulong)rnd.Next();
+                                ds = db.GetAccount(newAccountID, 1);
+                            }
 
                             Debug.Log("Server creating new local account");
 
                             Parallel.Invoke(() =>
                             {
-                                db.AddAccount(newAccountID, 1);
+                                db.AddAccount(newAccountID, 1, UsernameGenerator.GenerateUsername());
                                 newConnection.BeginSend(NetworkingMessageTranslator.GenerateNewAccountMessageResponce(new NewAccountMsg(newAccountID, 1)));
                             });
                         }
@@ -333,8 +342,10 @@ public class ServerController : MonoBehaviour
                                     // If no account exists and is type 0 (steam) create new account
                                     if (newAccountMsg.accountType == 0)
                                     {
+                                        string steamUsername = SteamScript.GetSteamUsername(newAccountMsg.accountID);
+
                                         // Create new steam account
-                                        db.AddAccount(newAccountMsg.accountID, 0);
+                                        db.AddAccount(newAccountMsg.accountID, 0, steamUsername);
 
                                         // Get account
                                         ds = db.GetAccount(newAccountMsg.accountID, 0);

@@ -6,6 +6,7 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using TMPro;
 using System.Linq;
+using System.Threading.Tasks;
 
 public enum RaceControllerStateEnum { IDLE , PRACTICE, RACE };
 public enum RaceControllerMode { CLIENT, SERVER };
@@ -102,8 +103,6 @@ public class RaceController : MonoBehaviour
     public float clientFastestLapTime = float.MaxValue;
 
     public bool shownCompletedReward = false;
-
-    private int finishedPosition = 1;
 
     private ConcurrentQueue<InputState> incomingInputStates = new ConcurrentQueue<InputState>();
     private ConcurrentQueue<int> playersToRemove = new ConcurrentQueue<int>();
@@ -616,11 +615,6 @@ public class RaceController : MonoBehaviour
 
     void RaceEnd()
     {
-        // Todo
-        // Get players by place
-        // Post race results
-        // Save to file / server / db
-
         if(mc != null)
         {
             mc.postRaceMenu.infoText.text = "Next Race in " + String.Format("{0:0.}", (maxReadyTimer - readyTimer)) + "s";
@@ -628,6 +622,22 @@ public class RaceController : MonoBehaviour
 
         if (raceControllerMode == RaceControllerMode.SERVER && CheckReadyTimeout())
         {
+            // Todo refactor speed of this
+            foreach (PlayerEntity pe in GetRacingPlayers()) {
+
+                ulong accountID = pe.accountID;
+                int accountType = pe.accountType;
+
+                // Todo wins and score
+                int numWinsDelta = 1;
+                int scoreDelta = 10;
+
+                Parallel.Invoke(() =>
+                {
+                    sc.db.UpdateAccountStats(accountID, accountType, numWinsDelta, scoreDelta);
+                });
+            }
+
             ResetRaceMode();
             RemoveAllPlayersCars();
         }
@@ -818,8 +828,6 @@ public class RaceController : MonoBehaviour
         startTimer = 0.0f;
 
         openGridPos = 0;
-
-        finishedPosition = 1;
 
         foreach (PlayerEntity pe in players)
         {
@@ -1122,7 +1130,6 @@ public class RaceController : MonoBehaviour
                             if (pe.lap > targetNumberOfLaps && pe.finishedTime < 0.0f)
                             {
                                 pe.finishedTime = Time.time;
-                                pe.position = finishedPosition++;
                             }
                         }
                     }
@@ -1162,10 +1169,10 @@ public class RaceController : MonoBehaviour
         List<PlayerEntity> p = ps.OrderBy(o => {
             if (o.finishedTime > 0.0f)
             {
-                return -o.position;
+                return o.finishedTime;
             }
             else {
-                return -o.lapScore + ((targetNumberOfLaps + 1000) * 5);
+                return -o.lapScore + (float.MaxValue * 0.95f);
             };
         }).ToList();
 
@@ -1224,14 +1231,14 @@ public class RaceController : MonoBehaviour
 
     public PlayerEntity CreatePlayer(int networkID)
     {
-        PlayerEntity pe = new PlayerEntity(networkID);
+        PlayerEntity pe = new PlayerEntity(networkID, 0, -1);
         players.Add(pe);
         return pe;
     }
 
-    public PlayerEntity CreatePlayer(int networkID, int carModel)
+    public PlayerEntity CreatePlayer(int networkID, int carModel, ulong accountID, int accountType)
     {
-        PlayerEntity pe = new PlayerEntity(networkID);
+        PlayerEntity pe = new PlayerEntity(networkID, (ulong)accountID, accountType);
         pe.carModel = carModel;
         players.Add(pe);
         return pe;
@@ -1469,7 +1476,10 @@ public class PlayerEntity
     public int lap = 0;
     public int checkpoint = 0;
     public int frame;
+
     public int networkID;
+    public ulong accountID;
+    public int accountType;
 
     public int position = 0;
     public float lapScore = 0.0f;
@@ -1481,16 +1491,11 @@ public class PlayerEntity
 
     private float lastInputReceivedFrom = -1.0f;
 
-    public PlayerEntity(int networkID, int carID, int carModel)
+    public PlayerEntity(int networkID, ulong accountID, int accountType)
     {
         this.networkID = networkID;
-        this.carID = carID;
-        this.carModel = carModel;
-    }
-
-    public PlayerEntity (int networkID)
-    {
-        this.networkID = networkID;
+        this.accountID = accountID;
+        this.accountType = accountType;
     }
 
     public void SetLapState(int lap, int checkpoint)
@@ -1642,12 +1647,16 @@ public class JoinRequest
     public string username;
     public string version;
     public int carModel;
+    public ulong accountID;
+    public int accountType;
 
-    public JoinRequest(string username, string version, int carModel)
+    public JoinRequest(string username, string version, int carModel, ulong accountID, int accountType)
     {
         this.username = username;
         this.version = version;
         this.carModel = carModel;
+        this.accountID = accountID;
+        this.accountType = accountType;
     }
 }
 

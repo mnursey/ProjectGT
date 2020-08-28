@@ -38,6 +38,8 @@ public class MenuController : MonoBehaviour
 
     public TextMeshProUGUI gameMenuPlay;
 
+    public ClientAccountManager cam;
+
     [Header("Menu GameObjects")]
 
     public GameObject mainMenu;
@@ -250,8 +252,14 @@ public class MenuController : MonoBehaviour
             cc.serverIP = serverIP.text;
         }
 
-        string username = usernameOption.text;
+        if(!cam.loggedIn)
+        {
+            Debug.LogWarning("Attempting to connect to server while not logged in...");
+            cam.LoadAccount();
+            return;
+        }
 
+        string username = cam.accountData.accountName;
 
         if(username.Length > maxUsernameLength)
         {
@@ -260,7 +268,7 @@ public class MenuController : MonoBehaviour
 
         rc.Reset();
 
-        cc.ConnectToServer(username, OnConnection, OnDisconnect, OnReject);
+        cc.ConnectToServer(username, cam.accountData.accountID, cam.accountData.accountType, OnConnection, OnDisconnect, OnReject);
 
         gameMenuPlay.text = gameMenuPlaySpawnText;
 

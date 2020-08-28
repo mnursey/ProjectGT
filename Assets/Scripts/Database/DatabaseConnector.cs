@@ -52,10 +52,9 @@ public class DatabaseConnector : MonoBehaviour
         return true;
     }
 
-    public void AddAccount(ulong accountID, int accountType)
+    public void AddAccount(ulong accountID, int accountType, string username)
     {
-        string cmd = String.Format("INSERT INTO [ProjectGT].[dbo].[Accounts] (AccountID, AccountType) VALUES ({0}, {1});", accountID, accountType);
-
+        string cmd = String.Format("INSERT INTO [ProjectGT].[dbo].[Accounts] (AccountID, AccountType, AccountName) VALUES ({0}, {1}, '{2}');", accountID, accountType, username);
         DataSet ds;
 
         Query(cmd, out ds);
@@ -64,6 +63,16 @@ public class DatabaseConnector : MonoBehaviour
     public DataSet GetAccount(ulong accountID, int accountType)
     {
         string cmd = String.Format("select * from [ProjectGT].[dbo].[Accounts] where AccountID = {0} and AccountType = {1};", accountID, accountType);
+
+        DataSet ds;
+
+        Query(cmd, out ds);
+        return ds;
+    }
+
+    public DataSet UpdateAccountStats(ulong accountID, int accountType, int numWinsDelta, int scoreDelta)
+    {
+        string cmd = String.Format("update [ProjectGT].[dbo].[Accounts] set NumRaces = NumRaces + 1, NumWins = NumWins + {2}, score = score + {3} where AccountID = {0} and AccountType = {1};", accountID, accountType, numWinsDelta, scoreDelta);
 
         DataSet ds;
 

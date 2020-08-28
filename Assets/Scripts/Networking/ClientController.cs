@@ -21,7 +21,6 @@ public class ClientController : MonoBehaviour
     public string version = "0.01";
     public string address = "";
 
-    public bool startClient = false;
     public int clientID = -1;
     public string serverIP;
     public int serverport = 10069;
@@ -39,6 +38,8 @@ public class ClientController : MonoBehaviour
     public RaceController rc;
 
     string connection_username;
+    ulong connection_accountID;
+    int connection_accountType;
     public OnConnect onConnect;
     public OnDisconnect onDisconnect;
     public OnReject onReject;
@@ -60,12 +61,6 @@ public class ClientController : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if(startClient)
-        {
-            ConnectToServer("player");
-
-            startClient = false;
-        } 
 
         if(disconnect)
         {
@@ -126,19 +121,21 @@ public class ClientController : MonoBehaviour
             connectingTime = 0.0f;
     }
 
-    public void ConnectToServer(string username)
+    public void ConnectToServer(string username, ulong accountID, int accountType)
     {
-        ConnectToServer(username, null, null, null);
+        ConnectToServer(username, accountID, accountType, null, null, null);
     }
 
-    public void ConnectToServer(string username, OnConnect onConnect, OnDisconnect onDisconnect, OnReject onReject)
+    public void ConnectToServer(string username, ulong accountID, int accountType, OnConnect onConnect, OnDisconnect onDisconnect, OnReject onReject)
     {
         this.onConnect = onConnect;
         this.onDisconnect = onDisconnect;
         this.onReject = onReject;
         connection_username = username;
+        connection_accountID = accountID;
+        connection_accountType = accountType;
 
-        ConnectHelper(NetworkingMessageTranslator.GenerateClientJoinMessage(new JoinRequest(username, version, rc.selectedCarModel)));
+        ConnectHelper(NetworkingMessageTranslator.GenerateClientJoinMessage(new JoinRequest(username, version, rc.selectedCarModel, accountID, accountType)));
     }
 
     public void CreateNewAccount(OnAccountCreate onAccountCreate)
@@ -318,7 +315,7 @@ public class ClientController : MonoBehaviour
                             serverport = int.Parse(forwardIPs[connectionServerIPIndex % forwardIPs.Count].Split(':')[1]);
 
                             // Retry...
-                            ConnectToServer(connection_username, onConnect, onDisconnect, onReject);
+                            ConnectToServer(connection_username, connection_accountID, connection_accountType, onConnect, onDisconnect, onReject);
                         }
                     }
                 }
