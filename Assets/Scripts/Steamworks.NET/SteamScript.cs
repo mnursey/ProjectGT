@@ -2,13 +2,21 @@
 using System.Collections.Generic;
 using UnityEngine;
 using Steamworks;
+using System.Net.Http;
+using System.Threading.Tasks;
+using Newtonsoft.Json.Linq;
 
 public class SteamScript : MonoBehaviour
 {
     protected Callback<GameOverlayActivated_t> m_GameOverlayActivated;
     private CallResult<NumberOfCurrentPlayers_t> m_NumberOfCurrentPlayers;
 
+    private static string webAPIKey = "46701AC33838A809DB58A6F9B716588B";
+
     public bool test;
+
+    static readonly HttpClient httpClient = new HttpClient();
+
 
     // Start is called before the first frame update
     void Start()
@@ -30,12 +38,17 @@ public class SteamScript : MonoBehaviour
         {
             if (SteamManager.Initialized)
             {
+                string steamUsername = SteamScript.GetSteamUsername(76561198047736793);
+
+                Debug.Log(steamUsername);
+                /*
                 m_GameOverlayActivated = Callback<GameOverlayActivated_t>.Create(OnGameOverlayActivated);
                 m_NumberOfCurrentPlayers = CallResult<NumberOfCurrentPlayers_t>.Create(OnNumberOfCurrentPlayers);
 
                 SteamAPICall_t handle = SteamUserStats.GetNumberOfCurrentPlayers();
                 m_NumberOfCurrentPlayers.Set(handle);
                 Debug.Log("Called GetNumberOfCurrentPlayers()");
+                */
             }
 
             test = false;
@@ -83,5 +96,34 @@ public class SteamScript : MonoBehaviour
         {
             return false;
         }
+    }
+
+    public static string GetPlayerSummary(ulong steamID)
+    {
+        string url = string.Format("https://api.steampowered.com/ISteamUser/GetPlayerSummaries/v2/?key={0}&steamids={1}", webAPIKey, steamID);
+
+        var responce = httpClient.GetAsync(url).Result;
+
+        if (responce.IsSuccessStatusCode)
+        {
+            string responseBody = responce.Content.ReadAsStringAsync().Result;
+            return responseBody;
+        }
+
+        return null;
+    }
+
+    public static string GetSteamUsername(ulong steamID)
+    {
+        string playerSummary = GetPlayerSummary(steamID);
+
+        if(playerSummary != null)
+        {
+            JObject obj = JObject.Parse(playerSummary);
+            string name = (string)obj["response"]["players"][0]["personaname"];
+            return name;
+        }
+
+        return null;
     }
 }

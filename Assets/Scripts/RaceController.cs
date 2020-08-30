@@ -6,6 +6,7 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using TMPro;
 using System.Linq;
+using System.Threading.Tasks;
 
 public enum RaceControllerStateEnum { IDLE , PRACTICE, RACE };
 public enum RaceControllerMode { CLIENT, SERVER };
@@ -29,6 +30,8 @@ public class RaceController : MonoBehaviour
     public TrackGenerator trackGenerator;
     public ControlManager cm;
     public List<PlayerEntity> players = new List<PlayerEntity>();
+    public List<PlayerEntity> removedPlayers = new List<PlayerEntity>();
+
     public Scene targetScene;
     public PhysicsScene targetPhysicsScene;
 
@@ -102,8 +105,6 @@ public class RaceController : MonoBehaviour
     public float clientFastestLapTime = float.MaxValue;
 
     public bool shownCompletedReward = false;
-
-    private int finishedPosition = 1;
 
     private ConcurrentQueue<InputState> incomingInputStates = new ConcurrentQueue<InputState>();
     private ConcurrentQueue<int> playersToRemove = new ConcurrentQueue<int>();
@@ -616,11 +617,6 @@ public class RaceController : MonoBehaviour
 
     void RaceEnd()
     {
-        // Todo
-        // Get players by place
-        // Post race results
-        // Save to file / server / db
-
         if(mc != null)
         {
             mc.postRaceMenu.infoText.text = "Next Race in " + String.Format("{0:0.}", (maxReadyTimer - readyTimer)) + "s";
@@ -628,8 +624,58 @@ public class RaceController : MonoBehaviour
 
         if (raceControllerMode == RaceControllerMode.SERVER && CheckReadyTimeout())
         {
+            ScorePlayers();
             ResetRaceMode();
             RemoveAllPlayersCars();
+        }
+    }
+
+    void ScorePlayers()
+    {
+        // Todo refactor speed of this
+
+        int numberOfPlayers = GetTotalNumberOfRacers();
+
+        // Current Players
+        foreach (PlayerEntity pe in GetRacingPlayers())
+        {
+
+            ulong accountID = pe.accountID;
+            int accountType = pe.accountType;
+
+            int numWinsDelta = pe.position == 1 ? 1 : 0;
+            int scoreDelta = -(pe.position - numberOfPlayers / 2) + 1;
+
+            Parallel.Invoke(() =>
+            {
+                Debug.Log("player -> " + pe.accountID + " scoreDelta -> " + scoreDelta);
+                sc.db.UpdateAccountStats(accountID, accountType, numWinsDelta, scoreDelta);
+            });
+        }
+
+        // Disconnected Players
+        foreach (PlayerEntity pe in removedPlayers)
+        {
+
+            if (pe.elapsedTime > 0)
+            {
+                ulong accountID = pe.accountID;
+                int accountType = pe.accountType;
+
+                int numWinsDelta = pe.position == 1 ? 1 : 0;
+                int scoreDelta = -(pe.position - numberOfPlayers / 2) + 1;
+
+                if (pe.finishedTime < 0.0f)
+                {
+                    scoreDelta = -25;
+                }
+
+                Parallel.Invoke(() =>
+                {
+                    Debug.Log("player -> " + pe.accountID + " scoreDelta -> " + scoreDelta);
+                    sc.db.UpdateAccountStats(accountID, accountType, numWinsDelta, scoreDelta);
+                });
+            }
         }
     }
 
@@ -819,8 +865,6 @@ public class RaceController : MonoBehaviour
 
         openGridPos = 0;
 
-        finishedPosition = 1;
-
         foreach (PlayerEntity pe in players)
         {
             pe.ready = false;
@@ -832,7 +876,9 @@ public class RaceController : MonoBehaviour
             pe.SetLapState(0, 0);
         }
 
-        if(raceStartText != null)
+        removedPlayers = new List<PlayerEntity>();
+
+        if (raceStartText != null)
         {
             raceStartText.text = "";
         }
@@ -915,6 +961,7 @@ public class RaceController : MonoBehaviour
                 if(raceControllerMode == RaceControllerMode.SERVER && players.Count == 0)
                 {
                     raceControllerState = RaceControllerStateEnum.IDLE;
+                    ScorePlayers();
                     ResetRaceMode();
                 } else
                 {
@@ -1029,6 +1076,21 @@ public class RaceController : MonoBehaviour
         return racers;
     }
 
+    int GetTotalNumberOfRacers()
+    {
+        int c = GetRacingPlayers().Count;
+
+        foreach (PlayerEntity pe in removedPlayers)
+        {
+            if (pe.carID > -1)
+            {
+                c++;
+            }
+        }
+
+        return c;
+    }
+
     CheckPoint GetNextCheckpoint(PlayerEntity pe)
     {
         CarController c = GetCarControllerFromID(pe.carID);
@@ -1122,7 +1184,6 @@ public class RaceController : MonoBehaviour
                             if (pe.lap > targetNumberOfLaps && pe.finishedTime < 0.0f)
                             {
                                 pe.finishedTime = Time.time;
-                                pe.position = finishedPosition++;
                             }
                         }
                     }
@@ -1162,10 +1223,10 @@ public class RaceController : MonoBehaviour
         List<PlayerEntity> p = ps.OrderBy(o => {
             if (o.finishedTime > 0.0f)
             {
-                return -o.position;
+                return o.finishedTime + -100000000;
             }
             else {
-                return -o.lapScore + ((targetNumberOfLaps + 1000) * 5);
+                return -o.lapScore;
             };
         }).ToList();
 
@@ -1224,14 +1285,14 @@ public class RaceController : MonoBehaviour
 
     public PlayerEntity CreatePlayer(int networkID)
     {
-        PlayerEntity pe = new PlayerEntity(networkID);
+        PlayerEntity pe = new PlayerEntity(networkID, 0, -1);
         players.Add(pe);
         return pe;
     }
 
-    public PlayerEntity CreatePlayer(int networkID, int carModel)
+    public PlayerEntity CreatePlayer(int networkID, int carModel, ulong accountID, int accountType)
     {
-        PlayerEntity pe = new PlayerEntity(networkID);
+        PlayerEntity pe = new PlayerEntity(networkID, (ulong)accountID, accountType);
         pe.carModel = carModel;
         players.Add(pe);
         return pe;
@@ -1334,6 +1395,7 @@ public class RaceController : MonoBehaviour
     {
         RemoveCar(pe);
         players.Remove(pe);
+        removedPlayers.Add(pe);
     }
 
     void RemoveAllPlayersCars()
@@ -1469,7 +1531,10 @@ public class PlayerEntity
     public int lap = 0;
     public int checkpoint = 0;
     public int frame;
+
     public int networkID;
+    public ulong accountID;
+    public int accountType;
 
     public int position = 0;
     public float lapScore = 0.0f;
@@ -1481,16 +1546,11 @@ public class PlayerEntity
 
     private float lastInputReceivedFrom = -1.0f;
 
-    public PlayerEntity(int networkID, int carID, int carModel)
+    public PlayerEntity(int networkID, ulong accountID, int accountType)
     {
         this.networkID = networkID;
-        this.carID = carID;
-        this.carModel = carModel;
-    }
-
-    public PlayerEntity (int networkID)
-    {
-        this.networkID = networkID;
+        this.accountID = accountID;
+        this.accountType = accountType;
     }
 
     public void SetLapState(int lap, int checkpoint)
@@ -1642,12 +1702,16 @@ public class JoinRequest
     public string username;
     public string version;
     public int carModel;
+    public ulong accountID;
+    public int accountType;
 
-    public JoinRequest(string username, string version, int carModel)
+    public JoinRequest(string username, string version, int carModel, ulong accountID, int accountType)
     {
         this.username = username;
         this.version = version;
         this.carModel = carModel;
+        this.accountID = accountID;
+        this.accountType = accountType;
     }
 }
 

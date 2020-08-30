@@ -9,8 +9,11 @@ public class ClientAccountManager : MonoBehaviour
     public ulong accountID = 0; 
     public bool loggedIn;
 
+    public AccountData accountData;
+
     private string localAccountDataLocation = "localAccount.data";
     public ClientController cc;
+    public MenuController mc;
     public bool test;
     // Detect if has steam account -> if true use steam account (When logging into steam account, if new account register account)
     // Detect if has local account -> if true use local account 
@@ -28,17 +31,13 @@ public class ClientAccountManager : MonoBehaviour
 
     void Start()
     {
-
+        LoadAccount();
     }
 
     // Update is called once per frame
     void Update()
     {
-        if(test)
-        {
-            LoadAccount();
-            test = false;
-        }
+
     }
 
     public void LoadAccount()
@@ -114,6 +113,14 @@ public class ClientAccountManager : MonoBehaviour
         if(ad != null)
         {
             Debug.Log("Logged in as " + ad.accountID + " " + ad.accountType + " Coins " + ad.coins);
+
+            accountData = ad;
+
+            // Todo
+            // Refactor this...
+            mc.usernameOption.text = ad.accountName;
+            mc.rc.selectedCarModel = accountData.selectedCarID;
+
             loggedIn = true;
         } else
         {
