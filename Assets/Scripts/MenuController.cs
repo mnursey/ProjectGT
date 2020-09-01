@@ -14,7 +14,13 @@ public class MenuController : MonoBehaviour
     [Header("Options")]
 
     public TMP_InputField serverIP;
-    public TMP_InputField usernameOption;
+
+    // Refactor these fields...
+    public TMP_Text usernameField;
+    public TMP_Text scoreField;
+    public TMP_Text coinsField;
+    public TMP_Text winsField;
+    public TMP_Text racesField;
 
     public TMP_Dropdown resolutionDropdown;
     public TMP_Dropdown qualityDropdown;

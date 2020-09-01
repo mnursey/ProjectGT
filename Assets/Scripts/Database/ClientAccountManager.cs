@@ -118,7 +118,12 @@ public class ClientAccountManager : MonoBehaviour
 
             // Todo
             // Refactor this...
-            mc.usernameOption.text = ad.accountName;
+            mc.usernameField.text = ad.accountName;
+            mc.scoreField.text = ad.score.ToString();
+            mc.winsField.text = ad.numWins.ToString();
+            mc.racesField.text = ad.numRaces.ToString();
+            mc.coinsField.text = ad.coins.ToString();
+
             mc.rc.selectedCarModel = accountData.selectedCarID;
 
             loggedIn = true;
