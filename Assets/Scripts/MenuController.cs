@@ -49,6 +49,8 @@ public class MenuController : MonoBehaviour
     public RaceMenu duringRaceMenu;
     public RaceMenu postRaceMenu;
 
+    public RaceMenu globalLeaderboardMenu;
+
     public GameObject carSelectMenu;
     public GameObject optionsMenu;
     public GameObject gameUI;
@@ -115,7 +117,7 @@ public class MenuController : MonoBehaviour
         {
             if(rc != null)
             {
-                if(rc.players != null)
+                if(rc.players != null && rc.networkID > -1)
                 {
                     lm.UpdateLeaderboard(rc.GetPlayersByPosition(), rc.um);
                 }
@@ -190,7 +192,7 @@ public class MenuController : MonoBehaviour
     {
         ForwardMenu(preRaceMenu.menu, false);
 
-        lm.SetNewTargetLeaderboard(preRaceMenu.leaderboard);
+        lm.SetNewTargetLeaderboard(preRaceMenu.leaderboard, true, true, true, true, false, false, false);
 
         preRaceMenu.actionButton.interactable = true;
         preRaceMenu.actionButtonText.text = "Join Grid";
@@ -212,7 +214,7 @@ public class MenuController : MonoBehaviour
         currentMenu.SetActive(true);
         DisableGameUI();
 
-        lm.SetNewTargetLeaderboard(duringRaceMenu.leaderboard);
+        lm.SetNewTargetLeaderboard(duringRaceMenu.leaderboard, true, true, true, true, false, false, false);
 
         Cursor.visible = true;
 
@@ -228,9 +230,26 @@ public class MenuController : MonoBehaviour
     {
         ForwardMenu(postRaceMenu.menu, false);
 
-        lm.SetNewTargetLeaderboard(postRaceMenu.leaderboard);
+        lm.SetNewTargetLeaderboard(postRaceMenu.leaderboard, true, true, true, true, false, false, false);
 
         postRaceMenu.infoText.text = "Next Race in...";
+    }
+
+    public void ShowGlobalLeaderboard()
+    {
+        ForwardMenu(globalLeaderboardMenu.menu, true);
+
+        lm.SetNewTargetLeaderboard(globalLeaderboardMenu.leaderboard, true, false, false, false, true, true, true);
+
+        // Make request to server to get global learderboard entries...
+
+        cc.GetGlobalLeaderboard(GlobalLeaderboardDataCallback);
+
+    }
+
+    public void GlobalLeaderboardDataCallback(List<AccountData> ad)
+    {
+        lm.UpdateLeaderboard(ad);
     }
 
     public void OnDisconnect()

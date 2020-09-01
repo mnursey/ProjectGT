@@ -129,6 +129,19 @@ public static class NetworkingMessageTranslator
         return ToJson(msg);
     }
 
+    public static string GenerateGlobalLeaderboardMessage()
+    {
+        NetworkingMessage msg = new NetworkingMessage(NetworkingMessageType.GLOBAL_LEADERBOARD, -1);
+        return ToJson(msg);
+    }
+
+    public static string GenerateGlobalLeaderboardMessage(List<AccountData> accountData)
+    {
+        NetworkingMessage msg = new NetworkingMessage(NetworkingMessageType.GLOBAL_LEADERBOARD, -1);
+        msg.content = ToJson(new AccountDataList(accountData));
+        return ToJson(msg);
+    }
+
     public static NetworkingMessage ParseMessage(string json)
     {
         return JsonUtility.FromJson<NetworkingMessage>(json);
@@ -179,6 +192,11 @@ public static class NetworkingMessageTranslator
         return JsonUtility.FromJson<AccountData>(json);
     }
 
+    public static AccountDataList ParseAccountDataList(string json)
+    {
+        return JsonUtility.FromJson<AccountDataList>(json);
+    }
+
     public static SelectedCarData ParseSelectedCarData(string json)
     {
         return JsonUtility.FromJson<SelectedCarData>(json);
@@ -186,7 +204,7 @@ public static class NetworkingMessageTranslator
 }
 
 [Serializable]
-public enum NetworkingMessageType { CLIENT_JOIN, SERVER_JOIN_RESPONSE, DISCONNECT, PING, PING_RESPONSE, GAME_STATE, INPUT_STATE, USER_MANAGER_STATE, CAR_MODEL, TRACK_DATA, NEW_ACCOUNT, NEW_ACCOUNT_RESPONCE, LOGIN, LOGIN_RESPONCE, SAVE_SELECTED_CAR };
+public enum NetworkingMessageType { CLIENT_JOIN, SERVER_JOIN_RESPONSE, DISCONNECT, PING, PING_RESPONSE, GAME_STATE, INPUT_STATE, USER_MANAGER_STATE, CAR_MODEL, TRACK_DATA, NEW_ACCOUNT, NEW_ACCOUNT_RESPONCE, LOGIN, LOGIN_RESPONCE, SAVE_SELECTED_CAR, GLOBAL_LEADERBOARD };
 
 [Serializable]
 public class NetworkingMessage
@@ -249,6 +267,17 @@ public class AccountData
         this.numWins = numWins;
         this.selectedCarID = selectedCarID;
         this.score = score;
+    }
+}
+
+[Serializable]
+public class AccountDataList
+{
+    public List<AccountData> accountData = new List<AccountData>();
+
+    public AccountDataList(List<AccountData> accountData)
+    {
+        this.accountData = accountData;
     }
 }
 

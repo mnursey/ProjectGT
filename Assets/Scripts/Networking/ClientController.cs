@@ -15,6 +15,7 @@ public delegate void OnDisconnect();
 public delegate void OnReject(string reason);
 public delegate void OnAccountCreate(ulong accountID, int accountType);
 public delegate void OnLogin(AccountData ac);
+public delegate void OnGlobalLeaderboardData(List<AccountData> ad);
 
 public class ClientController : MonoBehaviour
 {
@@ -45,6 +46,7 @@ public class ClientController : MonoBehaviour
     public OnReject onReject;
     public OnAccountCreate onAccountCreate;
     public OnLogin onLogin;
+    public OnGlobalLeaderboardData onGLD;
 
     public List<string> forwardIPs = new List<string>();
     public int connectionServerIPIndex = 0;
@@ -148,6 +150,7 @@ public class ClientController : MonoBehaviour
         this.onReject = null;
         this.onAccountCreate = onAccountCreate;
         this.onLogin = null;
+        this.onGLD = null;
 
         // Todo handle failed to connect
 
@@ -161,6 +164,7 @@ public class ClientController : MonoBehaviour
         this.onReject = null;
         this.onAccountCreate = null;
         this.onLogin = onLogin;
+        this.onGLD = null;
 
         // Todo handle failed to connect
 
@@ -175,8 +179,22 @@ public class ClientController : MonoBehaviour
         this.onReject = null;
         this.onAccountCreate = null;
         this.onLogin = null;
+        this.onGLD = null;
 
         ConnectHelper(NetworkingMessageTranslator.GenerateSaveSelectedCarMessage(accountID, accountType, carID));
+    }
+
+    public void GetGlobalLeaderboard(OnGlobalLeaderboardData onGLD)
+    {
+        // Todo handle failed to connect
+        this.onConnect = null;
+        this.onDisconnect = null;
+        this.onReject = null;
+        this.onAccountCreate = null;
+        this.onLogin = null;
+        this.onGLD = onGLD;
+
+        ConnectHelper(NetworkingMessageTranslator.GenerateGlobalLeaderboardMessage());
     }
 
     void ConnectHelper(string data)
@@ -358,6 +376,16 @@ public class ClientController : MonoBehaviour
                     AccountData ad = NetworkingMessageTranslator.ParseAccountData(msg.content);
 
                     UnityMainThreadDispatcher.Instance().Enqueue(() => onLogin?.Invoke(ad));
+
+                    Close();
+                    Reset();
+                }
+
+                if (msg.type == NetworkingMessageType.GLOBAL_LEADERBOARD)
+                {
+                    AccountDataList adl = NetworkingMessageTranslator.ParseAccountDataList(msg.content);
+
+                    UnityMainThreadDispatcher.Instance().Enqueue(() => onGLD?.Invoke(adl.accountData));
 
                     Close();
                     Reset();
