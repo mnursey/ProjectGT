@@ -72,7 +72,7 @@ public class DatabaseConnector : MonoBehaviour
 
     public DataSet UpdateAccountStats(ulong accountID, int accountType, int numWinsDelta, int scoreDelta)
     {
-        string cmd = String.Format("update [ProjectGT].[dbo].[Accounts] set NumRaces = NumRaces + 1, NumWins = NumWins + {2}, score = score + {3} where AccountID = {0} and AccountType = {1};", accountID, accountType, numWinsDelta, scoreDelta);
+        string cmd = String.Format("update [ProjectGT].[dbo].[Accounts] set NumRaces = NumRaces + 1, NumWins = NumWins + {2}, score = IIF(score + {3} > 0, score + {3}, 0) where AccountID = {0} and AccountType = {1};", accountID, accountType, numWinsDelta, scoreDelta);
 
         DataSet ds;
 
