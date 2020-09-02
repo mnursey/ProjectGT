@@ -111,6 +111,8 @@ public class RaceController : MonoBehaviour
 
     GameState incomingGameState = new GameState();
 
+    public int scoreMulti = 5;
+
     [Header("Missed checkpoint Variables")]
 
     public int skippedCheckpointTolerance = 2;
@@ -646,6 +648,8 @@ public class RaceController : MonoBehaviour
             int numWinsDelta = pe.position == 1 ? 1 : 0;
             int scoreDelta = -(pe.position - numberOfPlayers / 2) + 1;
 
+            scoreDelta *= scoreMulti;
+
             Parallel.Invoke(() =>
             {
                 Debug.Log("player -> " + pe.accountID + " scoreDelta -> " + scoreDelta);
@@ -669,6 +673,8 @@ public class RaceController : MonoBehaviour
                 {
                     scoreDelta = -2 * numberOfPlayers;
                 }
+
+                scoreDelta *= scoreMulti;
 
                 Parallel.Invoke(() =>
                 {
