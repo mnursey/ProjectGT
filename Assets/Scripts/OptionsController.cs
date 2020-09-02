@@ -31,12 +31,12 @@ public class OptionsController : MonoBehaviour
         PlayerPrefs.SetFloat(name, value);
     }
 
-    int LoadIntSetting(string name, int defaultValue)
+    public int LoadIntSetting(string name, int defaultValue)
     {
         return PlayerPrefs.GetInt(name, defaultValue);
     }
 
-    float LoadFloatSetting(string name, float defaultValue)
+    public float LoadFloatSetting(string name, float defaultValue)
     {
         return PlayerPrefs.GetFloat(name, defaultValue);
     }
@@ -114,7 +114,10 @@ public class OptionsController : MonoBehaviour
 
     public void SetFOV(float value, Camera c)
     {
-        c.fieldOfView = value;
+        if(c != null)
+        {
+            c.fieldOfView = value;
+        }
 
         SaveSetting("fov", value);
         SaveSettings();
