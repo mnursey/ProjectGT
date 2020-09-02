@@ -1396,6 +1396,11 @@ public class RaceController : MonoBehaviour
         RemoveCar(pe);
         players.Remove(pe);
         removedPlayers.Add(pe);
+        
+        if(raceControllerMode == RaceControllerMode.SERVER)
+        {
+            sc.SendDisconnect(pe.networkID);
+        }
     }
 
     void RemoveAllPlayersCars()
