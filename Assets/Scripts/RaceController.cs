@@ -1204,11 +1204,14 @@ public class RaceController : MonoBehaviour
             pe.lapScore = GetPlayerLapScore(pe);
         }
 
-        List<PlayerEntity> pbp = GetPlayersByPosition();
-        
-        for(int i = 0; i < pbp.Count; ++i)
+        if(raceControllerState == RaceControllerStateEnum.RACE && raceModeState != RaceModeState.POSTRACE)
         {
-            pbp[i].position = (i + 1);
+            List<PlayerEntity> pbp = GetPlayersByPosition();
+
+            for (int i = 0; i < pbp.Count; ++i)
+            {
+                pbp[i].position = (i + 1);
+            }
         }
     }
 
