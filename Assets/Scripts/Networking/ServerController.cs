@@ -389,6 +389,30 @@ public class ServerController : MonoBehaviour
                                 newConnection.BeginSend(NetworkingMessageTranslator.GenerateDisconnectMessage(-1));
                             });
                         }
+
+                        if (msg.type == NetworkingMessageType.GLOBAL_LEADERBOARD)
+                        {
+                            ServerConnection newConnection = new ServerConnection(GetNewClientID(), receiveObject.sender, socket);
+
+                            Parallel.Invoke(() =>
+                            {
+                                // Get account
+                                DataSet ds = db.GetUsersOrderedByScore(0, 15);
+
+                                List<AccountData> topScores = new List<AccountData>();
+
+                                for(int i = 0; i < ds.Tables[0].Rows.Count; ++i)
+                                {
+                                    Debug.Log((ulong)(long)ds.Tables[0].Rows[i]["AccountID"]);
+                                    AccountData accountData = new AccountData((ulong)(long)ds.Tables[0].Rows[i]["AccountID"], (int)ds.Tables[0].Rows[i]["AccountType"], ds.Tables[0].Rows[i]["AccountName"].ToString(), (int)ds.Tables[0].Rows[i]["Coins"], (int)ds.Tables[0].Rows[i]["NumRaces"], (int)ds.Tables[0].Rows[i]["NumWins"], (int)ds.Tables[0].Rows[i]["SelectedCarID"], (int)ds.Tables[0].Rows[i]["Score"]);
+                                    topScores.Add(accountData);
+                                }
+
+
+                                // return account info
+                                newConnection.BeginSend(NetworkingMessageTranslator.GenerateGlobalLeaderboardMessage(topScores));
+                            });
+                        }
                     }
                 }
             }
