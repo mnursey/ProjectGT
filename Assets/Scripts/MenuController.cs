@@ -322,6 +322,8 @@ public class MenuController : MonoBehaviour
         rc.Reset();
         cc.Disconnect();
         ReturnToMainMenu(true);
+
+        cam.LoadAccount();
     }
 
     public void MainMenuQuit()

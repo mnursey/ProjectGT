@@ -667,7 +667,7 @@ public class RaceController : MonoBehaviour
 
                 if (pe.finishedTime < 0.0f)
                 {
-                    scoreDelta = -25;
+                    scoreDelta = -2 * numberOfPlayers;
                 }
 
                 Parallel.Invoke(() =>
