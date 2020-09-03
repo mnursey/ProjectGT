@@ -22,9 +22,14 @@ public class MenuController : MonoBehaviour
     public TMP_Text winsField;
     public TMP_Text racesField;
 
+    [Header("Options menu References")]
+
     public TMP_Dropdown resolutionDropdown;
     public TMP_Dropdown qualityDropdown;
     public TMP_Dropdown cameraTypeDropdown;
+    public TMP_Dropdown windowModeDropdown;
+    public Slider fovSlider;
+    public Slider audioSlider;
 
     public OptionsController optionsController;
 
@@ -97,6 +102,9 @@ public class MenuController : MonoBehaviour
             if (inGameMode)
                 ShowDuringRaceMenu();
         };
+
+
+        SetOptionsMenuValues();
     }
 
     public void Start()
@@ -322,6 +330,8 @@ public class MenuController : MonoBehaviour
         rc.Reset();
         cc.Disconnect();
         ReturnToMainMenu(true);
+
+        cam.LoadAccount();
     }
 
     public void MainMenuQuit()
@@ -416,6 +426,16 @@ public class MenuController : MonoBehaviour
         s.gameObject.GetComponentInChildren<TMP_Text>().text = "FOV - " + s.value;
         optionsController.SetFOV(s.value, rc.cameraController.camera);
         clickSoundEffect.Play();
+    }
+
+    public void SetOptionsMenuValues()
+    {
+        resolutionDropdown.value = optionsController.LoadIntSetting("resolution", 0);
+        qualityDropdown.value = optionsController.LoadIntSetting("quality", optionsController.GetQualityOptions().Count - 1);
+        windowModeDropdown.value = optionsController.LoadIntSetting("screen_mode", 0);
+        audioSlider.value = optionsController.LoadFloatSetting("master_audio", 1.0f);
+        fovSlider.value = optionsController.LoadFloatSetting("fov", 60f);
+        fovSlider.gameObject.GetComponentInChildren<TMP_Text>().text = "FOV - " + fovSlider.value;
     }
 
     public void EnableGameUI()

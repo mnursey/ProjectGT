@@ -111,6 +111,8 @@ public class RaceController : MonoBehaviour
 
     GameState incomingGameState = new GameState();
 
+    public int scoreMulti = 5;
+
     [Header("Missed checkpoint Variables")]
 
     public int skippedCheckpointTolerance = 2;
@@ -646,6 +648,8 @@ public class RaceController : MonoBehaviour
             int numWinsDelta = pe.position == 1 ? 1 : 0;
             int scoreDelta = -(pe.position - numberOfPlayers / 2) + 1;
 
+            scoreDelta *= scoreMulti;
+
             Parallel.Invoke(() =>
             {
                 Debug.Log("player -> " + pe.accountID + " scoreDelta -> " + scoreDelta);
@@ -667,8 +671,10 @@ public class RaceController : MonoBehaviour
 
                 if (pe.finishedTime < 0.0f)
                 {
-                    scoreDelta = -25;
+                    scoreDelta = -2 * numberOfPlayers;
                 }
+
+                scoreDelta *= scoreMulti;
 
                 Parallel.Invoke(() =>
                 {
@@ -1198,11 +1204,14 @@ public class RaceController : MonoBehaviour
             pe.lapScore = GetPlayerLapScore(pe);
         }
 
-        List<PlayerEntity> pbp = GetPlayersByPosition();
-        
-        for(int i = 0; i < pbp.Count; ++i)
+        if(raceControllerState == RaceControllerStateEnum.RACE && raceModeState != RaceModeState.POSTRACE)
         {
-            pbp[i].position = (i + 1);
+            List<PlayerEntity> pbp = GetPlayersByPosition();
+
+            for (int i = 0; i < pbp.Count; ++i)
+            {
+                pbp[i].position = (i + 1);
+            }
         }
     }
 
@@ -1396,6 +1405,11 @@ public class RaceController : MonoBehaviour
         RemoveCar(pe);
         players.Remove(pe);
         removedPlayers.Add(pe);
+        
+        if(raceControllerMode == RaceControllerMode.SERVER)
+        {
+            sc.SendDisconnect(pe.networkID);
+        }
     }
 
     void RemoveAllPlayersCars()

@@ -116,13 +116,21 @@ public class ServerController : MonoBehaviour
 
         if (sc != null)
         {
-            string s = NetworkingMessageTranslator.GenerateDisconnectMessage(clientID);
-            sc.BeginSend(s);
+            try {
+                string s = NetworkingMessageTranslator.GenerateDisconnectMessage(clientID);
+                sc.BeginSend(s);
+            } catch(Exception ex)
+            {
+                Debug.Log("Error while sending disconnect msg... " + ex.Message);
+            }
+
+            clients.Remove(sc);
         }
 
-        clients.Remove(sc);
-
-        rc.QueueRemovePlayer(sc.clientID);
+        if(rc.players.Exists(x => x.networkID == clientID))
+        {
+            rc.QueueRemovePlayer(clientID);
+        }
     }
 
     public void SendGameState(GameState gameState)
