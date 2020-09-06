@@ -283,15 +283,39 @@ MonoBehaviour:
   landmarkChance: 2
   biomeFrequency: 0.05
   waterRange: 0.4
+  generationPowerA: 75
+  generationScaleA: 0.05
+  generationPowerB: 10
+  generationScaleB: 0.1
+  generationPowerC: 3
+  generationScaleC: 0.5
+  generationHeightOffset: 15
+  trackTileHeight: 15
+  generatedTilePrefab: {fileID: 7479221513899203132, guid: bce57d4991ab04b419f6942f1c6b64f5,
+    type: 3}
   trackStarts: []
   checkPoints: []
   raceTrackController: {fileID: 5337012155297989955}
+  rc: {fileID: 0}
   serverMode: 0
   generateTrack: 1
   targetX: 13
   targetY: 13
   trackSpawnWidth: 30
   serializedTrack: 
+  noiseMapDensity: 3
+  treePrefabs:
+  - {fileID: 850051677182801884, guid: 64e1cc8f54903a04f8ec03c75b183b1b, type: 3}
+  - {fileID: 850051677182801884, guid: ab26e2b29c9039a4b89637c7825561c2, type: 3}
+  - {fileID: 850051677182801884, guid: ef573115864f24d4cbf19fa601c2a091, type: 3}
+  treeInstances: []
+  numTrees: 1000
+  xOffsetA: 0
+  yOffsetA: 0
+  xOffsetB: 0
+  yOffsetB: 0
+  xOffsetC: 0
+  yOffsetC: 0
 --- !u!114 &5337012155297989955
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -22,13 +22,24 @@ public class TrackGenerator : MonoBehaviour
     public float biomeFrequency = 2.0f;
     public float waterRange = 0.5f;
 
+    public float generationPowerA = 1.0f;
+    public float generationScaleA = 1.0f;
+    public float generationPowerB = 1.0f;
+    public float generationScaleB = 1.0f;
+    public float generationPowerC = 1.0f;
+    public float generationScaleC = 1.0f;
+
+    public float generationHeightOffset = 16.0f;
+    public float trackTileHeight = 15f;
+
     public List<List<int>> worldCosts = new List<List<int>>();
-    public List<List<float>> biomeCosts = new List<List<float>>();
     public List<List<TrackPeiceType>> worldType = new List<List<TrackPeiceType>>();
 
     public List<List<int>> rotations = new List<List<int>>();
     public List<List<int>> prefabIndex = new List<List<int>>();
     List<int[]> trackPath = new List<int[]>();
+
+    public GameObject generatedTilePrefab;
 
     public List<List<GameObject>> trackPeices = new List<List<GameObject>>();
     public List<Transform> trackStarts = new List<Transform>();
@@ -37,6 +48,7 @@ public class TrackGenerator : MonoBehaviour
     public System.Random r = new System.Random();
 
     public RaceTrack raceTrackController;
+    public RaceController rc;
 
     public bool serverMode = false;
 
@@ -49,27 +61,201 @@ public class TrackGenerator : MonoBehaviour
 
     public string serializedTrack = "";
 
+    List<List<float>> noiseMap;
+    public int noiseMapDensity = 3;
+
+    public List<GameObject> treePrefabs = new List<GameObject>();
+    public List<GameObject> treeInstances = new List<GameObject>();
+
+    public int numTrees = 100;
+
+    public float xOffsetA;
+    public float yOffsetA;
+    public float xOffsetB;
+    public float yOffsetB;
+    public float xOffsetC;
+    public float yOffsetC;
+
     public void Start()
     {
 
     }
 
+    public List<List<float>> CreateNoiseMap()
+    {
+        System.Random r = new System.Random();
+
+        xOffsetA = (float)r.NextDouble();
+        yOffsetA = (float)r.NextDouble();
+        xOffsetB = (float)r.NextDouble();
+        yOffsetB = (float)r.NextDouble();
+        xOffsetC = (float)r.NextDouble();
+        yOffsetC = (float)r.NextDouble();
+
+        List<List<float>> map = new List<List<float>>();
+
+        for(int x = 0; x < noiseMapDensity * generationWidth; ++x)
+        {
+            List<float> column = new List<float>();
+            for(int y = 0; y < noiseMapDensity * generationWidth; ++y)
+            {
+                column.Add(CalculateHeight(x, y));
+            }
+
+            map.Add(column);
+        }
+
+        // Create flat quad areas
+        for (int x = 0; x < map.Count - 1; x += 2)
+        {
+            for(int y = 0; y < map.Count - 1; y += 2)
+            {
+                float value = (map[x][y] + map[x + 1][y + 1] + map[x][y + 1]  + map[x + 1][y]) / 4f;
+                map[x][y] = value;
+                map[x][y + 1] = value;
+                map[x + 1][y] = value;
+                map[x + 1][y + 1] = value;
+            }
+        }
+
+        // Set borders to be low
+        for (int i = 0; i < map.Count; ++i)
+        {
+            map[0][i] = waterHeight - 20f;
+            map[map.Count - 2][i] = waterHeight - 20f;
+            map[i][0] = waterHeight - 20f;
+            map[i][map.Count - 2] = waterHeight - 20f;
+        }
+
+        return map;
+    }
+
+    private float CalculateHeight(float x, float y)
+    {
+        float value = 0.0f;
+
+        value += ((Mathf.PerlinNoise(x * generationScaleA + xOffsetA, y * generationScaleA + yOffsetA) - 0.5f) * generationPowerA);
+        value += ((Mathf.PerlinNoise(x * generationScaleB + xOffsetB, y * generationScaleB + yOffsetB) - 0.5f) * generationPowerB);
+        value += ((Mathf.PerlinNoise(x * generationScaleC + xOffsetC, y * generationScaleC + yOffsetC) - 0.5f) * generationPowerC);
+
+        return value + generationHeightOffset;
+    }
+
+    public float GetHeightFromMap(float x, float y)
+    {
+        int mapX;
+        int mapY;
+
+        WorldPosToNoiseMapPos(x, y, out mapX, out mapY);
+
+        return noiseMap[mapX][mapY];
+    }
+
+    public void WorldPosToNoiseMapPos(float x, float y, out int mapX, out int mapY)
+    {
+        x = Mathf.Clamp(x / trackSpawnWidth * noiseMapDensity, 0.0f, noiseMap.Count - 1);
+        y = Mathf.Clamp(y / trackSpawnWidth * noiseMapDensity, 0.0f, noiseMap.Count - 1);
+
+        // Todo decided to either floor or round
+        mapX = Mathf.FloorToInt(x);
+        mapY = Mathf.FloorToInt(y);
+    }
+
+    public void WorldToTrackPos(float x, float y, out int trackX, out int trackY)
+    {
+        x = Mathf.Clamp(x / trackSpawnWidth, 0.0f, prefabIndex.Count - 1);
+        y = Mathf.Clamp(y / trackSpawnWidth, 0.0f, prefabIndex.Count - 1);
+
+        // Todo decided to either floor or round
+        trackX = Mathf.RoundToInt(x);
+        trackY = Mathf.RoundToInt(y);
+    }
+
+    public bool IsTrackTile(int x, int y)
+    {
+        return trackPeicePrefabs[prefabIndex[x][y]].type == TrackPeiceType.START || trackPeicePrefabs[prefabIndex[x][y]].type == TrackPeiceType.STRAIGHT || trackPeicePrefabs[prefabIndex[x][y]].type == TrackPeiceType.TURN || trackPeicePrefabs[prefabIndex[x][y]].type == TrackPeiceType.PIT || HasTag(trackPeicePrefabs[prefabIndex[x][y]], TrackPeiceTags.BRIDGE);
+    }
+
+    void FlattenNoiseMap()
+    {
+        for (int x = 0; x < rotations.Count; ++x)
+        {
+            List<GameObject> c = new List<GameObject>();
+            for (int y = 0; y < rotations[x].Count; ++y)
+            {
+                if (IsTrackTile(x, y))
+                {
+                    Vector2 worldPos = new Vector2(trackSpawnWidth * x, trackSpawnWidth * y);
+
+                    int mapX;
+                    int mapY;
+
+                    WorldPosToNoiseMapPos(worldPos.x, worldPos.y, out mapX, out mapY);
+
+                    for (int xHat = -2; xHat <= 1; ++xHat)
+                    {
+                        for (int yHat = -2; yHat <= 1; ++yHat)
+                        {
+                            noiseMap[mapX + xHat][mapY + yHat] = trackTileHeight;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     public void InstantiateTrack()
     {
-        for(int x = 0; x < rotations.Count; ++x)
+        FlattenNoiseMap();
+
+        for (int x = 0; x < rotations.Count; ++x)
         {
             List<GameObject> c = new List<GameObject>();
             for(int y = 0; y < rotations[x].Count; ++y)
             {
-                c.Add((GameObject)Instantiate(trackPeicePrefabs[prefabIndex[x][y]].prefab, new Vector3(trackSpawnWidth * x, 0.0f, trackSpawnWidth * y), Quaternion.Euler(-90f, 90f * rotations[x][y], 0f), this.transform));
+                if(!IsTrackTile(x, y))
+                {
+                    GameObject generatedTile = (GameObject)Instantiate(generatedTilePrefab, new Vector3(trackSpawnWidth * x, 0.0f, trackSpawnWidth * y), Quaternion.identity, this.transform);
+                    c.Add(generatedTile);
+
+                    GeneratedTrackTile gtt = generatedTile.GetComponent<GeneratedTrackTile>();
+                    gtt.Setup(x, y, this);
+                }
+                else
+                {
+                    c.Add((GameObject)Instantiate(trackPeicePrefabs[prefabIndex[x][y]].prefab, new Vector3(trackSpawnWidth * x, 0.0f, trackSpawnWidth * y), Quaternion.Euler(-90f, 90f * rotations[x][y], 0f), this.transform));
+                }
             }
 
             trackPeices.Add(c);
         }
 
         SetupWater();
+        SetupTrees();
 
         EnableServerObjects(serverMode);
+    }
+
+    public void SetupTrees()
+    {
+        for(int i = 0; i < treeInstances.Count; ++i)
+        {
+            PlaceOnGround pog = treeInstances[i].GetComponent<PlaceOnGround>();
+            pog.rc = rc;
+            pog.minHeight = waterHeight;
+            treeInstances[i].SetActive(true);
+            pog.Ground();
+
+            // Remove trees on racetrack
+            int xTile;
+            int yTile;
+            WorldToTrackPos(treeInstances[i].transform.position.x, treeInstances[i].transform.position.z, out xTile, out yTile);
+
+            if(IsTrackTile(xTile, yTile))
+            {
+                Destroy(treeInstances[i]);
+            }
+        }
     }
 
     public void DesignRoad(List<int[]> path)
@@ -152,40 +338,6 @@ public class TrackGenerator : MonoBehaviour
             }
         }
 
-        // Design empty spots
-        for(int x = 0; x < worldType.Count; ++x)
-        {
-            for(int y = 0; y < worldType[x].Count; ++y)
-            {
-                if(worldType[x][y] == TrackPeiceType.EMPTY)
-                {
-
-                    if(biomeCosts[x][y] < waterRange)
-                    {
-                        worldType[x][y] = TrackPeiceType.WATER;
-
-                        List<int[]> n = GetNeighbours(new int[] { x, y });
-
-                    } else
-                    {
-                        // Randomize rotation
-                        rotations[x][y] = r.Next(4);
-                    }
-                }
-            }
-        }
-
-        // Handle water tile rotation and types
-
-        for (int x = 0; x < worldType.Count; ++x)
-        {
-            for (int y = 0; y < worldType[x].Count; ++y)
-            {
-                HandleWaterTile(x, y);
-            }
-        }
-
-
         // Select type instance
         for (int x = 0; x < worldType.Count; ++x)
         {
@@ -229,54 +381,21 @@ public class TrackGenerator : MonoBehaviour
                 // if peice is straight && jump && next peice is straight
                 if(currentPeice.type == TrackPeiceType.STRAIGHT && nextPeice.type == TrackPeiceType.STRAIGHT && HasTag(currentPeice, TrackPeiceTags.JUMP))
                 {
-                    //check if next peice could of been water.
-                    // if so gen water spot instead...
-                    if (biomeCosts[path[i + 1][0]][path[i + 1][1]] < waterRange)
+                    // chance to make random hole...
+                    // random chance
+                    int c = r.Next(0, 100);
+
+                    // postive chance -> make nextpeice a hole
+                    if (c < holeChance)
                     {
-                        int oldRot = rotations[path[i + 1][0]][path[i + 1][1]];
-                        worldType[path[i + 1][0]][path[i + 1][1]] = TrackPeiceType.WATER;
-                        bool isWater = HandleWaterTile(path[i + 1][0], path[i + 1][1]);
-
-                        // Check if water is narrow...
-                        if(isWater && worldType[path[i + 1][0]][path[i + 1][1]] == TrackPeiceType.WATER_NARROW)
-                        {
-                            HandleTileInstancePicking(path[i + 1][0], path[i + 1][1]);
-
-                            // Update neighbour water tiles to account for new water tile.
-                            List<int[]> neighbours =  GetNeighbours(new int[] { path[i + 1][0], path[i + 1][1] });
-
-                            foreach(int[] n in neighbours)
-                            {
-                                bool neighbourIsWater = HandleWaterTile(n[0], n[1]);
-                                
-                                if(neighbourIsWater)
-                                {
-                                    HandleTileInstancePicking(n[0], n[1]);
-                                }
-                            }
-
-                        } else
-                        {
-                            rotations[path[i + 1][0]][path[i + 1][1]] = oldRot;
-                            worldType[path[i + 1][0]][path[i + 1][1]] = TrackPeiceType.STRAIGHT;
-                        }
-                    } else
-                    {
-                        // if not water spot have a chance to make random hole...
-                        // random chance
-                        int c = r.Next(0, 100);
-
-                        // postive chance -> make nextpeice a hole
-                        if (c < holeChance)
-                        {
-                            int ptIndex = r.Next(0, pt.Count);
-                            prefabIndex[path[i + 1][0]][path[i + 1][1]] = trackPeicePrefabs.FindIndex(j => j == pt[ptIndex]);
-                        }
+                        int ptIndex = r.Next(0, pt.Count);
+                        prefabIndex[path[i + 1][0]][path[i + 1][1]] = trackPeicePrefabs.FindIndex(j => j == pt[ptIndex]);
                     }
                 }
             }
         }
 
+        /*
         // Add water bridges on straights flanked by water
         {
             List<TrackPeice> pt = trackPeicePrefabs.FindAll(j => j.type == TrackPeiceType.WATER_NARROW && HasTag(j, TrackPeiceTags.BRIDGE));
@@ -323,6 +442,17 @@ public class TrackGenerator : MonoBehaviour
                     }
                 }
             }
+        }
+        */
+
+        // Spawn potential trees
+        for(int i = 0; i < numTrees; ++i)
+        {
+            GameObject prefab = treePrefabs[r.Next(treePrefabs.Count)];
+            GameObject tree = Instantiate(prefab, new Vector3(UnityEngine.Random.Range(0f, 454f), 2048f, UnityEngine.Random.Range(0f, 454f)), prefab.transform.rotation, transform);
+            treeInstances.Add(tree);
+            tree.transform.eulerAngles = new Vector3(0f, UnityEngine.Random.Range(0f, 360f), 0f);
+            treeInstances[i].SetActive(false);
         }
     }
 
@@ -705,8 +835,12 @@ public class TrackGenerator : MonoBehaviour
             Destroy(child.gameObject);
         }
 
+        foreach (Collider mc in GetComponentsInChildren<Collider>())
+        {
+            mc.enabled = false;
+        }
+
         worldCosts = new List<List<int>>();
-        biomeCosts = new List<List<float>>();
         worldType = new List<List<TrackPeiceType>>();
         rotations = new List<List<int>>();
         prefabIndex = new List<List<int>>();
@@ -716,10 +850,12 @@ public class TrackGenerator : MonoBehaviour
         float biomeXOffset = (float)r.NextDouble();
         float biomeYOffset = (float)r.NextDouble();
 
+        noiseMap = CreateNoiseMap();
+        treeInstances = new List<GameObject>();
+
         for (int x = 0; x < generationWidth; ++x)
         {
             List<int> c = new List<int>();
-            List<float> b = new List<float>();
             List<TrackPeiceType> t = new List<TrackPeiceType>();
             List<int> rots = new List<int>();
             List<int> index = new List<int>();
@@ -727,14 +863,12 @@ public class TrackGenerator : MonoBehaviour
             for (int y = 0; y < generationWidth; ++y)
             {
                 c.Add(r.Next());
-                b.Add(Mathf.PerlinNoise(biomeXOffset + x * biomeFrequency, biomeYOffset +  y * biomeFrequency));
                 t.Add(TrackPeiceType.EMPTY);
                 rots.Add(0);
                 index.Add(0);
             }
 
             worldCosts.Add(c);
-            biomeCosts.Add(b);
             worldType.Add(t);
             rotations.Add(rots);
             prefabIndex.Add(index);
