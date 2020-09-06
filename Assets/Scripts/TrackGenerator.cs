@@ -66,6 +66,7 @@ public class TrackGenerator : MonoBehaviour
 
     public List<GameObject> treePrefabs = new List<GameObject>();
     public List<GameObject> treeInstances = new List<GameObject>();
+    public List<int> treeInstanecPrefabID = new List<int>();
 
     public int numTrees = 100;
 
@@ -204,9 +205,10 @@ public class TrackGenerator : MonoBehaviour
         }
     }
 
-    public void InstantiateTrack()
+    public void InstantiateTrack(bool clientMode)
     {
-        FlattenNoiseMap();
+        if(!clientMode)
+            FlattenNoiseMap();
 
         for (int x = 0; x < rotations.Count; ++x)
         {
@@ -231,7 +233,9 @@ public class TrackGenerator : MonoBehaviour
         }
 
         SetupWater();
-        SetupTrees();
+
+        if(!clientMode) 
+            SetupTrees();
 
         EnableServerObjects(serverMode);
     }
@@ -244,7 +248,7 @@ public class TrackGenerator : MonoBehaviour
             pog.rc = rc;
             pog.minHeight = waterHeight;
             treeInstances[i].SetActive(true);
-            pog.Ground();
+            bool grounded = pog.Ground();
 
             // Remove trees on racetrack
             int xTile;
@@ -254,6 +258,12 @@ public class TrackGenerator : MonoBehaviour
             if(IsTrackTile(xTile, yTile))
             {
                 Destroy(treeInstances[i]);
+                treeInstances[i] = null;
+            }
+
+            if (!grounded)
+            {
+                treeInstances[i] = null;
             }
         }
     }
@@ -448,7 +458,9 @@ public class TrackGenerator : MonoBehaviour
         // Spawn potential trees
         for(int i = 0; i < numTrees; ++i)
         {
-            GameObject prefab = treePrefabs[r.Next(treePrefabs.Count)];
+            int prefabID = r.Next(treePrefabs.Count);
+            GameObject prefab = treePrefabs[prefabID];
+            treeInstanecPrefabID.Add(prefabID);
             GameObject tree = Instantiate(prefab, new Vector3(UnityEngine.Random.Range(0f, 454f), 2048f, UnityEngine.Random.Range(0f, 454f)), prefab.transform.rotation, transform);
             treeInstances.Add(tree);
             tree.transform.eulerAngles = new Vector3(0f, UnityEngine.Random.Range(0f, 360f), 0f);
@@ -696,7 +708,7 @@ public class TrackGenerator : MonoBehaviour
 
         DesignRoad(trackPath);
 
-        InstantiateTrack();
+        InstantiateTrack(false);
 
         SetupStartPositions();
         SetupCheckpoints(trackPath);
@@ -725,6 +737,8 @@ public class TrackGenerator : MonoBehaviour
             }
 
             serializedTrack = JsonUtility.ToJson(Serialize());
+            Debug.Log(serializedTrack.Length);
+            Debug.Log(serializedTrack);
         }
     }
 
@@ -852,6 +866,7 @@ public class TrackGenerator : MonoBehaviour
 
         noiseMap = CreateNoiseMap();
         treeInstances = new List<GameObject>();
+        treeInstanecPrefabID = new List<int>();
 
         for (int x = 0; x < generationWidth; ++x)
         {
@@ -1079,7 +1094,7 @@ public class TrackGenerator : MonoBehaviour
     {
         GeneratedTrackData data = new GeneratedTrackData();
 
-        data.Serialize(rotations, prefabIndex, trackPath, waterHeight);
+        data.Serialize(rotations, prefabIndex, trackPath, noiseMap, treeInstances, treeInstanecPrefabID, waterHeight);
 
         return data;
     }
@@ -1088,9 +1103,21 @@ public class TrackGenerator : MonoBehaviour
     {
         InitializeTrack();
 
-        data.Deserialize(out rotations, out prefabIndex, out trackPath, out waterHeight);
+        List<ObjectData> trees;
 
-        InstantiateTrack();
+        data.Deserialize(out rotations, out prefabIndex, out trackPath, out noiseMap, out trees, out waterHeight);
+
+        InstantiateTrack(true);
+
+        // setup trees
+
+        foreach(ObjectData od in trees)
+        {
+            GameObject prefab = treePrefabs[od.prefabID];
+            GameObject tree = Instantiate(prefab, new Vector3(od.x, od.y, od.z), prefab.transform.rotation, transform);
+            treeInstances.Add(tree);
+            tree.transform.eulerAngles = new Vector3(od.rotX, od.rotY, od.rotZ);
+        }
 
         SetupStartPositions();
         SetupCheckpoints(trackPath);
@@ -1122,14 +1149,20 @@ public class GeneratedTrackData
     public List<IntList> rotations = new List<IntList>();
     public List<IntList> prefabIndex = new List<IntList>();
     public List<Point> trackPath = new List<Point>();
+    public List<FloatList> trackMap = new List<FloatList>();
+    public List<ObjectData> trees = new List<ObjectData>();
+
     public float waterHeight;
 
-    public void Serialize(List<List<int>> rotations, List<List<int>> prefabIndex, List<int[]> trackPath, float waterHeight)
+    public void Serialize(List<List<int>> rotations, List<List<int>> prefabIndex, List<int[]> trackPath, List<List<float>> trackMap, List<GameObject> trees, List<int> treePrefabIds, float waterHeight)
     {
 
         this.rotations = new List<IntList>();
         this.prefabIndex = new List<IntList>();
         this.trackPath = new List<Point>();
+        this.trackMap = new List<FloatList>();
+        this.trees = new List<ObjectData>();
+
         this.waterHeight = waterHeight;
 
         for (int x = 0; x < rotations.Count; ++x)
@@ -1156,19 +1189,42 @@ public class GeneratedTrackData
             this.prefabIndex.Add(yHat);
         }
 
-        foreach(int[] a in trackPath)
+        for (int x = 0; x < trackMap.Count; ++x)
+        {
+            FloatList yHat = new FloatList();
+
+            for (int y = 0; y < trackMap[x].Count; ++y)
+            {
+                yHat.list.Add(trackMap[x][y]);
+            }
+
+            this.trackMap.Add(yHat);
+        }
+
+        foreach (int[] a in trackPath)
         {
             this.trackPath.Add(new Point(a[0], a[1]));
         }
+
+        for(int i = 0; i < trees.Count; ++i) 
+        {
+            GameObject g = trees[i];
+            if(g != null)
+            {
+                this.trees.Add(new ObjectData(treePrefabIds[i], g.transform.position.x, g.transform.position.y, g.transform.position.z, g.transform.eulerAngles.x, g.transform.eulerAngles.y, g.transform.eulerAngles.z));
+            }
+        }
     }
 
-    public void Deserialize(out List<List<int>> rotations, out List<List<int>> prefabIndex, out List<int[]> trackPath, out float waterHeight)
+    public void Deserialize(out List<List<int>> rotations, out List<List<int>> prefabIndex, out List<int[]> trackPath, out List<List<float>> trackMap, out List<ObjectData> trees, out float waterHeight)
     {
 
         rotations = new List<List<int>>();
         prefabIndex = new List<List<int>>();
         trackPath = new List<int[]>();
+        trackMap = new List<List<float>>();
         waterHeight = this.waterHeight;
+        trees = this.trees;
 
         for (int x = 0; x < this.rotations.Count; ++x)
         {
@@ -1192,6 +1248,18 @@ public class GeneratedTrackData
             }
 
             prefabIndex.Add(yHat);
+        }
+
+        for (int x = 0; x < this.trackMap.Count; ++x)
+        {
+            List<float> yHat = new List<float>();
+
+            for (int y = 0; y < this.trackMap[x].list.Count; ++y)
+            {
+                yHat.Add(this.trackMap[x][y]);
+            }
+
+            trackMap.Add(yHat);
         }
 
         foreach (Point p in this.trackPath)
@@ -1220,6 +1288,24 @@ public class IntList
 }
 
 [Serializable]
+public class FloatList
+{
+    public List<float> list = new List<float>();
+
+    public float this[int key]
+    {
+        get
+        {
+            return list[key];
+        }
+        set
+        {
+            list[key] = value;
+        }
+    }
+}
+
+[Serializable]
 public class Point
 {
     public int x = 0;
@@ -1231,5 +1317,34 @@ public class Point
     {
         this.x = x;
         this.y = y;
+    }
+}
+
+[Serializable]
+public class ObjectData
+{
+    public int prefabID = 0;
+
+    public float x = 0f;
+    public float y = 0f;
+    public float z = 0f;
+
+    public float rotX = 0f;
+    public float rotY = 0f;
+    public float rotZ = 0f;
+
+    public ObjectData() { }
+
+    public ObjectData(int prefabID, float x, float y, float z, float rotX, float rotY, float rotZ)
+    {
+        this.prefabID = prefabID;
+
+        this.x = x;
+        this.y = y;
+        this.z = z;
+
+        this.rotX = rotX;
+        this.rotY = rotY;
+        this.rotZ = rotZ;
     }
 }

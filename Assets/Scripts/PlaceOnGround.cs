@@ -11,7 +11,7 @@ public class PlaceOnGround : MonoBehaviour
     bool onGround = false;
 
     // Start is called before the first frame update
-    public void Ground()
+    public bool Ground()
     {
         float height = 0.0f;
 
@@ -26,18 +26,20 @@ public class PlaceOnGround : MonoBehaviour
         else
         {
             Destroy(gameObject);
-            return;
+            return false;
         }
 
         if (height <= minHeight)
         {
             Destroy(gameObject);
-            return;
+            return false;
         }
 
         transform.position = new Vector3(transform.position.x, height, transform.position.z);
 
         onGround = true;
+
+        return true;
     }
 
     void Start()
