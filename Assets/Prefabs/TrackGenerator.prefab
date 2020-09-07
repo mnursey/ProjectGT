@@ -66,7 +66,7 @@ MonoBehaviour:
       type: 3}
     tags: 
   - type: 2
-    prefab: {fileID: 4454764041570004665, guid: 10217ff0230a3bc4385a3eff494c2188,
+    prefab: {fileID: 4454764041570004665, guid: dadc40fdb5f9c7c4e8458ec07bccbccf,
       type: 3}
     tags: 
   - type: 2
@@ -108,15 +108,15 @@ MonoBehaviour:
   - type: 2
     prefab: {fileID: 1557698554331177871, guid: c813b2cfa36a9854eb5e4a2bc616e872,
       type: 3}
-    tags: 02000000
+    tags: 0200000006000000
   - type: 2
     prefab: {fileID: 1557698554331177871, guid: 40e96ab2ca6b9ab4aa59bbc9e1068146,
       type: 3}
-    tags: 02000000
+    tags: 0200000006000000
   - type: 2
     prefab: {fileID: 6670929847867414898, guid: 8738aa63087ed9b418b6c803dd0e9d22,
       type: 3}
-    tags: 01000000
+    tags: 0100000006000000
   - type: 4
     prefab: {fileID: 6670929847867414898, guid: 98b370bd7ec2d4b498230132bcc3b3f9,
       type: 3}
@@ -124,7 +124,7 @@ MonoBehaviour:
   - type: 2
     prefab: {fileID: 1557698554331177871, guid: d75d24379d452754bbf10ea64f950c2f,
       type: 3}
-    tags: 02000000
+    tags: 0200000006000000
   - type: 5
     prefab: {fileID: 6638033786677637244, guid: 720c616d63f4f92409636732ded4cbf9,
       type: 3}
@@ -216,7 +216,7 @@ MonoBehaviour:
   - type: 2
     prefab: {fileID: 1557698554331177871, guid: d84c90d003c591b4caec75fd7b78a77d,
       type: 3}
-    tags: 
+    tags: 06000000
   - type: 2
     prefab: {fileID: 1557698554331177871, guid: ef2fba17a5e76cf4d91d0e3361980d8a,
       type: 3}
@@ -224,15 +224,15 @@ MonoBehaviour:
   - type: 2
     prefab: {fileID: 1557698554331177871, guid: ffb45a7bb409d4d46874baefb732e578,
       type: 3}
-    tags: 
+    tags: 06000000
   - type: 2
     prefab: {fileID: 1557698554331177871, guid: 6bd6e429cd675d54c918661fb5d88b3d,
       type: 3}
-    tags: 
+    tags: 06000000
   - type: 2
     prefab: {fileID: 1557698554331177871, guid: f411b10e2787dd84580b7b562934222a,
       type: 3}
-    tags: 
+    tags: 06000000
   - type: 0
     prefab: {fileID: 5691122574158358379, guid: 006f5111ecedeb742bf381000d34838b,
       type: 3}
@@ -248,7 +248,7 @@ MonoBehaviour:
   - type: 2
     prefab: {fileID: 4409933064841954170, guid: 48f00076ac726e545b5b278ff5ac20f0,
       type: 3}
-    tags: 00000000
+    tags: 0000000006000000
   - type: 3
     prefab: {fileID: 4338775768554391120, guid: bb24aa67563b4104bb7b81fdac82738a,
       type: 3}
@@ -256,11 +256,11 @@ MonoBehaviour:
   - type: 3
     prefab: {fileID: 4338775768554391120, guid: b6a8a1177e11c5c49830d32520dbb731,
       type: 3}
-    tags: 
+    tags: 06000000
   - type: 3
     prefab: {fileID: 5980534405059048180, guid: 07889b7ad2434a74196d4d4e78a071a1,
       type: 3}
-    tags: 
+    tags: 06000000
   - type: 2
     prefab: {fileID: 4454764041570004665, guid: 6e893bafdcb3b2b44b9200b03a5f1047,
       type: 3}
@@ -272,7 +272,7 @@ MonoBehaviour:
   - type: 3
     prefab: {fileID: 5691122574158358379, guid: 3932c6db9ff35aa4f8fe968747434921,
       type: 3}
-    tags: 05000000
+    tags: 0500000006000000
   - type: 0
     prefab: {fileID: 3747090962397192214, guid: e039544aaa678d14ab6aaf4e1f9db480,
       type: 3}
@@ -280,7 +280,7 @@ MonoBehaviour:
   - type: 2
     prefab: {fileID: 4454764041570004665, guid: 10217ff0230a3bc4385a3eff494c2188,
       type: 3}
-    tags: 05000000
+    tags: 0500000006000000
   generationWidth: 16
   defaultCheckpointRadius: 25
   holeChance: 50
@@ -314,7 +314,7 @@ MonoBehaviour:
   - {fileID: 850051677182801884, guid: ef573115864f24d4cbf19fa601c2a091, type: 3}
   treeInstances: []
   treeInstanecPrefabID: 
-  numTrees: 300
+  numTrees: 100
   xOffsetA: 0
   yOffsetA: 0
   xOffsetB: 0

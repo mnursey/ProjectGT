@@ -197,7 +197,10 @@ public class TrackGenerator : MonoBehaviour
                     {
                         for (int yHat = -2; yHat <= 1; ++yHat)
                         {
-                            noiseMap[mapX + xHat][mapY + yHat] = trackTileHeight;
+                            if(noiseMap[mapX + xHat][mapY + yHat] > trackTileHeight || noiseMap[mapX + xHat][mapY + yHat] < trackTileHeight - 2f || HasTag(trackPeicePrefabs[prefabIndex[x][y]], TrackPeiceTags.WIDE))
+                            {
+                                noiseMap[mapX + xHat][mapY + yHat] = trackTileHeight;
+                            }
                         }
                     }
                 }
@@ -215,18 +218,23 @@ public class TrackGenerator : MonoBehaviour
             List<GameObject> c = new List<GameObject>();
             for(int y = 0; y < rotations[x].Count; ++y)
             {
-                if(!IsTrackTile(x, y))
-                {
-                    GameObject generatedTile = (GameObject)Instantiate(generatedTilePrefab, new Vector3(trackSpawnWidth * x, 0.0f, trackSpawnWidth * y), Quaternion.identity, this.transform);
-                    c.Add(generatedTile);
-
-                    GeneratedTrackTile gtt = generatedTile.GetComponent<GeneratedTrackTile>();
-                    gtt.Setup(x, y, this);
-                }
-                else
+                if(IsTrackTile(x, y))
                 {
                     c.Add((GameObject)Instantiate(trackPeicePrefabs[prefabIndex[x][y]].prefab, new Vector3(trackSpawnWidth * x, 0.0f, trackSpawnWidth * y), Quaternion.Euler(-90f, 90f * rotations[x][y], 0f), this.transform));
+                
+
                 }
+                
+                GameObject generatedTile = (GameObject)Instantiate(generatedTilePrefab, new Vector3(trackSpawnWidth * x, 0.0f, trackSpawnWidth * y), Quaternion.identity, this.transform);
+
+                // Todo
+                // Hacky fix this...
+                if(!IsTrackTile(x, y))
+                    c.Add(generatedTile);
+
+                GeneratedTrackTile gtt = generatedTile.GetComponent<GeneratedTrackTile>();
+                gtt.Setup(x, y, this);
+                
             }
 
             trackPeices.Add(c);
@@ -381,6 +389,7 @@ public class TrackGenerator : MonoBehaviour
         }
 
         // Add holes after jump
+        
         {
             List<TrackPeice> pt = trackPeicePrefabs.FindAll(j => j.type == TrackPeiceType.STRAIGHT && IsHole(j));
             for (int i = 0; i < path.Count - 1; ++i)
@@ -404,6 +413,7 @@ public class TrackGenerator : MonoBehaviour
                 }
             }
         }
+        
 
         /*
         // Add water bridges on straights flanked by water
@@ -1133,7 +1143,7 @@ public class TrackGenerator : MonoBehaviour
     }
 }
 
-public enum TrackPeiceTags { HOLE, JUMP, OBSTACLE, BRIDGE, ANIMAL, LANDMARK };
+public enum TrackPeiceTags { HOLE, JUMP, OBSTACLE, BRIDGE, ANIMAL, LANDMARK, WIDE };
 
 [Serializable]
 public class TrackPeice
