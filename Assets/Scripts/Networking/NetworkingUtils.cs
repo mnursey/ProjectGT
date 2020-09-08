@@ -203,6 +203,24 @@ public static class NetworkingMessageTranslator
     }
 }
 
+// Contains 1 or part of one networking message :)
+[Serializable]
+public class NetworkingPayload
+{
+    public int fragment = -1;
+    public int totalFragments = -1;
+    public int messageID = -1;
+    public string content = "";
+
+    public NetworkingPayload(int fragment, int totalFragments, int messageID, string content)
+    {
+        this.fragment = fragment;
+        this.totalFragments = totalFragments;
+        this.messageID = messageID;
+        this.content = content;
+    }
+}
+
 [Serializable]
 public enum NetworkingMessageType { CLIENT_JOIN, SERVER_JOIN_RESPONSE, DISCONNECT, PING, PING_RESPONSE, GAME_STATE, INPUT_STATE, USER_MANAGER_STATE, CAR_MODEL, TRACK_DATA, NEW_ACCOUNT, NEW_ACCOUNT_RESPONCE, LOGIN, LOGIN_RESPONCE, SAVE_SELECTED_CAR, GLOBAL_LEADERBOARD };
 

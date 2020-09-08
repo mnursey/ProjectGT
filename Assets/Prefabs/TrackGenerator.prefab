@@ -314,7 +314,7 @@ MonoBehaviour:
   - {fileID: 850051677182801884, guid: ef573115864f24d4cbf19fa601c2a091, type: 3}
   treeInstances: []
   treeInstanecPrefabID: 
-  numTrees: 100
+  numTrees: 1000
   xOffsetA: 0
   yOffsetA: 0
   xOffsetB: 0

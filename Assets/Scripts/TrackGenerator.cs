@@ -19,9 +19,6 @@ public class TrackGenerator : MonoBehaviour
     public int holeChance = 2;
     public int landmarkChance = 15;
 
-    public float biomeFrequency = 2.0f;
-    public float waterRange = 0.5f;
-
     public float generationPowerA = 1.0f;
     public float generationScaleA = 1.0f;
     public float generationPowerB = 1.0f;

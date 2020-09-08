@@ -411,7 +411,7 @@ public class ServerController : MonoBehaviour
 
                                 for(int i = 0; i < ds.Tables[0].Rows.Count; ++i)
                                 {
-                                    Debug.Log((ulong)(long)ds.Tables[0].Rows[i]["AccountID"]);
+                                    //Debug.Log((ulong)(long)ds.Tables[0].Rows[i]["AccountID"]);
                                     AccountData accountData = new AccountData((ulong)(long)ds.Tables[0].Rows[i]["AccountID"], (int)ds.Tables[0].Rows[i]["AccountType"], ds.Tables[0].Rows[i]["AccountName"].ToString(), (int)ds.Tables[0].Rows[i]["Coins"], (int)ds.Tables[0].Rows[i]["NumRaces"], (int)ds.Tables[0].Rows[i]["NumWins"], (int)ds.Tables[0].Rows[i]["SelectedCarID"], (int)ds.Tables[0].Rows[i]["Score"]);
                                     topScores.Add(accountData);
                                 }
@@ -481,6 +481,8 @@ public class ServerConnection
     public float lastSentTime;
     public int lastAcceptedMessage;
     public Socket socket;
+    private int payloadIDTracker = 0;
+    private int payloadSize = 8000;
 
     public ServerConnection(int clientID, EndPoint clientEndpoint, Socket socket)
     {
@@ -497,14 +499,36 @@ public class ServerConnection
 
     public void BeginSend(string msg, OnSent onSent)
     {
-        MessageObject message = new MessageObject();
+        List<NetworkingPayload> payloads = new List<NetworkingPayload>();
 
-        message.onSent = onSent;
+        int numberOfFragments = (msg.Length / payloadSize) + 1;
+        int bytesLeftToSend = msg.Length;
+        int payloadID = GetNewPayloadID();
 
-        message.buffer = Encoding.UTF8.GetBytes(msg);
-        int messageBufferSize = Encoding.UTF8.GetByteCount(msg);
+        for (int i = 0; i < numberOfFragments; ++i)
+        {
+            NetworkingPayload np = new NetworkingPayload(i, numberOfFragments, payloadID, msg.Substring(i * payloadSize, Math.Min(payloadSize, bytesLeftToSend)));
+            payloads.Add(np);
+            bytesLeftToSend -= payloadSize;
+        }
 
-        socket.BeginSendTo(message.buffer, 0, messageBufferSize, SocketFlags.None, clientEndpoint, new AsyncCallback(EndSend), message);
+        foreach (NetworkingPayload np in payloads)
+        {
+            //Debug.Log(np.messageID + " " + np.fragment + " " + np.totalFragments);
+            MessageObject message = new MessageObject();
+
+            if (np.fragment == 0)
+                message.onSent = onSent;
+            else
+                message.onSent = null;
+
+            string data = JsonUtility.ToJson(np);
+
+            message.buffer = Encoding.UTF8.GetBytes(data);
+            int messageBufferSize = Encoding.UTF8.GetByteCount(data);
+
+            socket.BeginSendTo(message.buffer, 0, messageBufferSize, SocketFlags.None, clientEndpoint, new AsyncCallback(EndSend), message);
+        }
     }
 
     public void EndSend(IAsyncResult ar)
@@ -514,6 +538,8 @@ public class ServerConnection
         int bytesSent = socket.EndSend(ar);
 
         message.onSent?.Invoke();
+
+        //Debug.Log("Server sent " + bytesSent + " bytes.");
 
         //lastSentTime = Time.time;
     }
@@ -526,5 +552,10 @@ public class ServerConnection
     void Ping()
     {
         BeginSend(NetworkingMessageTranslator.GeneratePingMessage(clientID));
+    }
+
+    public int GetNewPayloadID()
+    {
+        return ++payloadIDTracker;
     }
 }

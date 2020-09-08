@@ -55,6 +55,9 @@ public class ClientController : MonoBehaviour
     public float connectingTime = 0.0f;
 
     public bool disconnect = false;
+
+    public List<NetworkingPayload> incomingPayloads = new List<NetworkingPayload>();
+
     void Start()
     {
         
@@ -121,6 +124,8 @@ public class ClientController : MonoBehaviour
         serverEndPoint = null;
         if (resetConnectingTime)
             connectingTime = 0.0f;
+
+        incomingPayloads = new List<NetworkingPayload>();
     }
 
     public void ConnectToServer(string username, ulong accountID, int accountType)
@@ -296,166 +301,220 @@ public class ClientController : MonoBehaviour
         if (bytesRead > 0)
         {
             data = Encoding.UTF8.GetString(receiveObject.buffer, 0, bytesRead);
-            //Debug.Log("Client Received:" + data + " From " + receiveObject.sender.ToString());
-            NetworkingMessage msg = NetworkingMessageTranslator.ParseMessage(data);
 
-            // Check if connection request was accepted...
-            if(state == ClientState.CONNECTING)
+            NetworkingPayload payload = JsonUtility.FromJson<NetworkingPayload>(data);
+
+            bool messageComplete = false;
+            string msgData = "";
+
+            List<NetworkingPayload> msgFragments = new List<NetworkingPayload>();
+
+            msgFragments.Add(payload);
+
+            foreach(NetworkingPayload np in incomingPayloads)
             {
-                if (msg.type == NetworkingMessageType.SERVER_JOIN_RESPONSE)
+                if(np.messageID == payload.messageID)
                 {
-                    JoinRequestResponce jrr = NetworkingMessageTranslator.ParseJoinRequestResponce(msg.content);
-                    clientID = jrr.clientID;
-
-                    // Todo
-                    // Refactor this.... ugly.. very ugly...
-                    rc.networkID = clientID;
-
-                    if(clientID > -1)
-                    {
-                        // CONNECTED
-                        UnityMainThreadDispatcher.Instance().Enqueue(() => onConnect?.Invoke(true));
-                        state = ClientState.CONNECTED;
-
-                        UnityMainThreadDispatcher.Instance().Enqueue(() => {
-
-                            GeneratedTrackData gtd = NetworkingMessageTranslator.ParseGenerateTrackData(jrr.trackSerialized);
-
-                            rc.trackGenerator.LoadTrackData(gtd);
-
-                        });
-
-                    } else
-                    {
-                        // NOT CONNECTED
-                        if(jrr.reason != "")
-                        {
-                            // REASON FOR NOT CONNECTING
-                            UnityMainThreadDispatcher.Instance().Enqueue(() => onReject?.Invoke(jrr.reason));
-                            Reset(true);
-                        } else
-                        {
-                            // FORWARD TO OTHER SERVER
-                            Reset(false);
-
-                            // Add forwarding IPs
-                            if (jrr.forwardIPs != null)
-                            {
-                                foreach (string fp in jrr.forwardIPs)
-                                {
-                                    if (!forwardIPs.Exists(x => fp == x))
-                                    {
-                                        forwardIPs.Add(fp);
-                                    }
-                                }
-                            }
-
-                            // Change ServerIP & port
-                            connectionServerIPIndex++;
-                            serverIP = forwardIPs[connectionServerIPIndex % forwardIPs.Count].Split(':')[0];
-                            serverport = int.Parse(forwardIPs[connectionServerIPIndex % forwardIPs.Count].Split(':')[1]);
-
-                            // Retry...
-                            ConnectToServer(connection_username, connection_accountID, connection_accountType, onConnect, onDisconnect, onReject);
-                        }
-                    }
-                }
-
-                if(msg.type == NetworkingMessageType.NEW_ACCOUNT_RESPONCE)
-                {
-                    NewAccountMsg newAccountMsg = NetworkingMessageTranslator.ParseNewAccountMsg(msg.content);
-
-                    UnityMainThreadDispatcher.Instance().Enqueue(() => onAccountCreate?.Invoke(newAccountMsg.accountID, newAccountMsg.accountType));
-
-                    Close();
-                    Reset();
-                }
-
-                if (msg.type == NetworkingMessageType.LOGIN_RESPONCE)
-                {
-                    AccountData ad = NetworkingMessageTranslator.ParseAccountData(msg.content);
-
-                    UnityMainThreadDispatcher.Instance().Enqueue(() => onLogin?.Invoke(ad));
-
-                    Close();
-                    Reset();
-                }
-
-                if (msg.type == NetworkingMessageType.GLOBAL_LEADERBOARD)
-                {
-                    AccountDataList adl = NetworkingMessageTranslator.ParseAccountDataList(msg.content);
-
-                    UnityMainThreadDispatcher.Instance().Enqueue(() => onGLD?.Invoke(adl.accountData));
-
-                    Close();
-                    Reset();
-                }
-
-                if (msg.type == NetworkingMessageType.DISCONNECT)
-                {
-                    UnityMainThreadDispatcher.Instance().Enqueue(() => onDisconnect?.Invoke());
-
-                    Close();
-                    Reset();
+                    msgFragments.Add(np);
                 }
             }
 
-            if(state == ClientState.CONNECTED)
+            if(msgFragments.Count == payload.totalFragments)
             {
-                switch(msg.type)
+                // Combined payloads
+                msgFragments.Sort((x, y) => x.fragment.CompareTo(y.fragment));
+
+                foreach(NetworkingPayload np in msgFragments)
                 {
-                    case NetworkingMessageType.PING:
+                    msgData += np.content;
+                }
 
-                    case NetworkingMessageType.PING_RESPONSE:
+                // Remove stored payloads
+                foreach (NetworkingPayload np in msgFragments)
+                {
+                    if(msgFragments.Contains(np))
+                        incomingPayloads.Remove(np);
+                }
 
-                    case NetworkingMessageType.DISCONNECT:
+                messageComplete = true;
+            } else
+            {
+                // store payload
+                incomingPayloads.Add(payload);
+            }
 
+            //Debug.Log("Client Received:" + data + " From " + receiveObject.sender.ToString());
+
+            if(messageComplete)
+            {
+                NetworkingMessage msg = NetworkingMessageTranslator.ParseMessage(msgData);
+
+                // Check if connection request was accepted...
+                if (state == ClientState.CONNECTING)
+                {
+                    if (msg.type == NetworkingMessageType.SERVER_JOIN_RESPONSE)
+                    {
+                        JoinRequestResponce jrr = NetworkingMessageTranslator.ParseJoinRequestResponce(msg.content);
+                        clientID = jrr.clientID;
+
+                        // Todo
+                        // Refactor this.... ugly.. very ugly...
+                        rc.networkID = clientID;
+
+                        if (clientID > -1)
+                        {
+                            // CONNECTED
+                            UnityMainThreadDispatcher.Instance().Enqueue(() => onConnect?.Invoke(true));
+                            state = ClientState.CONNECTED;
+
+                            UnityMainThreadDispatcher.Instance().Enqueue(() => {
+
+                                GeneratedTrackData gtd = NetworkingMessageTranslator.ParseGenerateTrackData(jrr.trackSerialized);
+
+                                rc.trackGenerator.LoadTrackData(gtd);
+
+                            });
+
+                        }
+                        else
+                        {
+                            // NOT CONNECTED
+                            if (jrr.reason != "")
+                            {
+                                // REASON FOR NOT CONNECTING
+                                UnityMainThreadDispatcher.Instance().Enqueue(() => onReject?.Invoke(jrr.reason));
+                                Reset(true);
+                            }
+                            else
+                            {
+                                // FORWARD TO OTHER SERVER
+                                Reset(false);
+
+                                // Add forwarding IPs
+                                if (jrr.forwardIPs != null)
+                                {
+                                    foreach (string fp in jrr.forwardIPs)
+                                    {
+                                        if (!forwardIPs.Exists(x => fp == x))
+                                        {
+                                            forwardIPs.Add(fp);
+                                        }
+                                    }
+                                }
+
+                                // Change ServerIP & port
+                                connectionServerIPIndex++;
+                                serverIP = forwardIPs[connectionServerIPIndex % forwardIPs.Count].Split(':')[0];
+                                serverport = int.Parse(forwardIPs[connectionServerIPIndex % forwardIPs.Count].Split(':')[1]);
+
+                                // Retry...
+                                ConnectToServer(connection_username, connection_accountID, connection_accountType, onConnect, onDisconnect, onReject);
+                            }
+                        }
+                    }
+
+                    if (msg.type == NetworkingMessageType.NEW_ACCOUNT_RESPONCE)
+                    {
+                        NewAccountMsg newAccountMsg = NetworkingMessageTranslator.ParseNewAccountMsg(msg.content);
+
+                        UnityMainThreadDispatcher.Instance().Enqueue(() => onAccountCreate?.Invoke(newAccountMsg.accountID, newAccountMsg.accountType));
+
+                        Close();
+                        Reset();
+                    }
+
+                    if (msg.type == NetworkingMessageType.LOGIN_RESPONCE)
+                    {
+                        AccountData ad = NetworkingMessageTranslator.ParseAccountData(msg.content);
+
+                        UnityMainThreadDispatcher.Instance().Enqueue(() => onLogin?.Invoke(ad));
+
+                        Close();
+                        Reset();
+                    }
+
+                    if (msg.type == NetworkingMessageType.GLOBAL_LEADERBOARD)
+                    {
+                        AccountDataList adl = NetworkingMessageTranslator.ParseAccountDataList(msg.content);
+
+                        UnityMainThreadDispatcher.Instance().Enqueue(() => onGLD?.Invoke(adl.accountData));
+
+                        Close();
+                        Reset();
+                    }
+
+                    if (msg.type == NetworkingMessageType.DISCONNECT)
+                    {
                         UnityMainThreadDispatcher.Instance().Enqueue(() => onDisconnect?.Invoke());
 
                         Close();
                         Reset();
+                    }
 
-                        UnityMainThreadDispatcher.Instance().Enqueue(() => rc.Reset());
-
-                        Debug.Log("Server disconnected...");
-
-                        break;
-
-                    case NetworkingMessageType.GAME_STATE:
-
-                        GameState gameState = NetworkingMessageTranslator.ParseGameState(msg.content);
-                        rc.QueueGameState(gameState);
-
-                        break;
-
-                    case NetworkingMessageType.USER_MANAGER_STATE:
-
+                    if (msg.type == NetworkingMessageType.USER_MANAGER_STATE)
+                    {
                         UserManagerState ums = NetworkingMessageTranslator.ParseUserManagerState(msg.content);
-
                         rc.um.SetState(ums);
+                    }
+                }
 
-                        break;
+                if (state == ClientState.CONNECTED)
+                {
+                    switch (msg.type)
+                    {
+                        case NetworkingMessageType.PING:
 
-                    case NetworkingMessageType.TRACK_DATA:
+                        case NetworkingMessageType.PING_RESPONSE:
 
-                        UnityMainThreadDispatcher.Instance().Enqueue(() => {
+                        case NetworkingMessageType.DISCONNECT:
 
-                            GeneratedTrackData gtd = NetworkingMessageTranslator.ParseGenerateTrackData(msg.content);
+                            UnityMainThreadDispatcher.Instance().Enqueue(() => onDisconnect?.Invoke());
 
-                            rc.trackGenerator.LoadTrackData(gtd);
+                            Close();
+                            Reset();
 
-                        });
+                            UnityMainThreadDispatcher.Instance().Enqueue(() => rc.Reset());
+
+                            Debug.Log("Server disconnected...");
+
+                            break;
+
+                        case NetworkingMessageType.GAME_STATE:
+
+                            GameState gameState = NetworkingMessageTranslator.ParseGameState(msg.content);
+                            rc.QueueGameState(gameState);
+
+                            break;
+
+                        case NetworkingMessageType.USER_MANAGER_STATE:
+
+                            UserManagerState ums = NetworkingMessageTranslator.ParseUserManagerState(msg.content);
+
+                            rc.um.SetState(ums);
+
+                            break;
+
+                        case NetworkingMessageType.TRACK_DATA:
+
+                            UnityMainThreadDispatcher.Instance().Enqueue(() => {
+
+                                GeneratedTrackData gtd = NetworkingMessageTranslator.ParseGenerateTrackData(msg.content);
+
+                                rc.trackGenerator.LoadTrackData(gtd);
+
+                            });
 
 
-                        break;
+                            break;
 
-                    default:
-                        break;
+                        default:
+                            break;
+                    }
                 }
             }
         }
 
-        if (state == ClientState.CONNECTED)
+        if (state == ClientState.CONNECTED || state == ClientState.CONNECTING)
         {
             BeginReceive();
         }
