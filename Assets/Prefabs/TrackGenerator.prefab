@@ -285,14 +285,6 @@ MonoBehaviour:
   defaultCheckpointRadius: 25
   holeChance: 50
   landmarkChance: 2
-  biomeFrequency: 0.05
-  waterRange: 0.4
-  generationPowerA: 75
-  generationScaleA: 0.05
-  generationPowerB: 10
-  generationScaleB: 0.1
-  generationPowerC: 3
-  generationScaleC: 0.5
   generationHeightOffset: 15
   trackTileHeight: 15
   generatedTilePrefab: {fileID: 7479221513899203132, guid: bce57d4991ab04b419f6942f1c6b64f5,
@@ -314,7 +306,41 @@ MonoBehaviour:
   - {fileID: 850051677182801884, guid: ef573115864f24d4cbf19fa601c2a091, type: 3}
   treeInstances: []
   treeInstanecPrefabID: 
-  numTrees: 1000
+  biomes:
+  - name: Forest
+    grassColour: 0.55
+    cliffColour: 0.09
+    waterEdgeColour: 0.18
+    numTrees: 1000
+    powerA: 75
+    scaleA: 0.05
+    powerB: 10
+    scaleB: 0.1
+    powerC: 3
+    scaleC: 0.5
+  - name: Desert
+    grassColour: 0.49
+    cliffColour: 0.09
+    waterEdgeColour: 0.18
+    numTrees: 30
+    powerA: 30
+    scaleA: 0.1
+    powerB: 5
+    scaleB: 0.1
+    powerC: 1
+    scaleC: 0.5
+  - name: Cliffs
+    grassColour: 0.55
+    cliffColour: 0.09
+    waterEdgeColour: 0.18
+    numTrees: 500
+    powerA: 90
+    scaleA: 0.1
+    powerB: 20
+    scaleB: 0.5
+    powerC: 1
+    scaleC: 0.5
+  currentBiomeIndex: 0
   xOffsetA: 0
   yOffsetA: 0
   xOffsetB: 0

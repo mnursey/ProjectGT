@@ -19,13 +19,6 @@ public class TrackGenerator : MonoBehaviour
     public int holeChance = 2;
     public int landmarkChance = 15;
 
-    public float generationPowerA = 1.0f;
-    public float generationScaleA = 1.0f;
-    public float generationPowerB = 1.0f;
-    public float generationScaleB = 1.0f;
-    public float generationPowerC = 1.0f;
-    public float generationScaleC = 1.0f;
-
     public float generationHeightOffset = 16.0f;
     public float trackTileHeight = 15f;
 
@@ -65,7 +58,8 @@ public class TrackGenerator : MonoBehaviour
     public List<GameObject> treeInstances = new List<GameObject>();
     public List<int> treeInstanecPrefabID = new List<int>();
 
-    public int numTrees = 100;
+    public List<Biome> biomes = new List<Biome>();
+    public int currentBiomeIndex = 0;
 
     public float xOffsetA;
     public float yOffsetA;
@@ -132,9 +126,9 @@ public class TrackGenerator : MonoBehaviour
     {
         float value = 0.0f;
 
-        value += ((Mathf.PerlinNoise(x * generationScaleA + xOffsetA, y * generationScaleA + yOffsetA) - 0.5f) * generationPowerA);
-        value += ((Mathf.PerlinNoise(x * generationScaleB + xOffsetB, y * generationScaleB + yOffsetB) - 0.5f) * generationPowerB);
-        value += ((Mathf.PerlinNoise(x * generationScaleC + xOffsetC, y * generationScaleC + yOffsetC) - 0.5f) * generationPowerC);
+        value += ((Mathf.PerlinNoise(x * biomes[currentBiomeIndex].scaleA + xOffsetA, y * biomes[currentBiomeIndex].scaleA + yOffsetA) - 0.5f) * biomes[currentBiomeIndex].powerA);
+        value += ((Mathf.PerlinNoise(x * biomes[currentBiomeIndex].scaleB + xOffsetB, y * biomes[currentBiomeIndex].scaleB + yOffsetB) - 0.5f) * biomes[currentBiomeIndex].powerB);
+        value += ((Mathf.PerlinNoise(x * biomes[currentBiomeIndex].scaleC + xOffsetC, y * biomes[currentBiomeIndex].scaleC + yOffsetC) - 0.5f) * biomes[currentBiomeIndex].powerC);
 
         return value + generationHeightOffset;
     }
@@ -230,10 +224,9 @@ public class TrackGenerator : MonoBehaviour
                     c.Add(generatedTile);
 
                 GeneratedTrackTile gtt = generatedTile.GetComponent<GeneratedTrackTile>();
-                gtt.Setup(x, y, this);
+                gtt.Setup(x, y, biomes[currentBiomeIndex].grassColour, biomes[currentBiomeIndex].cliffColour, biomes[currentBiomeIndex].waterEdgeColour, this);
                 
             }
-
             trackPeices.Add(c);
         }
 
@@ -410,7 +403,7 @@ public class TrackGenerator : MonoBehaviour
                 }
             }
         }
-        
+
 
         /*
         // Add water bridges on straights flanked by water
@@ -463,7 +456,7 @@ public class TrackGenerator : MonoBehaviour
         */
 
         // Spawn potential trees
-        for(int i = 0; i < numTrees; ++i)
+        for (int i = 0; i < biomes[currentBiomeIndex].numTrees; ++i)
         {
             int prefabID = r.Next(treePrefabs.Count);
             GameObject prefab = treePrefabs[prefabID];
@@ -868,8 +861,8 @@ public class TrackGenerator : MonoBehaviour
         trackPath = new List<int[]>();
         trackPeices = new List<List<GameObject>>();
         waterHeight = UnityEngine.Random.Range(waterHeightMin, waterHeightMax);
-        float biomeXOffset = (float)r.NextDouble();
-        float biomeYOffset = (float)r.NextDouble();
+
+        currentBiomeIndex = r.Next(biomes.Count);
 
         noiseMap = CreateNoiseMap();
         treeInstances = new List<GameObject>();
@@ -1101,7 +1094,7 @@ public class TrackGenerator : MonoBehaviour
     {
         GeneratedTrackData data = new GeneratedTrackData();
 
-        data.Serialize(rotations, prefabIndex, trackPath, noiseMap, treeInstances, treeInstanecPrefabID, waterHeight);
+        data.Serialize(rotations, prefabIndex, trackPath, noiseMap, treeInstances, treeInstanecPrefabID, waterHeight, currentBiomeIndex);
 
         return data;
     }
@@ -1112,7 +1105,7 @@ public class TrackGenerator : MonoBehaviour
 
         List<ObjectData> trees;
 
-        data.Deserialize(out rotations, out prefabIndex, out trackPath, out noiseMap, out trees, out waterHeight);
+        data.Deserialize(out rotations, out prefabIndex, out trackPath, out noiseMap, out trees, out waterHeight, out currentBiomeIndex);
 
         InstantiateTrack(true);
 
@@ -1140,6 +1133,24 @@ public class TrackGenerator : MonoBehaviour
     }
 }
 
+[Serializable]
+public class Biome
+{
+    public string name;
+    public float grassColour;
+    public float cliffColour;
+    public float waterEdgeColour;
+
+    public int numTrees;
+
+    public float powerA;
+    public float scaleA;
+    public float powerB;
+    public float scaleB;
+    public float powerC;
+    public float scaleC;
+}
+
 public enum TrackPeiceTags { HOLE, JUMP, OBSTACLE, BRIDGE, ANIMAL, LANDMARK, WIDE };
 
 [Serializable]
@@ -1161,7 +1172,9 @@ public class GeneratedTrackData
 
     public float waterHeight;
 
-    public void Serialize(List<List<int>> rotations, List<List<int>> prefabIndex, List<int[]> trackPath, List<List<float>> trackMap, List<GameObject> trees, List<int> treePrefabIds, float waterHeight)
+    public int biomeIndex;
+
+    public void Serialize(List<List<int>> rotations, List<List<int>> prefabIndex, List<int[]> trackPath, List<List<float>> trackMap, List<GameObject> trees, List<int> treePrefabIds, float waterHeight, int biomeIndex)
     {
 
         this.rotations = new List<IntList>();
@@ -1171,6 +1184,8 @@ public class GeneratedTrackData
         this.trees = new List<ObjectData>();
 
         this.waterHeight = waterHeight;
+
+        this.biomeIndex = biomeIndex;
 
         for (int x = 0; x < rotations.Count; ++x)
         {
@@ -1223,7 +1238,7 @@ public class GeneratedTrackData
         }
     }
 
-    public void Deserialize(out List<List<int>> rotations, out List<List<int>> prefabIndex, out List<int[]> trackPath, out List<List<float>> trackMap, out List<ObjectData> trees, out float waterHeight)
+    public void Deserialize(out List<List<int>> rotations, out List<List<int>> prefabIndex, out List<int[]> trackPath, out List<List<float>> trackMap, out List<ObjectData> trees, out float waterHeight, out int biomeIndex)
     {
 
         rotations = new List<List<int>>();
@@ -1232,6 +1247,7 @@ public class GeneratedTrackData
         trackMap = new List<List<float>>();
         waterHeight = this.waterHeight;
         trees = this.trees;
+        biomeIndex = this.biomeIndex;
 
         for (int x = 0; x < this.rotations.Count; ++x)
         {

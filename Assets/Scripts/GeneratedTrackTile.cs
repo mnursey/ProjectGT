@@ -28,7 +28,7 @@ public class GeneratedTrackTile : MonoBehaviour
 
     }
 
-    public void Setup(int x, int y, TrackGenerator tg)
+    public void Setup(int x, int y, float grassUVColourPercent, float cliffUVColourPercent, float waterEdgeUVColourPercent, TrackGenerator tg)
     {
         if(!createdTrigs)
         {
@@ -41,6 +41,10 @@ public class GeneratedTrackTile : MonoBehaviour
 
         offsetX = x;
         offsetY = y;
+
+        this.grassUVColourPercent = grassUVColourPercent;
+        this.cliffUVColourPercent = cliffUVColourPercent;
+        this.waterEdgeUVColourPercent = waterEdgeUVColourPercent;
 
         UpdateTerrainHeight();
         hasSetup = true;
