@@ -47,6 +47,8 @@ public class TrackGenerator : MonoBehaviour
     public int targetX = 10;
     public int targetY = 10;
 
+    public List<Point> targetXYPositions = new List<Point>();
+
     public float trackSpawnWidth = 10.0f;
 
     public string serializedTrack = "";
@@ -863,6 +865,10 @@ public class TrackGenerator : MonoBehaviour
         waterHeight = UnityEngine.Random.Range(waterHeightMin, waterHeightMax);
 
         currentBiomeIndex = r.Next(biomes.Count);
+
+        Point targetPos = targetXYPositions[r.Next(targetXYPositions.Count)];
+        targetX = targetPos.x;
+        targetY = targetPos.y;
 
         noiseMap = CreateNoiseMap();
         treeInstances = new List<GameObject>();

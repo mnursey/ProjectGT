@@ -297,6 +297,15 @@ MonoBehaviour:
   generateTrack: 1
   targetX: 13
   targetY: 13
+  targetXYPositions:
+  - x: 13
+    y: 13
+  - x: 1
+    y: 1
+  - x: 13
+    y: 1
+  - x: 1
+    y: 13
   trackSpawnWidth: 30
   serializedTrack: 
   noiseMapDensity: 3
