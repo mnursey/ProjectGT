@@ -64,6 +64,7 @@ public class RaceController : MonoBehaviour
     [Header("Audio")]
 
     public AudioSource fastestLaptimeSound;
+    public AudioSource lapCompletedSound;
     public AudioSource shortTone;
     public AudioSource longTone;
 
@@ -103,7 +104,7 @@ public class RaceController : MonoBehaviour
     public float idleTime = 5.0f;
 
     public float clientFastestLapTime = float.MaxValue;
-
+    public int clientCurrentLap = 0;
     public bool shownCompletedReward = false;
 
     private ConcurrentQueue<InputState> incomingInputStates = new ConcurrentQueue<InputState>();
@@ -210,6 +211,7 @@ public class RaceController : MonoBehaviour
         cameraController.targetObject = null;
         frame = 0;
         clientFastestLapTime = float.MaxValue;
+        clientCurrentLap = 0;
         cameraController.GetComponent<AudioListener>().enabled = true;
         raceControllerState = RaceControllerStateEnum.IDLE;
 
@@ -278,6 +280,22 @@ public class RaceController : MonoBehaviour
             if (pe.fastestLapTime < clientFastestLapTime)
             {
                 clientFastestLapTime = pe.fastestLapTime;
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    bool ClientCheckIfCompletedLap()
+    {
+        PlayerEntity pe = players.Find(x => x.networkID == networkID);
+
+        if (pe != null)
+        {
+            if (pe.lap > clientCurrentLap)
+            {
+                clientCurrentLap = pe.lap;
                 return true;
             }
         }
@@ -377,13 +395,23 @@ public class RaceController : MonoBehaviour
 
     void RewardForPersonalBestTime()
     {
-        if (ClientCheckIfBeatPrevRecord())
+        bool bestTime = ClientCheckIfBeatPrevRecord();
+        bool finishedLap = ClientCheckIfCompletedLap();
+
+        // If best time...
+        if (bestTime)
         {
             fastestLaptimeSound.Play();
 
             objectTitle.text = "Personal Best Lap";
             objectValue.text = String.Format("{0:0.0#}", clientFastestLapTime) + "s";
             objectiveAnimator.SetTrigger("Display");
+        }
+
+        // If we didn't get best time and we haven't completed...
+        if(!bestTime && finishedLap && !(clientCurrentLap > targetNumberOfLaps))
+        {
+            lapCompletedSound.Play();
         }
     }
 
@@ -880,7 +908,11 @@ public class RaceController : MonoBehaviour
             pe.finishedTime = -1.0f;
             pe.lapScore = 0.0f;
             pe.SetLapState(0, 0);
+            pe.lap = 0;
         }
+
+        clientFastestLapTime = float.MaxValue;
+        clientCurrentLap = 0;
 
         removedPlayers = new List<PlayerEntity>();
 
