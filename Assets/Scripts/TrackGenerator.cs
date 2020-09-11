@@ -165,9 +165,58 @@ public class TrackGenerator : MonoBehaviour
         trackY = Mathf.RoundToInt(y);
     }
 
+    public void TrackPosToNoiseMapPos(int x, int y, out int mapX, out int mapY)
+    {
+        Vector2 worldPos = new Vector2(trackSpawnWidth * x, trackSpawnWidth * y);
+
+        WorldPosToNoiseMapPos(worldPos.x, worldPos.y, out mapX, out mapY);
+    }
+
     public bool IsTrackTile(int x, int y)
     {
         return trackPeicePrefabs[prefabIndex[x][y]].type == TrackPeiceType.START || trackPeicePrefabs[prefabIndex[x][y]].type == TrackPeiceType.STRAIGHT || trackPeicePrefabs[prefabIndex[x][y]].type == TrackPeiceType.TURN || trackPeicePrefabs[prefabIndex[x][y]].type == TrackPeiceType.PIT || HasTag(trackPeicePrefabs[prefabIndex[x][y]], TrackPeiceTags.BRIDGE);
+    }
+
+    public bool IsNoiseMapBelowTile(int x, int y)
+    {
+        int mapX;
+        int mapY;
+
+        TrackPosToNoiseMapPos(x, y, out mapX, out mapY);
+
+        for (int xHat = -2; xHat <= 1; ++xHat)
+        {
+            for (int yHat = -2; yHat <= 1; ++yHat)
+            {
+                if(noiseMap[mapX + xHat][mapY + yHat] > trackTileHeight)
+                {
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
+
+    public bool IsNoiseMapBelowWater(int x, int y)
+    {
+        int mapX;
+        int mapY;
+
+        TrackPosToNoiseMapPos(x, y, out mapX, out mapY);
+
+        for (int xHat = -2; xHat <= 1; ++xHat)
+        {
+            for (int yHat = -2; yHat <= 1; ++yHat)
+            {
+                if (noiseMap[mapX + xHat][mapY + yHat] > waterHeight)
+                {
+                    return false;
+                }
+            }
+        }
+
+        return true;
     }
 
     void FlattenNoiseMap()
@@ -177,7 +226,7 @@ public class TrackGenerator : MonoBehaviour
             List<GameObject> c = new List<GameObject>();
             for (int y = 0; y < rotations[x].Count; ++y)
             {
-                if (IsTrackTile(x, y))
+                if (IsTrackTile(x, y) && !HasTag(trackPeicePrefabs[prefabIndex[x][y]], TrackPeiceTags.USE_TERRAIN))
                 {
                     Vector2 worldPos = new Vector2(trackSpawnWidth * x, trackSpawnWidth * y);
 
@@ -380,10 +429,11 @@ public class TrackGenerator : MonoBehaviour
             }
         }
 
-        // Add holes after jump
-        
+        // Add holes or walls after jump
         {
-            List<TrackPeice> pt = trackPeicePrefabs.FindAll(j => j.type == TrackPeiceType.STRAIGHT && IsHole(j));
+            List<TrackPeice> walls = trackPeicePrefabs.FindAll(j => j.type == TrackPeiceType.STRAIGHT && IsHole(j) && !HasTag(j, TrackPeiceTags.USE_TERRAIN));
+            List<TrackPeice> holes = trackPeicePrefabs.FindAll(j => j.type == TrackPeiceType.STRAIGHT && IsHole(j) && HasTag(j, TrackPeiceTags.USE_TERRAIN));
+
             for (int i = 0; i < path.Count - 1; ++i)
             {
                 TrackPeice currentPeice = trackPeicePrefabs[prefabIndex[path[i][0]][path[i][1]]];
@@ -399,16 +449,27 @@ public class TrackGenerator : MonoBehaviour
                     // postive chance -> make nextpeice a hole
                     if (c < holeChance)
                     {
-                        int ptIndex = r.Next(0, pt.Count);
-                        prefabIndex[path[i + 1][0]][path[i + 1][1]] = trackPeicePrefabs.FindIndex(j => j == pt[ptIndex]);
+                        // Check if terrain is under track height
+                        bool underTrackHeight = IsNoiseMapBelowTile(path[i + 1][0], path[i + 1][1]);
+
+                        if(underTrackHeight)
+                        {
+                            // Hole
+                            int ptIndex = r.Next(0, holes.Count);
+                            prefabIndex[path[i + 1][0]][path[i + 1][1]] = trackPeicePrefabs.FindIndex(j => j == holes[ptIndex]);
+                        } else
+                        {
+                            // Wall
+                            int ptIndex = r.Next(0, walls.Count);
+                            prefabIndex[path[i + 1][0]][path[i + 1][1]] = trackPeicePrefabs.FindIndex(j => j == walls[ptIndex]);
+                        }
                     }
                 }
             }
         }
 
 
-        /*
-        // Add water bridges on straights flanked by water
+        // Add water bridges on straights overwater
         {
             List<TrackPeice> pt = trackPeicePrefabs.FindAll(j => j.type == TrackPeiceType.WATER_NARROW && HasTag(j, TrackPeiceTags.BRIDGE));
             for (int i = 0; i < path.Count - 1; ++i)
@@ -418,44 +479,16 @@ public class TrackGenerator : MonoBehaviour
                 // if peice is straight && regular
                 if (currentPeice.type == TrackPeiceType.STRAIGHT && currentPeice.tags.Count == 0)
                 {
-                    // check if peice could of been water && if flanked by water...
-                    // gen water spot instead...
-                    if (biomeCosts[path[i][0]][path[i][1]] < waterRange)
-                    {
-                        int oldRot = rotations[path[i][0]][path[i][1]];
-                        worldType[path[i][0]][path[i][1]] = TrackPeiceType.WATER_NARROW;
-                        bool isWater = HandleWaterTile(path[i][0], path[i][1]);
-
-                        // Check if water is narrow...
-                        if (isWater && worldType[path[i][0]][path[i][1]] == TrackPeiceType.WATER_NARROW)
-                        {
-                            int ptIndex = r.Next(0, pt.Count);
-                            prefabIndex[path[i][0]][path[i][1]] = trackPeicePrefabs.FindIndex(j => j == pt[ptIndex]);
-
-                            // Update neighbour water tiles to account for new water tile.
-                            List<int[]> neighbours = GetNeighbours(new int[] { path[i][0], path[i][1] });
-
-                            foreach (int[] n in neighbours)
-                            {
-                                bool neighbourIsWater = HandleWaterTile(n[0], n[1]);
-
-                                if (neighbourIsWater)
-                                {
-                                    HandleTileInstancePicking(n[0], n[1]);
-                                }
-                            }
-
-                        }
-                        else
-                        {
-                            rotations[path[i][0]][path[i][1]] = oldRot;
-                            worldType[path[i][0]][path[i][1]] = TrackPeiceType.STRAIGHT;
-                        }
+                    // Check terrain is below water
+                    if (IsNoiseMapBelowWater(path[i][0], path[i][1]))
+                    {                        
+                        int ptIndex = r.Next(0, pt.Count);
+                        prefabIndex[path[i][0]][path[i][1]] = trackPeicePrefabs.FindIndex(j => j == pt[ptIndex]);
                     }
                 }
             }
         }
-        */
+        
 
         // Spawn potential trees
         for (int i = 0; i < biomes[currentBiomeIndex].numTrees; ++i)
@@ -1157,7 +1190,7 @@ public class Biome
     public float scaleC;
 }
 
-public enum TrackPeiceTags { HOLE, JUMP, OBSTACLE, BRIDGE, ANIMAL, LANDMARK, WIDE };
+public enum TrackPeiceTags { HOLE, JUMP, OBSTACLE, BRIDGE, ANIMAL, LANDMARK, WIDE, USE_TERRAIN };
 
 [Serializable]
 public class TrackPeice
