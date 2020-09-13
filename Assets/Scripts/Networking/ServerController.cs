@@ -156,7 +156,7 @@ public class ServerController : MonoBehaviour
         foreach (ServerConnection sc in clients.ToArray())
         {
             string s = NetworkingMessageTranslator.GenerateTrackDataMessage(rc.trackGenerator.serializedTrack, sc.clientID);
-            sc.BeginSend(s);
+            sc.BeginSend(s, true);
         }
     }
 
@@ -208,10 +208,10 @@ public class ServerController : MonoBehaviour
                             rc.CreatePlayer(newConnection.clientID, jr.carModel, jr.accountID, jr.accountType);
 
                             // Send Accept Connect msg
-                            newConnection.BeginSend(NetworkingMessageTranslator.GenerateServerJoinResponseMessage(new JoinRequestResponce(newConnection.clientID)), SendUserManagerState);
+                            newConnection.BeginSend(NetworkingMessageTranslator.GenerateServerJoinResponseMessage(new JoinRequestResponce(newConnection.clientID)), SendUserManagerState, false);
 
                             // Send Track data
-                            newConnection.BeginSend(NetworkingMessageTranslator.GenerateTrackDataMessage(rc.trackGenerator.serializedTrack, newConnection.clientID), SendUserManagerState);
+                            newConnection.BeginSend(NetworkingMessageTranslator.GenerateTrackDataMessage(rc.trackGenerator.serializedTrack, newConnection.clientID), true);
                         }
                         else
                         {
@@ -485,7 +485,8 @@ public class ServerConnection
     public int lastAcceptedMessage;
     public Socket socket;
     private int payloadIDTracker = 0;
-    private int payloadSize = 1000;
+    public int payloadSize = 1000;
+    public int dripDelay = 30;
 
     public ServerConnection(int clientID, EndPoint clientEndpoint, Socket socket)
     {
@@ -497,10 +498,15 @@ public class ServerConnection
 
     public void BeginSend(string msg)
     {
-        BeginSend(msg, null);
+        BeginSend(msg, false);
     }
 
-    public void BeginSend(string msg, OnSent onSent)
+    public void BeginSend(string msg, bool dripSend)
+    {
+        BeginSend(msg, null, dripSend);
+    }
+
+    public void BeginSend(string msg, OnSent onSent, bool dripSend)
     {
         List<NetworkingPayload> payloads = new List<NetworkingPayload>();
 
@@ -517,22 +523,49 @@ public class ServerConnection
 
         foreach (NetworkingPayload np in payloads)
         {
-            //Debug.Log(np.messageID + " " + np.fragment + " " + np.totalFragments);
-            MessageObject message = new MessageObject();
+            if(dripSend)
+            {
+                Task sendPayload = SendPayload(np, onSent, dripDelay * np.fragment);
+            } else
+            {
+                // Todo
+                // refactor this with SendPayload fnc
+                MessageObject message = new MessageObject();
 
-            if (np.fragment == 0)
-                message.onSent = onSent;
-            else
-                message.onSent = null;
+                if (np.fragment == 0)
+                    message.onSent = onSent;
+                else
+                    message.onSent = null;
 
-            string data = JsonUtility.ToJson(np);
+                string data = JsonUtility.ToJson(np);
 
-            message.buffer = Encoding.UTF8.GetBytes(data);
-            int messageBufferSize = Encoding.UTF8.GetByteCount(data);
+                message.buffer = Encoding.UTF8.GetBytes(data);
+                int messageBufferSize = Encoding.UTF8.GetByteCount(data);
 
-            socket.BeginSendTo(message.buffer, 0, messageBufferSize, SocketFlags.None, clientEndpoint, new AsyncCallback(EndSend), message);
+                socket.BeginSendTo(message.buffer, 0, messageBufferSize, SocketFlags.None, clientEndpoint, new AsyncCallback(EndSend), message);
+            }
         }
     }
+
+    async Task SendPayload(NetworkingPayload np, OnSent onSent, int msWait)
+    {
+        Task delay = Task.Delay(msWait);
+        await delay;
+
+        MessageObject message = new MessageObject();
+
+        if (np.fragment == 0)
+            message.onSent = onSent;
+        else
+            message.onSent = null;
+
+        string data = JsonUtility.ToJson(np);
+
+        message.buffer = Encoding.UTF8.GetBytes(data);
+        int messageBufferSize = Encoding.UTF8.GetByteCount(data);
+
+        socket.BeginSendTo(message.buffer, 0, messageBufferSize, SocketFlags.None, clientEndpoint, new AsyncCallback(EndSend), message);
+    } 
 
     public void EndSend(IAsyncResult ar)
     {
