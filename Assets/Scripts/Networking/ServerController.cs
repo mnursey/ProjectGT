@@ -208,7 +208,10 @@ public class ServerController : MonoBehaviour
                             rc.CreatePlayer(newConnection.clientID, jr.carModel, jr.accountID, jr.accountType);
 
                             // Send Accept Connect msg
-                            newConnection.BeginSend(NetworkingMessageTranslator.GenerateServerJoinResponseMessage(new JoinRequestResponce(newConnection.clientID, rc.trackGenerator.serializedTrack)), SendUserManagerState);
+                            newConnection.BeginSend(NetworkingMessageTranslator.GenerateServerJoinResponseMessage(new JoinRequestResponce(newConnection.clientID)), SendUserManagerState);
+
+                            // Send Track data
+                            newConnection.BeginSend(NetworkingMessageTranslator.GenerateTrackDataMessage(rc.trackGenerator.serializedTrack, newConnection.clientID), SendUserManagerState);
                         }
                         else
                         {
@@ -482,7 +485,7 @@ public class ServerConnection
     public int lastAcceptedMessage;
     public Socket socket;
     private int payloadIDTracker = 0;
-    private int payloadSize = 8000;
+    private int payloadSize = 1000;
 
     public ServerConnection(int clientID, EndPoint clientEndpoint, Socket socket)
     {

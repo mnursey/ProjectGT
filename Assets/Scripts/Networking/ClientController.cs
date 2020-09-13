@@ -366,15 +366,6 @@ public class ClientController : MonoBehaviour
                             // CONNECTED
                             UnityMainThreadDispatcher.Instance().Enqueue(() => onConnect?.Invoke(true));
                             state = ClientState.CONNECTED;
-
-                            UnityMainThreadDispatcher.Instance().Enqueue(() => {
-
-                                GeneratedTrackData gtd = NetworkingMessageTranslator.ParseGenerateTrackData(jrr.trackSerialized);
-
-                                rc.trackGenerator.LoadTrackData(gtd);
-
-                            });
-
                         }
                         else
                         {
@@ -494,22 +485,23 @@ public class ClientController : MonoBehaviour
 
                             break;
 
-                        case NetworkingMessageType.TRACK_DATA:
-
-                            UnityMainThreadDispatcher.Instance().Enqueue(() => {
-
-                                GeneratedTrackData gtd = NetworkingMessageTranslator.ParseGenerateTrackData(msg.content);
-
-                                rc.trackGenerator.LoadTrackData(gtd);
-
-                            });
-
-
-                            break;
-
                         default:
                             break;
                     }
+                }
+
+                if(msg.type == NetworkingMessageType.TRACK_DATA)
+                {
+                    // TODO
+                    // Check if we should load this trackdata...
+
+                    UnityMainThreadDispatcher.Instance().Enqueue(() => {
+
+                        GeneratedTrackData gtd = NetworkingMessageTranslator.ParseGenerateTrackData(msg.content);
+
+                        rc.trackGenerator.LoadTrackData(gtd);
+
+                    });
                 }
             }
         }

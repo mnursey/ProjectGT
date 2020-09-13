@@ -1766,14 +1766,12 @@ public class JoinRequestResponce
 {
     public int clientID;
     public string reason;
-    public string trackSerialized;
     public List<string> forwardIPs = new List<string>();
 
-    public JoinRequestResponce(int clientID, string trackSerialized)
+    public JoinRequestResponce(int clientID)
     {
         this.clientID = clientID;
         reason = "";
-        this.trackSerialized = trackSerialized;
     }
 
     public JoinRequestResponce(string reason)

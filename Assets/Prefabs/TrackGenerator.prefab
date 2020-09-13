@@ -331,7 +331,7 @@ MonoBehaviour:
     grassColour: 0.49
     cliffColour: 0.09
     waterEdgeColour: 0.18
-    numTrees: 30
+    numTrees: 50
     powerA: 30
     scaleA: 0.1
     powerB: 5
@@ -342,7 +342,7 @@ MonoBehaviour:
     grassColour: 0.55
     cliffColour: 0.09
     waterEdgeColour: 0.18
-    numTrees: 500
+    numTrees: 300
     powerA: 90
     scaleA: 0.1
     powerB: 20
