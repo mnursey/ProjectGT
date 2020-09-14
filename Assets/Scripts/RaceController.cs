@@ -921,6 +921,8 @@ public class RaceController : MonoBehaviour
         }
 
         clientFastestLapTime = float.MaxValue;
+
+        // Index for this starts at 1. You can't have 0 laps
         clientCurrentLap = 1;
 
         removedPlayers = new List<PlayerEntity>();
