@@ -60,8 +60,11 @@ public class ServerController : MonoBehaviour
             DisconnectAll();
             disconnectAll = false;
         }
+    }
 
-        if(serverActive)
+    void FixedUpdate()
+    {
+        if (serverActive)
         {
             HandleDripSend();
         }
