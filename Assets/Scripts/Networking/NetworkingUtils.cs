@@ -145,7 +145,14 @@ public static class NetworkingMessageTranslator
     public static string GenerateRequestPayloadData(int payloadID, int fragmentNumber, int clientID)
     {
         NetworkingMessage msg = new NetworkingMessage(NetworkingMessageType.REQUEST_PAYLOAD, clientID);
-        msg.content = ToJson(new RequestPayloadMessage(payloadID, fragmentNumber));
+        msg.content = ToJson(new PayloadInfo(payloadID, fragmentNumber));
+        return ToJson(msg);
+    }
+
+    public static string GenerateDripPayloadACK(int payloadID, int fragmentNumber, int clientID)
+    {
+        NetworkingMessage msg = new NetworkingMessage(NetworkingMessageType.DRIP_ACK, clientID);
+        msg.content = ToJson(new PayloadInfo(payloadID, fragmentNumber));
         return ToJson(msg);
     }
 
@@ -209,9 +216,9 @@ public static class NetworkingMessageTranslator
         return JsonUtility.FromJson<SelectedCarData>(json);
     }
 
-    public static RequestPayloadMessage ParsePayloadData(string json)
+    public static PayloadInfo ParsePayloadData(string json)
     {
-        return JsonUtility.FromJson<RequestPayloadMessage>(json);
+        return JsonUtility.FromJson<PayloadInfo>(json);
     }
 }
 
@@ -223,18 +230,20 @@ public class NetworkingPayload
     public int totalFragments = -1;
     public int messageID = -1;
     public string content = "";
+    public bool drip;
 
-    public NetworkingPayload(int fragment, int totalFragments, int messageID, string content)
+    public NetworkingPayload(int fragment, int totalFragments, int messageID, string content, bool drip)
     {
         this.fragment = fragment;
         this.totalFragments = totalFragments;
         this.messageID = messageID;
         this.content = content;
+        this.drip = drip;
     }
 }
 
 [Serializable]
-public enum NetworkingMessageType { CLIENT_JOIN, SERVER_JOIN_RESPONSE, DISCONNECT, PING, PING_RESPONSE, GAME_STATE, INPUT_STATE, USER_MANAGER_STATE, CAR_MODEL, TRACK_DATA, NEW_ACCOUNT, NEW_ACCOUNT_RESPONCE, LOGIN, LOGIN_RESPONCE, SAVE_SELECTED_CAR, GLOBAL_LEADERBOARD, REQUEST_PAYLOAD };
+public enum NetworkingMessageType { CLIENT_JOIN, SERVER_JOIN_RESPONSE, DISCONNECT, PING, PING_RESPONSE, GAME_STATE, INPUT_STATE, USER_MANAGER_STATE, CAR_MODEL, TRACK_DATA, NEW_ACCOUNT, NEW_ACCOUNT_RESPONCE, LOGIN, LOGIN_RESPONCE, SAVE_SELECTED_CAR, GLOBAL_LEADERBOARD, REQUEST_PAYLOAD, DRIP_ACK };
 
 [Serializable]
 public class NetworkingMessage
@@ -330,12 +339,12 @@ public class SelectedCarData
 // Make RequestPayloadMessage have a list of fragments instead of just one fragment
 
 [Serializable]
-public class RequestPayloadMessage
+public class PayloadInfo
 {
     public int payloadID;
     public int fragmentNumber;
 
-    public RequestPayloadMessage(int payloadID, int fragmentNumber)
+    public PayloadInfo(int payloadID, int fragmentNumber)
     {
         this.payloadID = payloadID;
         this.fragmentNumber = fragmentNumber;

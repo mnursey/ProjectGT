@@ -60,6 +60,11 @@ public class ServerController : MonoBehaviour
             DisconnectAll();
             disconnectAll = false;
         }
+
+        if(serverActive)
+        {
+            HandleDripSend();
+        }
     }
 
     void TestSend()
@@ -92,6 +97,18 @@ public class ServerController : MonoBehaviour
         socket.Bind(new IPEndPoint(IPAddress.Any, serverPort));
 
         BeginReceive();
+    }
+
+    public void HandleDripSend()
+    {
+        foreach (ServerConnection sc in clients)
+        {
+            if(sc.savedDripPayloads.Count > 0 && Time.time - sc.dripSentAtTime > sc.delayBeforeResendDrip)
+            {
+                sc.SendPayload(sc.savedDripPayloads[0], null);
+                sc.dripSentAtTime = Time.time;
+            }
+        }
     }
 
     public void SendToAll(string msg)
@@ -208,7 +225,7 @@ public class ServerController : MonoBehaviour
                             rc.CreatePlayer(newConnection.clientID, jr.carModel, jr.accountID, jr.accountType);
 
                             // Send Accept Connect msg
-                            newConnection.BeginSend(NetworkingMessageTranslator.GenerateServerJoinResponseMessage(new JoinRequestResponce(newConnection.clientID)), SendUserManagerState, false);
+                            newConnection.BeginSend(NetworkingMessageTranslator.GenerateServerJoinResponseMessage(new JoinRequestResponce(newConnection.clientID)), SendUserManagerState, true);
 
                             // Send Track data
                             newConnection.BeginSend(NetworkingMessageTranslator.GenerateTrackDataMessage(rc.trackGenerator.serializedTrack, newConnection.clientID), true);
@@ -299,10 +316,23 @@ public class ServerController : MonoBehaviour
 
                             case NetworkingMessageType.REQUEST_PAYLOAD:
 
-                                Debug.Log("Server received payload request");
+                                {
+                                    Debug.Log("Server received payload request");
 
-                                RequestPayloadMessage rpm = NetworkingMessageTranslator.ParsePayloadData(msg.content);
-                                serverConnection.SendLostPacket(rpm.payloadID, rpm.fragmentNumber);
+                                    PayloadInfo rpm = NetworkingMessageTranslator.ParsePayloadData(msg.content);
+                                    serverConnection.SendLostPacket(rpm.payloadID, rpm.fragmentNumber);
+                                }
+
+                                break;
+
+                            case NetworkingMessageType.DRIP_ACK:
+
+                                UnityMainThreadDispatcher.Instance().Enqueue(() => {
+
+                                    PayloadInfo rpm = NetworkingMessageTranslator.ParsePayloadData(msg.content);
+                                    serverConnection.ACKDrip(rpm.payloadID, rpm.fragmentNumber);
+
+                                });
 
                                 break;
 
@@ -495,10 +525,10 @@ public class ServerConnection
     public Socket socket;
     private int payloadIDTracker = 0;
     public int payloadSize = 1000;
-    public int dripDelay = 30;
 
-    List<NetworkingPayload> savedPayloads = new List<NetworkingPayload>();
-    int maxStoredPayloads = 300;
+    public List<NetworkingPayload> savedDripPayloads = new List<NetworkingPayload>();
+    public float delayBeforeResendDrip = 0.15f;
+    public float dripSentAtTime;
 
     public ServerConnection(int clientID, EndPoint clientEndpoint, Socket socket)
     {
@@ -528,7 +558,7 @@ public class ServerConnection
 
         for (int i = 0; i < numberOfFragments; ++i)
         {
-            NetworkingPayload np = new NetworkingPayload(i, numberOfFragments, payloadID, msg.Substring(i * payloadSize, Math.Min(payloadSize, bytesLeftToSend)));
+            NetworkingPayload np = new NetworkingPayload(i, numberOfFragments, payloadID, msg.Substring(i * payloadSize, Math.Min(payloadSize, bytesLeftToSend)), dripSend);
             payloads.Add(np);
             bytesLeftToSend -= payloadSize;
         }
@@ -537,43 +567,21 @@ public class ServerConnection
         {
             if(dripSend)
             {
-                Task sendPayload = SendPayload(np, onSent, dripDelay * np.fragment);
-
-                // Store packets incase client lost a packet
-
-                savedPayloads.Add(np);
-
-                if(savedPayloads.Count > maxStoredPayloads)
-                {
-                    savedPayloads.RemoveAt(0);
-                }
-
+                savedDripPayloads.Add(np);
             } else
             {
-                // Todo
-                // refactor this with SendPayload fnc
-                MessageObject message = new MessageObject();
-
-                if (np.fragment == 0)
-                    message.onSent = onSent;
-                else
-                    message.onSent = null;
-
-                string data = JsonUtility.ToJson(np);
-
-                message.buffer = Encoding.UTF8.GetBytes(data);
-                int messageBufferSize = Encoding.UTF8.GetByteCount(data);
-
-                socket.BeginSendTo(message.buffer, 0, messageBufferSize, SocketFlags.None, clientEndpoint, new AsyncCallback(EndSend), message);
+                SendPayload(np, onSent);
             }
+        }
+
+        if(dripSend)
+        {
+            onSent?.Invoke();
         }
     }
 
-    async Task SendPayload(NetworkingPayload np, OnSent onSent, int msWait)
+    public void SendPayload(NetworkingPayload np, OnSent onSent)
     {
-        Task delay = Task.Delay(msWait);
-        await delay;
-
         MessageObject message = new MessageObject();
 
         if (np.fragment == 0)
@@ -591,14 +599,25 @@ public class ServerConnection
 
     public void SendLostPacket(int payloadID, int fragmentNumber)
     {
-        NetworkingPayload np = savedPayloads.Find(x => x.messageID == payloadID && x.fragment == fragmentNumber);
+        NetworkingPayload np = savedDripPayloads.Find(x => x.messageID == payloadID && x.fragment == fragmentNumber);
 
         if(np != null)
         {
-            Task sendPayload = SendPayload(np, null, 0);
+            SendPayload(np, null);
         } else
         {
             Debug.LogWarning("Client request networking payload that does not exist or has been discarded... payloadID: " + payloadID + " fragmentNumber: " + fragmentNumber);
+        }
+    }
+
+    public void ACKDrip(int payloadID, int fragmentNumber)
+    {
+        NetworkingPayload np = savedDripPayloads.Find(x => x.messageID == payloadID && x.fragment == fragmentNumber);
+
+        if (np != null)
+        {
+            savedDripPayloads.Remove(np);
+            dripSentAtTime = 0.0f;
         }
     }
 

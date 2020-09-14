@@ -7,6 +7,7 @@ using System.Net.Sockets;
 using System.Threading;
 using System.Text;
 using System.Linq;
+using System.Collections.Concurrent;
 
 [Serializable]
 public enum ClientState { IDLE, CONNECTING, CONNECTED, DISCONNECTING, ERROR };
@@ -58,7 +59,6 @@ public class ClientController : MonoBehaviour
     public bool disconnect = false;
 
     public List<NetworkingPayload> incomingPayloads = new List<NetworkingPayload>();
-    public List<ClientPayloadTracker> payloadTrackers = new List<ClientPayloadTracker>();
 
     public float maxPayloadIdleTime = 2.1f;
 
@@ -104,11 +104,6 @@ public class ClientController : MonoBehaviour
 
             lastReceivedTime += Time.deltaTime;
         }
-
-        if(state == ClientState.CONNECTED || state == ClientState.CONNECTING)
-        {
-            HandleStoredIncomingPayloads();
-        }
     }
 
     void Reset()
@@ -135,7 +130,6 @@ public class ClientController : MonoBehaviour
             connectingTime = 0.0f;
 
         incomingPayloads = new List<NetworkingPayload>();
-        payloadTrackers = new List<ClientPayloadTracker>();
     }
 
     public void ConnectToServer(string username, ulong accountID, int accountType)
@@ -252,6 +246,11 @@ public class ClientController : MonoBehaviour
         BeginSend(NetworkingMessageTranslator.GenerateRequestPayloadData(payloadID, fragmentNumber, clientID));
     }
 
+    public void SendDripACK(int payloadID, int fragmentNumber)
+    {
+        BeginSend(NetworkingMessageTranslator.GenerateDripPayloadACK(payloadID, fragmentNumber, clientID));
+    }
+
     public void SendCarModel(int carModel)
     {
         BeginSend(NetworkingMessageTranslator.GenerateCarModelMessage(carModel, clientID));
@@ -303,55 +302,6 @@ public class ClientController : MonoBehaviour
         UnityMainThreadDispatcher.Instance().Enqueue(() => lastReceivedTime = 0.0f);
     }
 
-    void HandleStoredIncomingPayloads()
-    {
-        // Detect new incoming payloads and create payload tracker for them
-        foreach(NetworkingPayload np in incomingPayloads.ToList())
-        {
-            ClientPayloadTracker cpt = payloadTrackers.Find(x => x.payloadID == np.messageID);
-
-            if(cpt == null)
-            {
-                payloadTrackers.Add(new ClientPayloadTracker(Time.time, np.messageID, np.totalFragments));
-            }
-        }
-
-        // Todo 
-        // early remove for non important payloads...
-
-        // Check if we should send a request for payload data or remove payloads
-        foreach(ClientPayloadTracker pt in payloadTrackers.ToList())
-        {
-            if(Time.time - pt.receivedTime > maxPayloadIdleTime && pt.numberOfRequests <= 5)
-            {
-                // Find all missed msgs.. 
-                // Send Requests for msgs..
-                List<bool> hasMsg = new List<bool>(new bool[pt.numFragments]);
-
-                foreach(NetworkingPayload np in incomingPayloads.FindAll(x => x.messageID == pt.payloadID))
-                {
-                    hasMsg[np.fragment] = true;
-                }
-
-                for(int i = 0; i < hasMsg.Count; ++i)
-                {
-                    if(!hasMsg[i])
-                        SendPayloadRequest(pt.payloadID, i);
-                }
-
-                pt.receivedTime = Time.time;
-                pt.numberOfRequests++;
-            }
-
-            if(Time.time - pt.receivedTime > maxPayloadIdleTime && pt.numberOfRequests > 5)
-            {
-                // Remove payload tracker and remove all incoming payloads associated with it
-                payloadTrackers.Remove(pt);
-                incomingPayloads.RemoveAll(x => x.messageID == pt.payloadID);
-            }
-        }
-    }
-
     void EndReceive(IAsyncResult ar)
     {
         String data = String.Empty;
@@ -371,6 +321,11 @@ public class ClientController : MonoBehaviour
             bool messageComplete = false;
             string msgData = "";
 
+            if (payload.drip)
+            {
+                SendDripACK(payload.messageID, payload.fragment);
+            }
+
             List<NetworkingPayload> msgFragments = new List<NetworkingPayload>();
 
             msgFragments.Add(payload);
@@ -383,20 +338,26 @@ public class ClientController : MonoBehaviour
                 }
             }
 
-            msgFragments.Select(x => x.fragment).Distinct();
+            List<int> receivedFragments = msgFragments.Select(x => x.fragment).Distinct().ToList();
 
-            if (msgFragments.Count == payload.totalFragments)
+            if (receivedFragments.Count == payload.totalFragments)
             {
                 // Combined payloads
                 msgFragments.Sort((x, y) => x.fragment.CompareTo(y.fragment));
 
+                int prevFragmentID = -1;
                 foreach (NetworkingPayload np in msgFragments)
                 {
-                    msgData += np.content;
+                    if(prevFragmentID != np.fragment)
+                        msgData += np.content;
+
+                    prevFragmentID = np.fragment;
 
                     // Remove stored payloads
                     if (msgFragments.Contains(np))
+                    {
                         incomingPayloads.Remove(np);
+                    }
                 }
 
                 messageComplete = true;
@@ -558,7 +519,7 @@ public class ClientController : MonoBehaviour
                 {
                     // TODO
                     // Check if we should load this trackdata...
-
+                    Debug.Log("RECEIVED TRACK DATA!");
                     UnityMainThreadDispatcher.Instance().Enqueue(() => {
 
                         GeneratedTrackData gtd = NetworkingMessageTranslator.ParseGenerateTrackData(msg.content);
@@ -596,11 +557,13 @@ public class ClientPayloadTracker
     public int payloadID;
     public int numberOfRequests;
     public int numFragments;
+    public bool important;
 
-    public ClientPayloadTracker(float receivedTime, int payloadID, int numFragments)
+    public ClientPayloadTracker(float receivedTime, int payloadID, int numFragments, bool important)
     {
         this.receivedTime = receivedTime;
         this.payloadID = payloadID;
         this.numFragments = numFragments;
+        this.important = important;
     }
 }
