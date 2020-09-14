@@ -142,6 +142,13 @@ public static class NetworkingMessageTranslator
         return ToJson(msg);
     }
 
+    public static string GenerateRequestPayloadData(int payloadID, int fragmentNumber, int clientID)
+    {
+        NetworkingMessage msg = new NetworkingMessage(NetworkingMessageType.REQUEST_PAYLOAD, clientID);
+        msg.content = ToJson(new RequestPayloadMessage(payloadID, fragmentNumber));
+        return ToJson(msg);
+    }
+
     public static NetworkingMessage ParseMessage(string json)
     {
         return JsonUtility.FromJson<NetworkingMessage>(json);
@@ -201,6 +208,11 @@ public static class NetworkingMessageTranslator
     {
         return JsonUtility.FromJson<SelectedCarData>(json);
     }
+
+    public static RequestPayloadMessage ParsePayloadData(string json)
+    {
+        return JsonUtility.FromJson<RequestPayloadMessage>(json);
+    }
 }
 
 // Contains 1 or part of one networking message :)
@@ -222,7 +234,7 @@ public class NetworkingPayload
 }
 
 [Serializable]
-public enum NetworkingMessageType { CLIENT_JOIN, SERVER_JOIN_RESPONSE, DISCONNECT, PING, PING_RESPONSE, GAME_STATE, INPUT_STATE, USER_MANAGER_STATE, CAR_MODEL, TRACK_DATA, NEW_ACCOUNT, NEW_ACCOUNT_RESPONCE, LOGIN, LOGIN_RESPONCE, SAVE_SELECTED_CAR, GLOBAL_LEADERBOARD };
+public enum NetworkingMessageType { CLIENT_JOIN, SERVER_JOIN_RESPONSE, DISCONNECT, PING, PING_RESPONSE, GAME_STATE, INPUT_STATE, USER_MANAGER_STATE, CAR_MODEL, TRACK_DATA, NEW_ACCOUNT, NEW_ACCOUNT_RESPONCE, LOGIN, LOGIN_RESPONCE, SAVE_SELECTED_CAR, GLOBAL_LEADERBOARD, REQUEST_PAYLOAD };
 
 [Serializable]
 public class NetworkingMessage
@@ -311,6 +323,22 @@ public class SelectedCarData
         this.accountID = accountID;
         this.accountType = accountType;
         this.selectedCarID = selectedCarID;
+    }
+}
+
+// Todo
+// Make RequestPayloadMessage have a list of fragments instead of just one fragment
+
+[Serializable]
+public class RequestPayloadMessage
+{
+    public int payloadID;
+    public int fragmentNumber;
+
+    public RequestPayloadMessage(int payloadID, int fragmentNumber)
+    {
+        this.payloadID = payloadID;
+        this.fragmentNumber = fragmentNumber;
     }
 }
 

@@ -6,6 +6,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 using System.Text;
+using System.Linq;
 
 [Serializable]
 public enum ClientState { IDLE, CONNECTING, CONNECTED, DISCONNECTING, ERROR };
@@ -57,6 +58,9 @@ public class ClientController : MonoBehaviour
     public bool disconnect = false;
 
     public List<NetworkingPayload> incomingPayloads = new List<NetworkingPayload>();
+    public List<ClientPayloadTracker> payloadTrackers = new List<ClientPayloadTracker>();
+
+    public float maxPayloadIdleTime = 2.1f;
 
     void Start()
     {
@@ -100,6 +104,11 @@ public class ClientController : MonoBehaviour
 
             lastReceivedTime += Time.deltaTime;
         }
+
+        if(state == ClientState.CONNECTED || state == ClientState.CONNECTING)
+        {
+            HandleStoredIncomingPayloads();
+        }
     }
 
     void Reset()
@@ -126,6 +135,7 @@ public class ClientController : MonoBehaviour
             connectingTime = 0.0f;
 
         incomingPayloads = new List<NetworkingPayload>();
+        payloadTrackers = new List<ClientPayloadTracker>();
     }
 
     public void ConnectToServer(string username, ulong accountID, int accountType)
@@ -237,6 +247,11 @@ public class ClientController : MonoBehaviour
         BeginSend(NetworkingMessageTranslator.GenerateInputMessage(inputState, clientID));
     }
 
+    public void SendPayloadRequest(int payloadID, int fragmentNumber)
+    {
+        BeginSend(NetworkingMessageTranslator.GenerateRequestPayloadData(payloadID, fragmentNumber, clientID));
+    }
+
     public void SendCarModel(int carModel)
     {
         BeginSend(NetworkingMessageTranslator.GenerateCarModelMessage(carModel, clientID));
@@ -288,6 +303,55 @@ public class ClientController : MonoBehaviour
         UnityMainThreadDispatcher.Instance().Enqueue(() => lastReceivedTime = 0.0f);
     }
 
+    void HandleStoredIncomingPayloads()
+    {
+        // Detect new incoming payloads and create payload tracker for them
+        foreach(NetworkingPayload np in incomingPayloads.ToList())
+        {
+            ClientPayloadTracker cpt = payloadTrackers.Find(x => x.payloadID == np.messageID);
+
+            if(cpt == null)
+            {
+                payloadTrackers.Add(new ClientPayloadTracker(Time.time, np.messageID, np.totalFragments));
+            }
+        }
+
+        // Todo 
+        // early remove for non important payloads...
+
+        // Check if we should send a request for payload data or remove payloads
+        foreach(ClientPayloadTracker pt in payloadTrackers.ToList())
+        {
+            if(Time.time - pt.receivedTime > maxPayloadIdleTime && pt.numberOfRequests <= 5)
+            {
+                // Find all missed msgs.. 
+                // Send Requests for msgs..
+                List<bool> hasMsg = new List<bool>(new bool[pt.numFragments]);
+
+                foreach(NetworkingPayload np in incomingPayloads.FindAll(x => x.messageID == pt.payloadID))
+                {
+                    hasMsg[np.fragment] = true;
+                }
+
+                for(int i = 0; i < hasMsg.Count; ++i)
+                {
+                    if(!hasMsg[i])
+                        SendPayloadRequest(pt.payloadID, i);
+                }
+
+                pt.receivedTime = Time.time;
+                pt.numberOfRequests++;
+            }
+
+            if(Time.time - pt.receivedTime > maxPayloadIdleTime && pt.numberOfRequests > 5)
+            {
+                // Remove payload tracker and remove all incoming payloads associated with it
+                payloadTrackers.Remove(pt);
+                incomingPayloads.RemoveAll(x => x.messageID == pt.payloadID);
+            }
+        }
+    }
+
     void EndReceive(IAsyncResult ar)
     {
         String data = String.Empty;
@@ -319,20 +383,19 @@ public class ClientController : MonoBehaviour
                 }
             }
 
-            if(msgFragments.Count == payload.totalFragments)
+            msgFragments.Select(x => x.fragment).Distinct();
+
+            if (msgFragments.Count == payload.totalFragments)
             {
                 // Combined payloads
                 msgFragments.Sort((x, y) => x.fragment.CompareTo(y.fragment));
 
-                foreach(NetworkingPayload np in msgFragments)
-                {
-                    msgData += np.content;
-                }
-
-                // Remove stored payloads
                 foreach (NetworkingPayload np in msgFragments)
                 {
-                    if(msgFragments.Contains(np))
+                    msgData += np.content;
+
+                    // Remove stored payloads
+                    if (msgFragments.Contains(np))
                         incomingPayloads.Remove(np);
                 }
 
@@ -340,7 +403,8 @@ public class ClientController : MonoBehaviour
             } else
             {
                 // store payload
-                incomingPayloads.Add(payload);
+                if(incomingPayloads.Find(x => x.messageID == payload.messageID && x.fragment == payload.fragment) == null)
+                    incomingPayloads.Add(payload);
             }
 
             //Debug.Log("Client Received:" + data + " From " + receiveObject.sender.ToString());
@@ -523,5 +587,20 @@ public class ClientController : MonoBehaviour
     {
         Close();
         Reset();
+    }
+}
+
+public class ClientPayloadTracker
+{
+    public float receivedTime;
+    public int payloadID;
+    public int numberOfRequests;
+    public int numFragments;
+
+    public ClientPayloadTracker(float receivedTime, int payloadID, int numFragments)
+    {
+        this.receivedTime = receivedTime;
+        this.payloadID = payloadID;
+        this.numFragments = numFragments;
     }
 }

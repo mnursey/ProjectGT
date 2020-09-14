@@ -297,6 +297,15 @@ public class ServerController : MonoBehaviour
 
                                 break;
 
+                            case NetworkingMessageType.REQUEST_PAYLOAD:
+
+                                Debug.Log("Server received payload request");
+
+                                RequestPayloadMessage rpm = NetworkingMessageTranslator.ParsePayloadData(msg.content);
+                                serverConnection.SendLostPacket(rpm.payloadID, rpm.fragmentNumber);
+
+                                break;
+
                             default:
                                 break;
                         }
@@ -488,6 +497,9 @@ public class ServerConnection
     public int payloadSize = 1000;
     public int dripDelay = 30;
 
+    List<NetworkingPayload> savedPayloads = new List<NetworkingPayload>();
+    int maxStoredPayloads = 300;
+
     public ServerConnection(int clientID, EndPoint clientEndpoint, Socket socket)
     {
         this.clientID = clientID;
@@ -526,6 +538,16 @@ public class ServerConnection
             if(dripSend)
             {
                 Task sendPayload = SendPayload(np, onSent, dripDelay * np.fragment);
+
+                // Store packets incase client lost a packet
+
+                savedPayloads.Add(np);
+
+                if(savedPayloads.Count > maxStoredPayloads)
+                {
+                    savedPayloads.RemoveAt(0);
+                }
+
             } else
             {
                 // Todo
@@ -565,7 +587,20 @@ public class ServerConnection
         int messageBufferSize = Encoding.UTF8.GetByteCount(data);
 
         socket.BeginSendTo(message.buffer, 0, messageBufferSize, SocketFlags.None, clientEndpoint, new AsyncCallback(EndSend), message);
-    } 
+    }
+
+    public void SendLostPacket(int payloadID, int fragmentNumber)
+    {
+        NetworkingPayload np = savedPayloads.Find(x => x.messageID == payloadID && x.fragment == fragmentNumber);
+
+        if(np != null)
+        {
+            Task sendPayload = SendPayload(np, null, 0);
+        } else
+        {
+            Debug.LogWarning("Client request networking payload that does not exist or has been discarded... payloadID: " + payloadID + " fragmentNumber: " + fragmentNumber);
+        }
+    }
 
     public void EndSend(IAsyncResult ar)
     {
