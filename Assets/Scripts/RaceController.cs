@@ -78,7 +78,8 @@ public class RaceController : MonoBehaviour
     public RaceModeState raceModeState = RaceModeState.PRERACE;
     public RaceModeState prevRaceModeState = RaceModeState.PRERACE;
 
-    public int targetNumberOfLaps = 0;
+    // Index for this starts at 1. You can't have 0 laps
+    public int targetNumberOfLaps = 1;
 
     public float maxRaceTimer = 60f * 5;
     public float raceTimer = 0f;
@@ -104,7 +105,9 @@ public class RaceController : MonoBehaviour
     public float idleTime = 5.0f;
 
     public float clientFastestLapTime = float.MaxValue;
-    public int clientCurrentLap = 0;
+
+    // Index for this starts at 1. You can't have 0 laps
+    public int clientCurrentLap = 1;
     public bool shownCompletedReward = false;
 
     private ConcurrentQueue<InputState> incomingInputStates = new ConcurrentQueue<InputState>();
@@ -204,14 +207,18 @@ public class RaceController : MonoBehaviour
 
     public void Reset()
     {
-        targetNumberOfLaps = 0;
+
+        // Index for this starts at 1. You can't have 0 laps
+        targetNumberOfLaps = 1;
         networkID = -1;
         players = new List<PlayerEntity>();
         incomingGameState = new GameState();
         cameraController.targetObject = null;
         frame = 0;
         clientFastestLapTime = float.MaxValue;
-        clientCurrentLap = 0;
+
+        // Index for this starts at 1. You can't have 0 laps
+        clientCurrentLap = 1;
         cameraController.GetComponent<AudioListener>().enabled = true;
         raceControllerState = RaceControllerStateEnum.IDLE;
 
@@ -908,11 +915,13 @@ public class RaceController : MonoBehaviour
             pe.finishedTime = -1.0f;
             pe.lapScore = 0.0f;
             pe.SetLapState(0, 0);
-            pe.lap = 0;
+
+            // Index for this starts at 1. You can't have 0 laps
+            pe.lap = 1;
         }
 
         clientFastestLapTime = float.MaxValue;
-        clientCurrentLap = 0;
+        clientCurrentLap = 1;
 
         removedPlayers = new List<PlayerEntity>();
 
@@ -1574,7 +1583,9 @@ public class PlayerEntity
     public int carID = -1;
     public int carModel = 0;
     public bool ready = false;
-    public int lap = 0;
+
+    // Index for this starts at 1. You can't have 0 laps
+    public int lap = 1;
     public int checkpoint = 0;
     public int frame;
 
@@ -1647,7 +1658,8 @@ public class RaceControllerState
 
     public RaceModeState raceModeState = RaceModeState.PRERACE;
 
-    public int targetNumberOfLaps = 0;
+    // Index for this starts at 1. You can't have 0 laps
+    public int targetNumberOfLaps = 1;
 
     public float maxRaceTimer = 60f * 5;
     public float raceTimer = 0f;
