@@ -122,7 +122,8 @@ public class LeaderboardManager : MonoBehaviour
 
             string fastestLapTimeText = String.Format("{0:0.0#}", pe.fastestLapTime) + "s";
 
-            if (pe.lap  == 0)
+            // Lap index starts at one. So when a player loads in, it will start at 1
+            if (pe.lap == 1)
             {
                 fastestLapTimeText = "-";
             }
