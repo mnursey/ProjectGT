@@ -20,10 +20,16 @@ public class AutoFadeUIText : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        float d = Vector3.Distance(c.transform.position, transform.position);
+        if(c != null)
+        {
+            float d = Vector3.Distance(c.transform.position, transform.position);
 
-        float p = (Mathf.Clamp(d , fadeCloseDistance, fadeFarDistance) - fadeCloseDistance) / (fadeFarDistance - fadeCloseDistance);
+            float p = (Mathf.Clamp(d, fadeCloseDistance, fadeFarDistance) - fadeCloseDistance) / (fadeFarDistance - fadeCloseDistance);
 
-        ui.alpha = Mathf.Lerp(0.0f, 1.0f, p);
+            ui.alpha = Mathf.Lerp(0.0f, 1.0f, p);
+        } else
+        {
+            gameObject.SetActive(false);
+        }
     }
 }

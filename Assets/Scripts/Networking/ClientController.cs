@@ -8,6 +8,7 @@ using System.Threading;
 using System.Text;
 using System.Linq;
 using System.Collections.Concurrent;
+using Valve.Sockets;
 
 [Serializable]
 public enum ClientState { IDLE, CONNECTING, CONNECTED, DISCONNECTING, ERROR };
@@ -64,7 +65,7 @@ public class ClientController : MonoBehaviour
 
     void Start()
     {
-        
+
     }
 
     // Update is called once per frame

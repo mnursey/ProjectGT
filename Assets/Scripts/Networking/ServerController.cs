@@ -9,6 +9,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Data.SqlClient;
 using System.Data;
+using Valve.Sockets;
 
 public class ServerController : MonoBehaviour
 {
@@ -34,10 +35,33 @@ public class ServerController : MonoBehaviour
 
     public DatabaseConnector db;
 
+    DebugCallback debug = (type, message) => {
+        Debug.Log("Networking Debug - Type: " + type + ", Message: " + message);
+    };
+
     // Start is called before the first frame update
     void Start()
     {
         Debug.Log(Application.persistentDataPath);
+
+        /*
+        Library.Initialize();
+
+        Debug.Log("Initialized ValveSockets");
+
+        NetworkingUtils utils = new NetworkingUtils();
+        utils.SetDebugCallback(DebugType.Everything, debug);
+
+        NetworkingSockets server = new NetworkingSockets();
+
+        Address address = new Address();
+        address.SetAddress("::0", (ushort)serverPort);
+
+        server.CreateListenSocket(ref address);
+
+
+        Debug.Log("Deinitialized ValveSockets");
+        */
     }
 
     // Update is called once per frame
@@ -368,7 +392,7 @@ public class ServerController : MonoBehaviour
 
                             Debug.Log("Server creating new local account");
 
-                            Parallel.Invoke(() =>
+                            Task.Run(() =>
                             {
                                 db.AddAccount(newAccountID, 1, UsernameGenerator.GenerateUsername());
                                 newConnection.BeginSend(NetworkingMessageTranslator.GenerateNewAccountMessageResponce(new NewAccountMsg(newAccountID, 1)));
@@ -381,7 +405,7 @@ public class ServerController : MonoBehaviour
 
                             NewAccountMsg newAccountMsg = NetworkingMessageTranslator.ParseNewAccountMsg(msg.content);
 
-                            Parallel.Invoke(() =>
+                            Task.Run(() =>
                             {
                                 Debug.Log("Server logging in user");
 
@@ -431,7 +455,7 @@ public class ServerController : MonoBehaviour
 
                             SelectedCarData scd = NetworkingMessageTranslator.ParseSelectedCarData(msg.content);
 
-                            Parallel.Invoke(() =>
+                            Task.Run(() =>
                             {
                                 Debug.Log("Updated selected car");
 
@@ -447,7 +471,7 @@ public class ServerController : MonoBehaviour
                         {
                             ServerConnection newConnection = new ServerConnection(GetNewClientID(), receiveObject.sender, socket);
 
-                            Parallel.Invoke(() =>
+                            Task.Run(() =>
                             {
                                 // Get account
                                 DataSet ds = db.GetUsersOrderedByScore(0, 15);

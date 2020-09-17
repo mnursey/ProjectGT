@@ -20,6 +20,9 @@ public class Billboard : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        transform.LookAt(c.transform); 
+        if (c != null)
+            transform.LookAt(c.transform);
+        else
+            gameObject.SetActive(false);
     }
 }

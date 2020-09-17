@@ -35667,11 +35667,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9f40f0a9c396b824293767681d0f98cf, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  version: 0.09
+  version: 1.0
   address: 
   clientID: -1
-  serverIP: 192.168.1.160
-  serverport: 10069
+  serverIP: 192.168.1.169
+  serverport: 10070
   state: 0
   lastReceivedTime: 0
   lastSentTime: 0
@@ -41621,7 +41621,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &2011691402
 MonoBehaviour:
   m_ObjectHideFlags: 0
