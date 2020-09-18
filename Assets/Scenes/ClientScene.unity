@@ -35668,22 +35668,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   version: 1.0
-  address: 
-  clientID: -1
-  serverIP: 192.168.1.169
-  serverport: 10070
-  state: 0
-  lastReceivedTime: 0
-  lastSentTime: 0
-  lastAcceptedMessage: 0
+  serverIP: 192.168.1.160
+  serverport: 10069
+  connection: 0
   rc: {fileID: 1893463311}
-  forwardIPs: []
-  connectionServerIPIndex: 0
-  maxConnectingTime: 5
-  connectingTime: 0
-  disconnect: 0
-  incomingPayloads: []
-  maxPayloadIdleTime: 5
+  connected: 0
 --- !u!4 &1639248995
 Transform:
   m_ObjectHideFlags: 0
@@ -39921,7 +39910,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3a6210d8c4a052e4cb9a3d0abd5d1ce0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  networkID: -1
+  networkID: 4294967295
   em: {fileID: 2083604270}
   um: {fileID: 1893463313}
   cameraController: {fileID: 946832230}

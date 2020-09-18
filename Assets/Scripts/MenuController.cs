@@ -131,7 +131,7 @@ public class MenuController : MonoBehaviour
         {
             if(rc != null)
             {
-                if(rc.players != null && rc.networkID > -1)
+                if(rc.players != null && rc.networkID > 0)
                 {
                     lm.UpdateLeaderboard(rc.GetPlayersByPosition(), rc.um);
                 }
@@ -301,7 +301,7 @@ public class MenuController : MonoBehaviour
 
         rc.Reset();
 
-        cc.ConnectToServer(username, cam.accountData.accountID, cam.accountData.accountType, OnConnection, OnDisconnect, OnReject);
+        cc.ConnectToServer(username, cam.accountData.accountID, cam.accountData.accountType, OnConnection, OnDisconnect, OnReject, null, null, null);
 
         gameMenuPlay.text = gameMenuPlaySpawnText;
 

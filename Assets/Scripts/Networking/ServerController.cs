@@ -10,669 +10,437 @@ using System.Threading.Tasks;
 using System.Data.SqlClient;
 using System.Data;
 using Valve.Sockets;
+using AOT;
+using System.Linq;
+
+public enum DisconnectionReason { NONE, ERROR, SERVER_CLOSED, SERVER_FULL, KICKED };
 
 public class ServerController : MonoBehaviour
 {
-    public string version = "0.01";
-    public bool startServer = false;
-    public int serverPort = 10069;
-    Socket socket;
-    SocketFlags socketFlags = SocketFlags.None;
-    bool serverActive = false;
+    public string version = "0.1";
+    public ushort port = 10069;
+
+    private StatusCallback status;
+    private NetworkingSockets server;
+    NetworkingUtils utils;
+    private uint listenSocket;
+
+    //private uint connectedPollGroup;
+
+    public List<UInt32> connectedClients = new List<UInt32>();
+
     public bool acceptingClients = true;
-
-    public bool testSend = false;
-
-    public List<ServerConnection> clients = new List<ServerConnection>();
-    private int clientIDTracker = 0;
+    public int maxConnections = 100;
+    public int maxPlayers = 20;
 
     public RaceController rc;
-
-    public int maxPlayers = 20;
-    public bool disconnectAll = false;
-
-    public List<string> forwardIPs = new List<string>();
-
     public DatabaseConnector db;
+
+    public static ServerController Instance;
+
+    const int maxMessages = 40;
+    Valve.Sockets.NetworkingMessage[] netMessages = new Valve.Sockets.NetworkingMessage[maxMessages];
 
     DebugCallback debug = (type, message) => {
         Debug.Log("Networking Debug - Type: " + type + ", Message: " + message);
     };
 
-    // Start is called before the first frame update
-    void Start()
+    void Awake()
     {
-        Debug.Log(Application.persistentDataPath);
-
-        /*
         Library.Initialize();
 
         Debug.Log("Initialized ValveSockets");
-
-        NetworkingUtils utils = new NetworkingUtils();
-        utils.SetDebugCallback(DebugType.Everything, debug);
-
-        NetworkingSockets server = new NetworkingSockets();
-
-        Address address = new Address();
-        address.SetAddress("::0", (ushort)serverPort);
-
-        server.CreateListenSocket(ref address);
-
-
-        Debug.Log("Deinitialized ValveSockets");
-        */
     }
 
-    // Update is called once per frame
-    void Update()
+    void Start()
     {
-        if(startServer)
-        {
-            StartServer();
-            startServer = false;
-        }
-
-        if(testSend)
-        {
-            TestSend();
-            testSend = false;
-        }
-
-        if(disconnectAll)
-        {
-            DisconnectAll();
-            disconnectAll = false;
-        }
-    }
-
-    void FixedUpdate()
-    {
-        if (serverActive)
-        {
-            HandleDripSend();
-        }
-    }
-
-    void TestSend()
-    {
-        Socket sock = new Socket(AddressFamily.InterNetwork, SocketType.Dgram,ProtocolType.Udp);
-
-        IPAddress serverAddr = IPAddress.Parse("192.168.1.100");
-
-        IPEndPoint endPoint = new IPEndPoint(serverAddr, serverPort);
-
-        string text = "Test UDP Message!";
-        byte[] send_buffer = Encoding.UTF8.GetBytes(text);
-
-        sock.SendTo(send_buffer, endPoint);
-
-        Debug.Log("Test Message Sent");
+        Instance = this;
+        StartServer();
     }
 
     void StartServer()
     {
         Debug.Log("Starting server...");
 
-        serverActive = true;
+        utils = new NetworkingUtils();
+        utils.SetDebugCallback(DebugType.Everything, debug);
 
-        clients = new List<ServerConnection>();
-        clientIDTracker = 0;
+        server = new NetworkingSockets();
 
-        socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
-        //socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
-        socket.Bind(new IPEndPoint(IPAddress.Any, serverPort));
+        Address address = new Address();
+        address.SetAddress("::0", port);
 
-        BeginReceive();
+        listenSocket = server.CreateListenSocket(address);
+
+        //connectedPollGroup = server.CreatePollGroup();
+
+        status = OnServerStatusUpdate;
     }
 
-    public void HandleDripSend()
+    [MonoPInvokeCallback(typeof(StatusCallback))]
+    static void OnServerStatusUpdate(StatusInfo info, System.IntPtr context)
     {
-        foreach (ServerConnection sc in clients)
+        Debug.Log("Server Status: " + info.ToString());
+        switch(info.connectionInfo.state)
         {
-            if(sc.savedDripPayloads.Count > 0 && Time.time - sc.dripSentAtTime > sc.delayBeforeResendDrip)
-            {
-                sc.SendPayload(sc.savedDripPayloads[0], null);
-                sc.dripSentAtTime = Time.time;
-            }
-        }
-    }
+            case Valve.Sockets.ConnectionState.None:
+                break;
 
-    public void SendToAll(string msg)
-    {
-        foreach(ServerConnection sc in clients)
-        {
-            sc.BeginSend(msg);
-        }
-    }
+            case Valve.Sockets.ConnectionState.Connecting:
 
-    void DisconnectAll()
-    {
-        foreach (ServerConnection sc in clients.ToArray())
-        {
-            SendDisconnect(sc.clientID);
-        }
-    }
-
-    public void SendDisconnect(int clientID)
-    {
-        ServerConnection sc = clients.Find(x => x.clientID == clientID);
-
-        if (sc != null)
-        {
-            try {
-                string s = NetworkingMessageTranslator.GenerateDisconnectMessage(clientID);
-                sc.BeginSend(s);
-            } catch(Exception ex)
-            {
-                Debug.Log("Error while sending disconnect msg... " + ex.Message);
-            }
-
-            clients.Remove(sc);
-        }
-
-        if(rc.players.Exists(x => x.networkID == clientID))
-        {
-            rc.QueueRemovePlayer(clientID);
-        }
-    }
-
-    public void SendGameState(GameState gameState)
-    {
-        foreach (ServerConnection sc in clients.ToArray())
-        {
-            string s = NetworkingMessageTranslator.GenerateGameStateMessage(gameState, sc.clientID);
-            sc.BeginSend(s);
-        }
-    }
-
-    public void SendUserManagerState()
-    {
-        foreach (ServerConnection sc in clients.ToArray())
-        {
-            string s = NetworkingMessageTranslator.GenerateUserManagerStateMessage(rc.um.GetState(), sc.clientID);
-            sc.BeginSend(s);
-        }
-    }
-
-    public void SendTrackData()
-    {
-        foreach (ServerConnection sc in clients.ToArray())
-        {
-            string s = NetworkingMessageTranslator.GenerateTrackDataMessage(rc.trackGenerator.serializedTrack, sc.clientID);
-            sc.BeginSend(s, true);
-        }
-    }
-
-    void BeginReceive()
-    {
-        MessageObject receiveObject = new MessageObject();
-        receiveObject.sender = new IPEndPoint(IPAddress.Any, 0);
-        socket.BeginReceiveFrom(receiveObject.buffer, 0, receiveObject.buffer.Length, 0, ref receiveObject.sender, new AsyncCallback(EndReceive), receiveObject);
-    }
-
-    void EndReceive(IAsyncResult ar)
-    {
-        try {
-            String data = String.Empty;
-
-            MessageObject receiveObject = (MessageObject)ar.AsyncState;
-
-            int bytesRead = socket.EndReceiveFrom(ar, ref receiveObject.sender);
-
-            if (bytesRead > 0)
-            {
-                data = Encoding.UTF8.GetString(receiveObject.buffer, 0, bytesRead);
-                //Debug.Log("Server Received:" + data + " From " + receiveObject.sender.ToString());
-
-                NetworkingMessage msg = NetworkingMessageTranslator.ParseMessage(data);
-
-                int clientID = msg.clientID;
-
-                // New clients
-                if (msg.type == NetworkingMessageType.CLIENT_JOIN)
+                if(Instance.acceptingClients && Instance.connectedClients.Count < Instance.maxConnections)
                 {
-                    ServerConnection newConnection = new ServerConnection(GetNewClientID(), receiveObject.sender, socket);
-                    Debug.Log("Join request");
-                    if (AcceptingNewClients())
+                    Result r = Instance.server.AcceptConnection(info.connection);
+                    Debug.Log("Server Accept connection result " + r.ToString());
+                    //server.SetConnectionPollGroup(connectedPollGroup, info.connection);
+                    Instance.connectedClients.Add(info.connection);
+                } else
+                {
+                    Instance.server.CloseConnection(info.connection, (int)DisconnectionReason.SERVER_FULL, "Server full.", false);
+                }
+
+                break;
+
+            case Valve.Sockets.ConnectionState.Connected:
+                Debug.Log(String.Format("Client connected - ID: {0}, IP: {1}", info.connection, info.connectionInfo.address.GetIP()));
+                break;
+
+            case Valve.Sockets.ConnectionState.ClosedByPeer:
+            case Valve.Sockets.ConnectionState.ProblemDetectedLocally:
+
+                string closeDebug = "";
+                DisconnectionReason reason = 0;
+
+                if(info.connectionInfo.state == Valve.Sockets.ConnectionState.ProblemDetectedLocally)
+                {
+                    closeDebug = "Problem detected locally.";
+                    reason = DisconnectionReason.ERROR;
+                } else
+                {
+                    closeDebug = "Closed by peer.";
+                    reason = DisconnectionReason.NONE;
+                }
+
+                Instance.RemoveClient(info.connection, reason, closeDebug);
+                Debug.Log(String.Format("Client disconnected from server - ID: {0}, IP: {1}", info.connection, info.connectionInfo.address.GetIP()));
+                break;
+        }
+    }
+
+    void OnMessage(ref Valve.Sockets.NetworkingMessage netMessage)
+    {
+        Debug.Log(String.Format("Message received server - ID: {0}, Channel ID: {1}, Data length: {2}", netMessage.connection, netMessage.channel, netMessage.length));
+
+        byte[] messageDataBuffer = new byte[netMessage.length];
+
+        netMessage.CopyTo(messageDataBuffer);
+        netMessage.Destroy();
+
+        string result = Encoding.ASCII.GetString(messageDataBuffer);
+
+        try
+        {
+            NetworkingMessage msg = NetworkingMessageTranslator.ParseMessage(result);
+
+            UInt32 clientID = netMessage.connection;
+
+            switch(msg.type)
+            {
+                case NetworkingMessageType.CLIENT_JOIN:
+
+                    JoinRequest jr = NetworkingMessageTranslator.ParseJoinRequest(msg.content);
+
+                    if (jr.version == version)
                     {
-                        Debug.Log("Server Allowed connection!");
-
-                        JoinRequest jr = NetworkingMessageTranslator.ParseJoinRequest(msg.content);
-
-                        if (jr.version == version)
+                        if(rc.players.Count < maxPlayers)
                         {
-                            // Add new server connection
-                            clients.Add(newConnection);
-
                             // Todo
                             // Verify account info... accountID, accountType
 
-                            rc.um.AddUser(jr.username, newConnection.clientID);
-                            rc.CreatePlayer(newConnection.clientID, jr.carModel, jr.accountID, jr.accountType);
+                            rc.um.AddUser(jr.username, clientID);
+                            rc.CreatePlayer(clientID, jr.carModel, jr.accountID, jr.accountType);
 
                             // Send Accept Connect msg
-                            newConnection.BeginSend(NetworkingMessageTranslator.GenerateServerJoinResponseMessage(new JoinRequestResponce(newConnection.clientID)), SendUserManagerState, true);
+                            SendTo(clientID, NetworkingMessageTranslator.GenerateServerJoinResponseMessage(new JoinRequestResponce(clientID)), SendType.Reliable);
 
                             // Send Track data
-                            newConnection.BeginSend(NetworkingMessageTranslator.GenerateTrackDataMessage(rc.trackGenerator.serializedTrack, newConnection.clientID), true);
-                        }
-                        else
+                            SendTrackData(clientID);
+                        } else
                         {
-                            Debug.Log("Server Rejected client connection due to version mismatch... Client Version " + jr.version);
+                            Debug.Log("Server full. Cannot allow client to join as player." + jr.version);
+
                             // Send Disconnect msg
-                            newConnection.BeginSend(NetworkingMessageTranslator.GenerateServerJoinResponseMessage(new JoinRequestResponce("Version Mismatch.\nVisit itch.io to download the up-to-date client.")));
+                            SendTo(clientID, NetworkingMessageTranslator.GenerateServerJoinResponseMessage(new JoinRequestResponce("Server full.")), SendType.Reliable);
                         }
                     }
                     else
                     {
-                        Debug.Log("Server Disallowed connection!");
+                        Debug.Log("Server Rejected client connection due to version mismatch... Client Version " + jr.version);
+
                         // Send Disconnect msg
-                        if (forwardIPs.Count == 0)
-                        {
-                            newConnection.BeginSend(NetworkingMessageTranslator.GenerateServerJoinResponseMessage(new JoinRequestResponce("Server full.")));
-                        }
-                        else
-                        {
-                            newConnection.BeginSend(NetworkingMessageTranslator.GenerateServerJoinResponseMessage(new JoinRequestResponce(forwardIPs)));
-                        }
+                        SendTo(clientID, NetworkingMessageTranslator.GenerateServerJoinResponseMessage(new JoinRequestResponce("Version Mismatch.\nVisit itch.io to download the up-to-date client.")), SendType.Reliable);
                     }
-                }
-                else
-                {
-                    // Check if existing server connection
-                    if (clientID > -1 && clients.Exists(x => x.clientID == clientID))
+
+                    break;
+
+                case NetworkingMessageType.INPUT_STATE:
+
+                    InputState s = NetworkingMessageTranslator.ParseInputState(msg.content);
+                    rc.QueueInputState(s);
+
+                    break;
+
+                case NetworkingMessageType.CAR_MODEL:
+
+                    int carModel = NetworkingMessageTranslator.ParseCarModel(msg.content);
+                    PlayerEntity pe = rc.players.Find(x => x.networkID == msg.clientID);
+
+                    if (pe != null)
                     {
-                        // Update serverConnection info
+                        Debug.Log("Set car model for " + pe.networkID + " to " + carModel);
+                        pe.carModel = carModel;
+                    }
+                    else
+                    {
+                        Debug.Log("SOFT WARNING! Could not find matching player entity to set car model... Received client id was " + msg.clientID);
+                    }
 
-                        ServerConnection serverConnection = clients.Find(x => x.clientID == clientID);
+                    break;
 
-                        // serverConnection.lastReceivedTime = Time.time;
+                case NetworkingMessageType.NEW_ACCOUNT:
 
-                        // TODO
-                        // Last msg accepted
+                    {
+                        NewAccountMsg newAccountMsg = NetworkingMessageTranslator.ParseNewAccountMsg(msg.content);
 
-                        switch (msg.type)
+                        System.Random rnd = new System.Random();
+
+                        ulong newAccountID = (ulong)rnd.Next();
+
+                        DataSet ds = db.GetAccount(newAccountID, 1);
+
+                        // Check if account with ID already exists
+                        while (ds.Tables[0].Rows.Count > 0)
                         {
-                            case NetworkingMessageType.PING:
-                                break;
+                            newAccountID = (ulong)rnd.Next();
+                            ds = db.GetAccount(newAccountID, 1);
+                        }
 
-                            case NetworkingMessageType.PING_RESPONSE:
-                                break;
+                        Debug.Log("Server creating new local account");
 
-                            case NetworkingMessageType.DISCONNECT:
+                        Task.Run(() =>
+                        {
+                            db.AddAccount(newAccountID, 1, UsernameGenerator.GenerateUsername());
+                            SendTo(clientID, NetworkingMessageTranslator.GenerateNewAccountMessageResponce(new NewAccountMsg(newAccountID, 1)), SendType.Reliable);
+                        });
+                    }
 
-                                UnityMainThreadDispatcher.Instance().Enqueue(() => {
+                    break;
 
-                                    clients.Remove(serverConnection);
+                case NetworkingMessageType.LOGIN:
 
-                                    Debug.Log("Client " + serverConnection.clientID + " disconnected...");
+                    {
+                        NewAccountMsg newAccountMsg = NetworkingMessageTranslator.ParseNewAccountMsg(msg.content);
 
-                                    rc.QueueRemovePlayer(serverConnection.clientID);
+                        Task.Run(() =>
+                        {
+                            Debug.Log("Server logging in user");
 
-                                });
+                            AccountData accountData = null;
 
-                                break;
+                            // Get account
+                            DataSet ds = db.GetAccount(newAccountMsg.accountID, newAccountMsg.accountType);
 
-                            case NetworkingMessageType.GAME_STATE:
-                                break;
-
-                            case NetworkingMessageType.INPUT_STATE:
-
-                                InputState s = NetworkingMessageTranslator.ParseInputState(msg.content);
-                                rc.QueueInputState(s);
-
-                                break;
-
-                            case NetworkingMessageType.CAR_MODEL:
-
-                                int carModel = NetworkingMessageTranslator.ParseCarModel(msg.content);
-                                PlayerEntity pe = rc.players.Find(x => x.networkID == msg.clientID);
-
-                                if (pe != null)
+                            if (!(ds.Tables[0].Rows.Count > 0))
+                            {
+                                // If no account exists and is type 0 (steam) create new account
+                                if (newAccountMsg.accountType == 0)
                                 {
-                                    Debug.Log("Set car model for " + pe.networkID + " to " + carModel);
-                                    pe.carModel = carModel;
+                                    string steamUsername = SteamScript.GetSteamUsername(newAccountMsg.accountID);
+
+                                    // Create new steam account
+                                    db.AddAccount(newAccountMsg.accountID, 0, steamUsername);
+
+                                    // Get account
+                                    ds = db.GetAccount(newAccountMsg.accountID, 0);
                                 }
                                 else
                                 {
-                                    Debug.Log("SOFT WARNING! Could not find matching player entity to set car model... Received client id was " + msg.clientID);
-                                }
-
-                                break;
-
-                            case NetworkingMessageType.REQUEST_PAYLOAD:
-
-                                {
-                                    Debug.Log("Server received payload request");
-
-                                    PayloadInfo rpm = NetworkingMessageTranslator.ParsePayloadData(msg.content);
-                                    serverConnection.SendLostPacket(rpm.payloadID, rpm.fragmentNumber);
-                                }
-
-                                break;
-
-                            case NetworkingMessageType.DRIP_ACK:
-
-                                UnityMainThreadDispatcher.Instance().Enqueue(() => {
-
-                                    PayloadInfo rpm = NetworkingMessageTranslator.ParsePayloadData(msg.content);
-                                    serverConnection.ACKDrip(rpm.payloadID, rpm.fragmentNumber);
-
-                                });
-
-                                break;
-
-                            default:
-                                break;
-                        }
-                    }
-                    else
-                    {
-                        // Create new account
-                        // This is for local accounts only
-                        if (msg.type == NetworkingMessageType.NEW_ACCOUNT)
-                        {
-                            ServerConnection newConnection = new ServerConnection(GetNewClientID(), receiveObject.sender, socket);
-
-                            NewAccountMsg newAccountMsg = NetworkingMessageTranslator.ParseNewAccountMsg(msg.content);
-
-                            System.Random rnd = new System.Random();
-
-                            ulong newAccountID = (ulong)rnd.Next();
-
-                            DataSet ds = db.GetAccount(newAccountID, 1);
-
-                            // Check if account with ID already exists
-                            while (ds.Tables[0].Rows.Count > 0)
-                            {
-                                newAccountID = (ulong)rnd.Next();
-                                ds = db.GetAccount(newAccountID, 1);
-                            }
-
-                            Debug.Log("Server creating new local account");
-
-                            Task.Run(() =>
-                            {
-                                db.AddAccount(newAccountID, 1, UsernameGenerator.GenerateUsername());
-                                newConnection.BeginSend(NetworkingMessageTranslator.GenerateNewAccountMessageResponce(new NewAccountMsg(newAccountID, 1)));
-                            });
-                        }
-
-                        if (msg.type == NetworkingMessageType.LOGIN)
-                        {
-                            ServerConnection newConnection = new ServerConnection(GetNewClientID(), receiveObject.sender, socket);
-
-                            NewAccountMsg newAccountMsg = NetworkingMessageTranslator.ParseNewAccountMsg(msg.content);
-
-                            Task.Run(() =>
-                            {
-                                Debug.Log("Server logging in user");
-
-                                AccountData accountData = null;
-
-                                // Get account
-                                DataSet ds = db.GetAccount(newAccountMsg.accountID, newAccountMsg.accountType);
-
-                                if (!(ds.Tables[0].Rows.Count > 0))
-                                {
-                                    // If no account exists and is type 0 (steam) create new account
-                                    if (newAccountMsg.accountType == 0)
-                                    {
-                                        string steamUsername = SteamScript.GetSteamUsername(newAccountMsg.accountID);
-
-                                        // Create new steam account
-                                        db.AddAccount(newAccountMsg.accountID, 0, steamUsername);
-
-                                        // Get account
-                                        ds = db.GetAccount(newAccountMsg.accountID, 0);
-                                    }
-                                    else
-                                    {
-                                        // Todo handle this...
-                                        // If local account error
-                                        Debug.LogWarning("Attempting to login into account that does not exist...");
-                                    }
-                                }
-
-                                if(ds.Tables[0].Rows.Count > 0)
-                                {
-                                    accountData = new AccountData((ulong)(long)ds.Tables[0].Rows[0]["AccountID"], (int)ds.Tables[0].Rows[0]["AccountType"], ds.Tables[0].Rows[0]["AccountName"].ToString(), (int)ds.Tables[0].Rows[0]["Coins"], (int)ds.Tables[0].Rows[0]["NumRaces"], (int)ds.Tables[0].Rows[0]["NumWins"], (int)ds.Tables[0].Rows[0]["SelectedCarID"], (int)ds.Tables[0].Rows[0]["Score"]);
-                                } else
-                                {
                                     // Todo handle this...
+                                    // If local account error
                                     Debug.LogWarning("Attempting to login into account that does not exist...");
                                 }
+                            }
 
-                                // return account info
-                                newConnection.BeginSend(NetworkingMessageTranslator.GenerateLoginMessageResponce(accountData));
-                            });
-                        }
-
-                        if (msg.type == NetworkingMessageType.SAVE_SELECTED_CAR)
-                        {
-                            ServerConnection newConnection = new ServerConnection(GetNewClientID(), receiveObject.sender, socket);
-
-                            SelectedCarData scd = NetworkingMessageTranslator.ParseSelectedCarData(msg.content);
-
-                            Task.Run(() =>
+                            if (ds.Tables[0].Rows.Count > 0)
                             {
-                                Debug.Log("Updated selected car");
-
-                                // Get account
-                                DataSet ds = db.UpdateSelectedCar(scd.accountID, scd.accountType, scd.selectedCarID);
-
-                                // return account info
-                                newConnection.BeginSend(NetworkingMessageTranslator.GenerateDisconnectMessage(-1));
-                            });
-                        }
-
-                        if (msg.type == NetworkingMessageType.GLOBAL_LEADERBOARD)
-                        {
-                            ServerConnection newConnection = new ServerConnection(GetNewClientID(), receiveObject.sender, socket);
-
-                            Task.Run(() =>
+                                accountData = new AccountData((ulong)(long)ds.Tables[0].Rows[0]["AccountID"], (int)ds.Tables[0].Rows[0]["AccountType"], ds.Tables[0].Rows[0]["AccountName"].ToString(), (int)ds.Tables[0].Rows[0]["Coins"], (int)ds.Tables[0].Rows[0]["NumRaces"], (int)ds.Tables[0].Rows[0]["NumWins"], (int)ds.Tables[0].Rows[0]["SelectedCarID"], (int)ds.Tables[0].Rows[0]["Score"]);
+                            }
+                            else
                             {
-                                // Get account
-                                DataSet ds = db.GetUsersOrderedByScore(0, 15);
+                                // Todo handle this...
+                                Debug.LogWarning("Attempting to login into account that does not exist...");
+                            }
 
-                                List<AccountData> topScores = new List<AccountData>();
-
-                                for(int i = 0; i < ds.Tables[0].Rows.Count; ++i)
-                                {
-                                    //Debug.Log((ulong)(long)ds.Tables[0].Rows[i]["AccountID"]);
-                                    AccountData accountData = new AccountData((ulong)(long)ds.Tables[0].Rows[i]["AccountID"], (int)ds.Tables[0].Rows[i]["AccountType"], ds.Tables[0].Rows[i]["AccountName"].ToString(), (int)ds.Tables[0].Rows[i]["Coins"], (int)ds.Tables[0].Rows[i]["NumRaces"], (int)ds.Tables[0].Rows[i]["NumWins"], (int)ds.Tables[0].Rows[i]["SelectedCarID"], (int)ds.Tables[0].Rows[i]["Score"]);
-                                    topScores.Add(accountData);
-                                }
-
-
-                                // return account info
-                                newConnection.BeginSend(NetworkingMessageTranslator.GenerateGlobalLeaderboardMessage(topScores));
-                            });
-                        }
+                            // return account info
+                            SendTo(clientID, NetworkingMessageTranslator.GenerateLoginMessageResponce(accountData), SendType.Reliable);
+                        });
                     }
-                }
+
+                    break;
+
+                case NetworkingMessageType.GLOBAL_LEADERBOARD:
+
+                    Task.Run(() =>
+                    {
+                        // Get account
+                        DataSet ds = db.GetUsersOrderedByScore(0, 15);
+
+                        List<AccountData> topScores = new List<AccountData>();
+
+                        for (int i = 0; i < ds.Tables[0].Rows.Count; ++i)
+                        {
+                            //Debug.Log((ulong)(long)ds.Tables[0].Rows[i]["AccountID"]);
+                            AccountData accountData = new AccountData((ulong)(long)ds.Tables[0].Rows[i]["AccountID"], (int)ds.Tables[0].Rows[i]["AccountType"], ds.Tables[0].Rows[i]["AccountName"].ToString(), (int)ds.Tables[0].Rows[i]["Coins"], (int)ds.Tables[0].Rows[i]["NumRaces"], (int)ds.Tables[0].Rows[i]["NumWins"], (int)ds.Tables[0].Rows[i]["SelectedCarID"], (int)ds.Tables[0].Rows[i]["Score"]);
+                            topScores.Add(accountData);
+                        }
+
+
+                        // return account info
+                        SendTo(clientID, NetworkingMessageTranslator.GenerateGlobalLeaderboardMessage(topScores), SendType.Reliable);
+                    });
+
+                    break;
+
+                case NetworkingMessageType.SAVE_SELECTED_CAR:
+
+                    SelectedCarData scd = NetworkingMessageTranslator.ParseSelectedCarData(msg.content);
+
+                    Task.Run(() =>
+                    {
+                        Debug.Log("Updated selected car");
+
+                        // Get account
+                        DataSet ds = db.UpdateSelectedCar(scd.accountID, scd.accountType, scd.selectedCarID);
+                    });
+
+                    RemoveClient(clientID, DisconnectionReason.ERROR, "Closing client after set car");
+
+                    break;
             }
-        } catch(Exception ex)
+        }
+        catch (Exception ex)
         {
             Debug.LogWarning(ex.ToString());
         }
 
+        Debug.Log(result);
+    }
 
-        if (serverActive)
+    public void SendGameState(GameState gameState)
+    {
+        SendToAllPlayers(Encoding.ASCII.GetBytes(NetworkingMessageTranslator.GenerateGameStateMessage(gameState, 0)), SendType.Unreliable);
+    }
+
+    public void SendUserManagerState()
+    {
+        SendToAllPlayers(Encoding.ASCII.GetBytes(NetworkingMessageTranslator.GenerateUserManagerStateMessage(rc.um.GetState(), 0)), SendType.Reliable);
+    }
+
+    public void SendTrackData()
+    {
+        SendToAllPlayers(Encoding.ASCII.GetBytes(NetworkingMessageTranslator.GenerateTrackDataMessage(rc.trackGenerator.serializedTrack, 0)), SendType.Reliable);
+    }
+
+    public void SendTrackData(UInt32 connectionID)
+    {
+        SendTo(connectionID, Encoding.ASCII.GetBytes(NetworkingMessageTranslator.GenerateTrackDataMessage(rc.trackGenerator.serializedTrack, 0)), SendType.Reliable);
+    }
+
+    public void SendTo(UInt32 connectionID, string data, SendType flags)
+    {
+        SendTo(connectionID, Encoding.ASCII.GetBytes(data), flags);
+    }
+
+    public void SendTo(UInt32 connectionID, byte[] data, SendType flags)
+    {
+        server.SendMessageToConnection(connectionID, data, flags);
+    }
+
+    public void SendToAll(Byte[] data, SendType flags)
+    {
+        if (ServerActive())
         {
-            BeginReceive();
+            foreach (UInt32 connectedId in connectedClients.ToArray())
+            {
+                SendTo(connectedId, data, flags);
+            }
         }
     }
 
-    public int GetNewClientID()
+    public void SendToAllPlayers(Byte[] data, SendType flags)
     {
-        return ++clientIDTracker;
-    }
-
-    public bool AcceptingNewClients()
-    {
-        if(rc.players.Count < maxPlayers)
+        if (ServerActive())
         {
-            return true;
+            foreach (UInt32 connectedId in rc.players.Select((x) => x.networkID).ToArray())
+            {
+                SendTo(connectedId, data, flags);
+            }
         }
-
-        return false;
     }
 
     public bool ServerActive()
     {
-        return serverActive;
+        return server != null;
     }
 
-    void Close()
+    public void RemoveClient(UInt32 connectionID, DisconnectionReason reason, string debug)
     {
-        socket.Close();
-        serverActive = false;
-        Debug.Log("Server closed...");
+        Debug.Log("Removing " + connectionID);
+        connectedClients.Remove(connectionID);
+        server.CloseConnection(connectionID, (int)reason, debug, false);
+        Debug.Log("Finished Removing " + connectionID);
+    }
+
+    void Update()
+    {
+        Receive();
+    }
+
+    void Receive()
+    {
+        if (ServerActive())
+        {
+            server.DispatchCallback(status);
+
+            for(int c = 0; c < connectedClients.Count; ++c){
+                int netMessagesCount = server.ReceiveMessagesOnConnection(connectedClients[c], netMessages, maxMessages);
+
+                if (netMessagesCount > 0)
+                {
+                    for (int i = 0; i < netMessagesCount; ++i)
+                    {
+                        OnMessage(ref netMessages[i]);
+                    }
+                }
+            }
+
+            {
+                int netMessagesCount = server.ReceiveMessagesOnListenSocket(listenSocket, netMessages, maxMessages);
+
+                if (netMessagesCount > 0)
+                {
+                    for (int i = 0; i < netMessagesCount; ++i)
+                    {
+                        OnMessage(ref netMessages[i]);
+                    }
+                }
+            }
+        }
     }
 
     void OnApplicationQuit()
     {
-        if(ServerActive())
-        {
-            Close();
-        }
-    }
-}
-
-[System.Serializable]
-public class ServerConnection
-{
-    public int clientID;
-    public EndPoint clientEndpoint;
-    public float lastReceivedTime;
-    public float lastSentTime;
-    public int lastAcceptedMessage;
-    public Socket socket;
-    private int payloadIDTracker = 0;
-    public int payloadSize = 1000;
-
-    public List<NetworkingPayload> savedDripPayloads = new List<NetworkingPayload>();
-    public float delayBeforeResendDrip = 0.15f;
-    public float dripSentAtTime;
-
-    public ServerConnection(int clientID, EndPoint clientEndpoint, Socket socket)
-    {
-        this.clientID = clientID;
-        this.clientEndpoint = clientEndpoint;
-        this.socket = socket;
-        //lastReceivedTime = Time.time;
-    }
-
-    public void BeginSend(string msg)
-    {
-        BeginSend(msg, false);
-    }
-
-    public void BeginSend(string msg, bool dripSend)
-    {
-        BeginSend(msg, null, dripSend);
-    }
-
-    public void BeginSend(string msg, OnSent onSent, bool dripSend)
-    {
-        List<NetworkingPayload> payloads = new List<NetworkingPayload>();
-
-        int numberOfFragments = (msg.Length / payloadSize) + 1;
-        int bytesLeftToSend = msg.Length;
-        int payloadID = GetNewPayloadID();
-
-        for (int i = 0; i < numberOfFragments; ++i)
-        {
-            NetworkingPayload np = new NetworkingPayload(i, numberOfFragments, payloadID, msg.Substring(i * payloadSize, Math.Min(payloadSize, bytesLeftToSend)), dripSend);
-            payloads.Add(np);
-            bytesLeftToSend -= payloadSize;
-        }
-
-        foreach (NetworkingPayload np in payloads)
-        {
-            if(dripSend)
-            {
-                savedDripPayloads.Add(np);
-            } else
-            {
-                SendPayload(np, onSent);
-            }
-        }
-
-        if(dripSend)
-        {
-            onSent?.Invoke();
-        }
-    }
-
-    public void SendPayload(NetworkingPayload np, OnSent onSent)
-    {
-        MessageObject message = new MessageObject();
-
-        if (np.fragment == 0)
-            message.onSent = onSent;
-        else
-            message.onSent = null;
-
-        string data = JsonUtility.ToJson(np);
-
-        message.buffer = Encoding.UTF8.GetBytes(data);
-        int messageBufferSize = Encoding.UTF8.GetByteCount(data);
-
-        socket.BeginSendTo(message.buffer, 0, messageBufferSize, SocketFlags.None, clientEndpoint, new AsyncCallback(EndSend), message);
-    }
-
-    public void SendLostPacket(int payloadID, int fragmentNumber)
-    {
-        NetworkingPayload np = savedDripPayloads.Find(x => x.messageID == payloadID && x.fragment == fragmentNumber);
-
-        if(np != null)
-        {
-            SendPayload(np, null);
-        } else
-        {
-            Debug.LogWarning("Client request networking payload that does not exist or has been discarded... payloadID: " + payloadID + " fragmentNumber: " + fragmentNumber);
-        }
-    }
-
-    public void ACKDrip(int payloadID, int fragmentNumber)
-    {
-        NetworkingPayload np = savedDripPayloads.Find(x => x.messageID == payloadID && x.fragment == fragmentNumber);
-
-        if (np != null)
-        {
-            savedDripPayloads.Remove(np);
-            dripSentAtTime = 0.0f;
-        }
-    }
-
-    public void EndSend(IAsyncResult ar)
-    {
-        MessageObject message = (MessageObject)ar.AsyncState;
-
-        int bytesSent = socket.EndSend(ar);
-
-        message.onSent?.Invoke();
-
-        //Debug.Log("Server sent " + bytesSent + " bytes.");
-
-        //lastSentTime = Time.time;
-    }
-
-    void Disconnect()
-    {
-        BeginSend(NetworkingMessageTranslator.GenerateDisconnectMessage(clientID));
-    }
-
-    void Ping()
-    {
-        BeginSend(NetworkingMessageTranslator.GeneratePingMessage(clientID));
-    }
-
-    public int GetNewPayloadID()
-    {
-        return ++payloadIDTracker;
+        server.CloseListenSocket(listenSocket);
+        Library.Deinitialize();
     }
 }

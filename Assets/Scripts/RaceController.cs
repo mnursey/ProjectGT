@@ -19,7 +19,7 @@ public delegate void OnAction();
 
 public class RaceController : MonoBehaviour
 {
-    public int networkID;
+    public UInt32 networkID;
 
     [Header("References")]
 
@@ -111,7 +111,7 @@ public class RaceController : MonoBehaviour
     public bool shownCompletedReward = false;
 
     private ConcurrentQueue<InputState> incomingInputStates = new ConcurrentQueue<InputState>();
-    private ConcurrentQueue<int> playersToRemove = new ConcurrentQueue<int>();
+    private ConcurrentQueue<uint> playersToRemove = new ConcurrentQueue<uint>();
 
     GameState incomingGameState = new GameState();
 
@@ -210,7 +210,7 @@ public class RaceController : MonoBehaviour
 
         // Index for this starts at 1. You can't have 0 laps
         targetNumberOfLaps = 1;
-        networkID = -1;
+        networkID = 0;
         players = new List<PlayerEntity>();
         incomingGameState = new GameState();
         cameraController.targetObject = null;
@@ -238,7 +238,7 @@ public class RaceController : MonoBehaviour
         incomingInputStates.Enqueue(inputState);
     }
 
-    public void QueueRemovePlayer(int networkID)
+    public void QueueRemovePlayer(uint networkID)
     {
         playersToRemove.Enqueue(networkID);
     }
@@ -332,7 +332,7 @@ public class RaceController : MonoBehaviour
 
     void ClientHandleInitialCarSpawn()
     {
-        if (cameraController.targetObject == null && networkID > -1)
+        if (cameraController.targetObject == null && networkID > 0)
         {
             PlayerEntity pe = players.Find(x => x.networkID == networkID);
 
@@ -952,7 +952,7 @@ public class RaceController : MonoBehaviour
     {
         InputState input = new InputState();
 
-        if (raceControllerMode == RaceControllerMode.CLIENT && cc.state == ClientState.CONNECTED)
+        if (raceControllerMode == RaceControllerMode.CLIENT && networkID > 0)
         {
             input = GetUserInputs(frame);
 
@@ -981,7 +981,7 @@ public class RaceController : MonoBehaviour
 
             RemoveIdlePlayers();
 
-            int leavingPlayerNetworkID = -1;
+            UInt32 leavingPlayerNetworkID = 0;
 
             while (playersToRemove.TryDequeue(out leavingPlayerNetworkID))
             {
@@ -1335,14 +1335,14 @@ public class RaceController : MonoBehaviour
         }
     }
 
-    public PlayerEntity CreatePlayer(int networkID)
+    public PlayerEntity CreatePlayer(UInt32 networkID)
     {
         PlayerEntity pe = new PlayerEntity(networkID, 0, -1);
         players.Add(pe);
         return pe;
     }
 
-    public PlayerEntity CreatePlayer(int networkID, int carModel, ulong accountID, int accountType)
+    public PlayerEntity CreatePlayer(UInt32 networkID, int carModel, ulong accountID, int accountType)
     {
         PlayerEntity pe = new PlayerEntity(networkID, (ulong)accountID, accountType);
         pe.carModel = carModel;
@@ -1433,7 +1433,7 @@ public class RaceController : MonoBehaviour
         return pe.carID;
     }
 
-    public void RemovePlayer(int networkID)
+    public void RemovePlayer(UInt32 networkID)
     {
         if (players.Exists(x => x.networkID == networkID))
         {
@@ -1451,7 +1451,7 @@ public class RaceController : MonoBehaviour
         
         if(raceControllerMode == RaceControllerMode.SERVER)
         {
-            sc.SendDisconnect(pe.networkID);
+            sc.RemoveClient((UInt32)pe.networkID, DisconnectionReason.KICKED, "Removed via request from race controller.");
         }
     }
 
@@ -1591,7 +1591,7 @@ public class PlayerEntity
     public int checkpoint = 0;
     public int frame;
 
-    public int networkID;
+    public UInt32 networkID;
     public ulong accountID;
     public int accountType;
 
@@ -1605,7 +1605,7 @@ public class PlayerEntity
 
     private float lastInputReceivedFrom = -1.0f;
 
-    public PlayerEntity(int networkID, ulong accountID, int accountType)
+    public PlayerEntity(UInt32 networkID, ulong accountID, int accountType)
     {
         this.networkID = networkID;
         this.accountID = accountID;
@@ -1696,7 +1696,7 @@ public class RaceControllerState
 [Serializable]
 public class InputState
 {
-    public int networkID;
+    public UInt32 networkID;
     public int frameID;
     public float steeringInput = 0.0f;
     public float accelerationInput = 0.0f;
@@ -1713,14 +1713,14 @@ public class InputState
 
     }
 
-    public InputState(int networkID, int frameID, bool ready)
+    public InputState(UInt32 networkID, int frameID, bool ready)
     {
         this.networkID = networkID;
         this.ready = ready;
         this.frameID = frameID;
     }
 
-    public InputState(int networkID, int frameID, float steeringInput, float accelerationInput, float brakingInput, bool resetInput, bool resetToCheckpointInput, bool hornInput, EntityState currentState)
+    public InputState(UInt32 networkID, int frameID, float steeringInput, float accelerationInput, float brakingInput, bool resetInput, bool resetToCheckpointInput, bool hornInput, EntityState currentState)
     {
         this.networkID = networkID;
         this.frameID = frameID;
@@ -1733,7 +1733,7 @@ public class InputState
         this.currentState = currentState;
     }
 
-    public InputState(int networkID, int frameID, float steeringInput, float accelerationInput, float brakingInput, bool resetInput, bool resetToCheckpointInput, bool hornInput, bool ready, EntityState currentState)
+    public InputState(UInt32 networkID, int frameID, float steeringInput, float accelerationInput, float brakingInput, bool resetInput, bool resetToCheckpointInput, bool hornInput, bool ready, EntityState currentState)
     {
         this.networkID = networkID;
         this.frameID = frameID;
@@ -1778,11 +1778,11 @@ public class JoinRequest
 [Serializable]
 public class JoinRequestResponce
 {
-    public int clientID;
+    public UInt32 clientID;
     public string reason;
     public List<string> forwardIPs = new List<string>();
 
-    public JoinRequestResponce(int clientID)
+    public JoinRequestResponce(UInt32 clientID)
     {
         this.clientID = clientID;
         reason = "";
@@ -1790,13 +1790,13 @@ public class JoinRequestResponce
 
     public JoinRequestResponce(string reason)
     {
-        clientID = -1;
+        clientID = 0;
         this.reason = reason;
     }
 
     public JoinRequestResponce(List<string> forwardIPs)
     {
-        clientID = -1;
+        clientID = 0;
         reason = "";
         this.forwardIPs = forwardIPs;
     }

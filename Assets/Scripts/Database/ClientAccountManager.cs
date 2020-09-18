@@ -31,7 +31,7 @@ public class ClientAccountManager : MonoBehaviour
 
     void Start()
     {
-        LoadAccount();
+        //LoadAccount();
     }
 
     // Update is called once per frame

@@ -232,7 +232,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3a6210d8c4a052e4cb9a3d0abd5d1ce0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  networkID: -1
+  networkID: 4294967295
   em: {fileID: 231262145}
   um: {fileID: 368693198}
   cameraController: {fileID: 0}
@@ -365,15 +365,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   version: 1.0
-  startServer: 1
-  serverPort: 10070
+  port: 10069
+  connectedClients: 
   acceptingClients: 1
-  testSend: 0
-  clients: []
-  rc: {fileID: 368693196}
+  maxConnections: 100
   maxPlayers: 20
-  disconnectAll: 0
-  forwardIPs: []
+  rc: {fileID: 368693196}
   db: {fileID: 1490767503}
 --- !u!1 &1490767502
 GameObject:
@@ -540,7 +537,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!114 &2065140993
 MonoBehaviour:
   m_ObjectHideFlags: 0

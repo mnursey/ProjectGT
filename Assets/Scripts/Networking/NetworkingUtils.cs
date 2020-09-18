@@ -28,7 +28,7 @@ public static class NetworkingMessageTranslator
 
     public static string GenerateClientJoinMessage(JoinRequest joinRequest)
     {
-        NetworkingMessage msg = new NetworkingMessage(NetworkingMessageType.CLIENT_JOIN, -1);
+        NetworkingMessage msg = new NetworkingMessage(NetworkingMessageType.CLIENT_JOIN, 0);
         msg.content = ToJson(joinRequest);
         return ToJson(msg);
     }
@@ -41,53 +41,53 @@ public static class NetworkingMessageTranslator
         return ToJson(msg);
     }
 
-    public static string GeneratePingMessage(int clientID)
+    public static string GeneratePingMessage(UInt32 clientID)
     {
         NetworkingMessage msg = new NetworkingMessage(NetworkingMessageType.PING, clientID);
         return ToJson(msg);
     }
 
-    public static string GeneratePingResponseMessage(int clientID)
+    public static string GeneratePingResponseMessage(UInt32 clientID)
     {
         NetworkingMessage msg = new NetworkingMessage(NetworkingMessageType.PING_RESPONSE, clientID);
         return ToJson(msg);
     }
 
-    public static string GenerateDisconnectMessage(int clientID)
+    public static string GenerateDisconnectMessage(UInt32 clientID)
     {
         NetworkingMessage msg = new NetworkingMessage(NetworkingMessageType.DISCONNECT, clientID);
         return ToJson(msg);
     }
 
-    public static string GenerateGameStateMessage(GameState gamestate, int clientID)
+    public static string GenerateGameStateMessage(GameState gamestate, UInt32 clientID)
     {
         NetworkingMessage msg = new NetworkingMessage(NetworkingMessageType.GAME_STATE, clientID);
         msg.content = ToJson(gamestate);
         return ToJson(msg);
     }
 
-    public static string GenerateUserManagerStateMessage(UserManagerState userManagerState, int clientID)
+    public static string GenerateUserManagerStateMessage(UserManagerState userManagerState, UInt32 clientID)
     {
         NetworkingMessage msg = new NetworkingMessage(NetworkingMessageType.USER_MANAGER_STATE, clientID);
         msg.content = ToJson(userManagerState);
         return ToJson(msg);
     }
 
-    public static string GenerateInputMessage(InputState inputState, int clientID)
+    public static string GenerateInputMessage(InputState inputState, UInt32 clientID)
     {
         NetworkingMessage msg = new NetworkingMessage(NetworkingMessageType.INPUT_STATE, clientID);
         msg.content = ToJson(inputState);
         return ToJson(msg);
     }
 
-    public static string GenerateCarModelMessage(int carModel, int clientID)
+    public static string GenerateCarModelMessage(int carModel, UInt32 clientID)
     {
         NetworkingMessage msg = new NetworkingMessage(NetworkingMessageType.CAR_MODEL, clientID);
         msg.content = carModel.ToString();
         return ToJson(msg);
     }
 
-    public static string GenerateTrackDataMessage(string serializedTrackData, int clientID)
+    public static string GenerateTrackDataMessage(string serializedTrackData, UInt32 clientID)
     {
         NetworkingMessage msg = new NetworkingMessage(NetworkingMessageType.TRACK_DATA, clientID);
         msg.content = serializedTrackData;
@@ -96,63 +96,49 @@ public static class NetworkingMessageTranslator
 
     public static string GenerateNewAccountMessage()
     {
-        NetworkingMessage msg = new NetworkingMessage(NetworkingMessageType.NEW_ACCOUNT, -1);
+        NetworkingMessage msg = new NetworkingMessage(NetworkingMessageType.NEW_ACCOUNT, 0);
         msg.content = ToJson(new NewAccountMsg(0, 1));
         return ToJson(msg);
     }
 
     public static string GenerateNewAccountMessageResponce(NewAccountMsg accountMsg)
     {
-        NetworkingMessage msg = new NetworkingMessage(NetworkingMessageType.NEW_ACCOUNT_RESPONCE, -1);
+        NetworkingMessage msg = new NetworkingMessage(NetworkingMessageType.NEW_ACCOUNT_RESPONCE, 0);
         msg.content = ToJson(accountMsg);
         return ToJson(msg);
     }
 
     public static string GenerateLoginMessage(ulong id, int type)
     {
-        NetworkingMessage msg = new NetworkingMessage(NetworkingMessageType.LOGIN, -1);
+        NetworkingMessage msg = new NetworkingMessage(NetworkingMessageType.LOGIN, 0);
         msg.content = ToJson(new NewAccountMsg(id, type));
         return ToJson(msg);
     }
 
     public static string GenerateLoginMessageResponce(AccountData ac)
     {
-        NetworkingMessage msg = new NetworkingMessage(NetworkingMessageType.LOGIN_RESPONCE, -1);
+        NetworkingMessage msg = new NetworkingMessage(NetworkingMessageType.LOGIN_RESPONCE, 0);
         msg.content = ToJson(ac);
         return ToJson(msg);
     }
 
     public static string GenerateSaveSelectedCarMessage(ulong id, int type, int carID)
     {
-        NetworkingMessage msg = new NetworkingMessage(NetworkingMessageType.SAVE_SELECTED_CAR, -1);
+        NetworkingMessage msg = new NetworkingMessage(NetworkingMessageType.SAVE_SELECTED_CAR, 0);
         msg.content = ToJson(new SelectedCarData(id, type, carID));
         return ToJson(msg);
     }
 
     public static string GenerateGlobalLeaderboardMessage()
     {
-        NetworkingMessage msg = new NetworkingMessage(NetworkingMessageType.GLOBAL_LEADERBOARD, -1);
+        NetworkingMessage msg = new NetworkingMessage(NetworkingMessageType.GLOBAL_LEADERBOARD, 0);
         return ToJson(msg);
     }
 
     public static string GenerateGlobalLeaderboardMessage(List<AccountData> accountData)
     {
-        NetworkingMessage msg = new NetworkingMessage(NetworkingMessageType.GLOBAL_LEADERBOARD, -1);
+        NetworkingMessage msg = new NetworkingMessage(NetworkingMessageType.GLOBAL_LEADERBOARD, 0);
         msg.content = ToJson(new AccountDataList(accountData));
-        return ToJson(msg);
-    }
-
-    public static string GenerateRequestPayloadData(int payloadID, int fragmentNumber, int clientID)
-    {
-        NetworkingMessage msg = new NetworkingMessage(NetworkingMessageType.REQUEST_PAYLOAD, clientID);
-        msg.content = ToJson(new PayloadInfo(payloadID, fragmentNumber));
-        return ToJson(msg);
-    }
-
-    public static string GenerateDripPayloadACK(int payloadID, int fragmentNumber, int clientID)
-    {
-        NetworkingMessage msg = new NetworkingMessage(NetworkingMessageType.DRIP_ACK, clientID);
-        msg.content = ToJson(new PayloadInfo(payloadID, fragmentNumber));
         return ToJson(msg);
     }
 
@@ -215,55 +201,30 @@ public static class NetworkingMessageTranslator
     {
         return JsonUtility.FromJson<SelectedCarData>(json);
     }
-
-    public static PayloadInfo ParsePayloadData(string json)
-    {
-        return JsonUtility.FromJson<PayloadInfo>(json);
-    }
-}
-
-// Contains 1 or part of one networking message :)
-[Serializable]
-public class NetworkingPayload
-{
-    public int fragment = -1;
-    public int totalFragments = -1;
-    public int messageID = -1;
-    public string content = "";
-    public bool drip;
-
-    public NetworkingPayload(int fragment, int totalFragments, int messageID, string content, bool drip)
-    {
-        this.fragment = fragment;
-        this.totalFragments = totalFragments;
-        this.messageID = messageID;
-        this.content = content;
-        this.drip = drip;
-    }
 }
 
 [Serializable]
-public enum NetworkingMessageType { CLIENT_JOIN, SERVER_JOIN_RESPONSE, DISCONNECT, PING, PING_RESPONSE, GAME_STATE, INPUT_STATE, USER_MANAGER_STATE, CAR_MODEL, TRACK_DATA, NEW_ACCOUNT, NEW_ACCOUNT_RESPONCE, LOGIN, LOGIN_RESPONCE, SAVE_SELECTED_CAR, GLOBAL_LEADERBOARD, REQUEST_PAYLOAD, DRIP_ACK };
+public enum NetworkingMessageType { CLIENT_JOIN, SERVER_JOIN_RESPONSE, DISCONNECT, PING, PING_RESPONSE, GAME_STATE, INPUT_STATE, USER_MANAGER_STATE, CAR_MODEL, TRACK_DATA, NEW_ACCOUNT, NEW_ACCOUNT_RESPONCE, LOGIN, LOGIN_RESPONCE, SAVE_SELECTED_CAR, GLOBAL_LEADERBOARD };
 
 [Serializable]
 public class NetworkingMessage
 {
     public NetworkingMessageType type;
     public string content;
-    public int clientID;
+    public UInt32 clientID;
 
     public NetworkingMessage()
     {
 
     }
 
-    public NetworkingMessage(NetworkingMessageType type, int clientID)
+    public NetworkingMessage(NetworkingMessageType type, UInt32 clientID)
     {
         this.type = type;
         this.clientID = clientID;
     }
 
-    public NetworkingMessage(NetworkingMessageType type, int clientID, string content)
+    public NetworkingMessage(NetworkingMessageType type, UInt32 clientID, string content)
     {
         this.type = type;
         this.clientID = clientID;
@@ -332,22 +293,6 @@ public class SelectedCarData
         this.accountID = accountID;
         this.accountType = accountType;
         this.selectedCarID = selectedCarID;
-    }
-}
-
-// Todo
-// Make RequestPayloadMessage have a list of fragments instead of just one fragment
-
-[Serializable]
-public class PayloadInfo
-{
-    public int payloadID;
-    public int fragmentNumber;
-
-    public PayloadInfo(int payloadID, int fragmentNumber)
-    {
-        this.payloadID = payloadID;
-        this.fragmentNumber = fragmentNumber;
     }
 }
 

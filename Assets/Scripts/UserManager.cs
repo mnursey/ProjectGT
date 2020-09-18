@@ -7,19 +7,16 @@ public class UserManager : MonoBehaviour
 {
     public List<UserReference> users = new List<UserReference>();
 
-    public void AddUser(string username, int networkID)
+    public void AddUser(string username, UInt32 networkID)
     {
         users.Add(new UserReference(username, networkID));
     }
 
-    public UserReference GetUserFromNetworkID(int networkID)
+    public UserReference GetUserFromNetworkID(UInt32 networkID)
     {
         UserReference user = null;
 
-        if(networkID > -1)
-        {
-            user = users.Find(x => x.networkID == networkID);
-        }
+        user = users.Find(x => x.networkID == networkID);
 
         return user; 
     }
@@ -39,9 +36,9 @@ public class UserManager : MonoBehaviour
 public class UserReference
 {
     public string username;
-    public int networkID;
+    public UInt32 networkID;
 
-    public UserReference(string username, int networkID)
+    public UserReference(string username, UInt32 networkID)
     {
         this.username = username;
         this.networkID = networkID;
