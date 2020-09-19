@@ -63,7 +63,7 @@ public class ServerController : MonoBehaviour
         Debug.Log("Starting server...");
 
         utils = new NetworkingUtils();
-        utils.SetDebugCallback(DebugType.Everything, debug);
+        utils.SetDebugCallback(DebugType.Message, debug);
 
         server = new NetworkingSockets();
 
@@ -80,7 +80,7 @@ public class ServerController : MonoBehaviour
     [MonoPInvokeCallback(typeof(StatusCallback))]
     static void OnServerStatusUpdate(StatusInfo info, System.IntPtr context)
     {
-        Debug.Log("Server Status: " + info.ToString());
+        // Debug.Log("Server Status: " + info.ToString());
         switch(info.connectionInfo.state)
         {
             case Valve.Sockets.ConnectionState.None:
@@ -129,7 +129,7 @@ public class ServerController : MonoBehaviour
 
     void OnMessage(ref Valve.Sockets.NetworkingMessage netMessage)
     {
-        Debug.Log(String.Format("Message received server - ID: {0}, Channel ID: {1}, Data length: {2}", netMessage.connection, netMessage.channel, netMessage.length));
+        // Debug.Log(String.Format("Message received server - ID: {0}, Channel ID: {1}, Data length: {2}", netMessage.connection, netMessage.channel, netMessage.length));
 
         byte[] messageDataBuffer = new byte[netMessage.length];
 
@@ -162,6 +162,9 @@ public class ServerController : MonoBehaviour
 
                             // Send Accept Connect msg
                             SendTo(clientID, NetworkingMessageTranslator.GenerateServerJoinResponseMessage(new JoinRequestResponce(clientID)), SendType.Reliable);
+
+                            // Send Usernames
+                            SendUserManagerState();
 
                             // Send Track data
                             SendTrackData(clientID);
@@ -333,7 +336,7 @@ public class ServerController : MonoBehaviour
             Debug.LogWarning(ex.ToString());
         }
 
-        Debug.Log(result);
+        // Debug.Log(result);
     }
 
     public void SendGameState(GameState gameState)
@@ -395,10 +398,8 @@ public class ServerController : MonoBehaviour
 
     public void RemoveClient(UInt32 connectionID, DisconnectionReason reason, string debug)
     {
-        Debug.Log("Removing " + connectionID);
         connectedClients.Remove(connectionID);
         server.CloseConnection(connectionID, (int)reason, debug, false);
-        Debug.Log("Finished Removing " + connectionID);
     }
 
     void Update()
