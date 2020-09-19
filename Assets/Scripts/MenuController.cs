@@ -301,7 +301,7 @@ public class MenuController : MonoBehaviour
 
         rc.Reset();
 
-        cc.ConnectToServer(username, cam.accountData.accountID, cam.accountData.accountType, OnConnection, OnDisconnect, OnReject, null, null, null);
+        cc.JoinGame(username, cam.accountData.accountID, cam.accountData.accountType, OnConnection, OnDisconnect, OnReject, null, null, null);
 
         gameMenuPlay.text = gameMenuPlaySpawnText;
 

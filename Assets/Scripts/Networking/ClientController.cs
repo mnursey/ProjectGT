@@ -35,10 +35,6 @@ public class ClientController : MonoBehaviour
 
     public RaceController rc;
 
-    string connection_username;
-    ulong connection_accountID;
-    int connection_accountType;
-
     public OnConnect onConnect;
     public OnDisconnect onDisconnect;
     public OnReject onReject;
@@ -80,12 +76,8 @@ public class ClientController : MonoBehaviour
         this.onLogin = onLogin;
         this.onGLD = onGlobalLeaderboardData;
 
-        connection_username = username;
-        connection_accountID = accountID;
-        connection_accountType = accountType;
-
         utils = new NetworkingUtils();
-        utils.SetDebugCallback(DebugType.Everything, debug);
+        utils.SetDebugCallback(DebugType.Message, debug);
 
         Reset();
 
@@ -98,6 +90,24 @@ public class ClientController : MonoBehaviour
         connection = client.Connect(address);
 
         status = OnClientStatusUpdate;
+    }
+
+    public void JoinGame(string username, ulong accountID, int accountType, OnConnect onConnect, OnDisconnect onDisconnect, OnReject onReject, OnAccountCreate onAccountCreate, OnLogin onLogin, OnGlobalLeaderboardData onGlobalLeaderboardData)
+    {
+        this.onConnect = (bool connected) => {
+            this.onConnect = onConnect;
+
+            if (connected)
+            {
+                Send(NetworkingMessageTranslator.GenerateClientJoinMessage(new JoinRequest(username, version, rc.selectedCarModel, accountID, accountType)), SendType.Reliable, null);
+            }
+            else
+            {
+                onConnect?.Invoke(connected);
+            }
+        };
+
+        ConnectToServer(username, accountID, accountType, this.onConnect, onDisconnect, onReject, onAccountCreate, onLogin, onGlobalLeaderboardData);
     }
 
     public void CreateNewAccount(OnAccountCreate onAccountCreate)
@@ -171,7 +181,6 @@ public class ClientController : MonoBehaviour
     [MonoPInvokeCallback(typeof(StatusCallback))]
     static void OnClientStatusUpdate(StatusInfo info, System.IntPtr context)
     {
-        Debug.Log("Client Status: " + info.ToString());
         switch (info.connectionInfo.state)
         {
             case Valve.Sockets.ConnectionState.None:
@@ -197,7 +206,7 @@ public class ClientController : MonoBehaviour
 
             case Valve.Sockets.ConnectionState.ProblemDetectedLocally:
 
-                if(Instance.connected)
+                if(!Instance.connected)
                     Instance.onConnect?.Invoke(Instance.connected);
                 else
                     Instance.onDisconnect?.Invoke();
@@ -211,7 +220,7 @@ public class ClientController : MonoBehaviour
 
     void OnMessage(ref Valve.Sockets.NetworkingMessage netMessage)
     {
-        Debug.Log(String.Format("Message received client - ID: {0}, Channel ID: {1}, Data length: {2}", netMessage.connection, netMessage.channel, netMessage.length));
+        // Debug.Log(String.Format("Message received client - ID: {0}, Channel ID: {1}, Data length: {2}", netMessage.connection, netMessage.channel, netMessage.length));
 
         byte[] messageDataBuffer = new byte[netMessage.length];
 
@@ -302,7 +311,7 @@ public class ClientController : MonoBehaviour
 
                     // TODO
                     // Check if we should load this trackdata...
-                    Debug.Log("RECEIVED TRACK DATA!");
+                    // .Log("RECEIVED TRACK DATA!");
                     UnityMainThreadDispatcher.Instance().Enqueue(() => {
 
                         GeneratedTrackData gtd = NetworkingMessageTranslator.ParseGenerateTrackData(msg.content);
@@ -319,7 +328,7 @@ public class ClientController : MonoBehaviour
             Debug.LogWarning(ex.ToString());
         }
 
-        Debug.Log(result);
+        //Debug.Log(result);
     }
 
     // Update is called once per frame
@@ -360,6 +369,8 @@ public class ClientController : MonoBehaviour
             bool disconnected = client.CloseConnection(connection, (int)DisconnectionReason.NONE, "client disconnected", false);
             Debug.Log("Client side disconnection was " + disconnected);
         }
+
+        rc.Reset();
 
         connected = false;
     }
