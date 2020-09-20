@@ -35672,6 +35672,9 @@ MonoBehaviour:
   serverport: 10069
   connection: 0
   rc: {fileID: 1893463311}
+  minCounter: 0
+  bytesPerMin: 0
+  numMsgsPerMin: 0
   connected: 0
 --- !u!4 &1639248995
 Transform:

@@ -44,6 +44,10 @@ public class ClientController : MonoBehaviour
 
     public static ClientController Instance;
 
+    public float minCounter = 0.0f;
+    public int bytesPerMin = 0;
+    public int numMsgsPerMin = 0;
+
     const int maxMessages = 40;
     Valve.Sockets.NetworkingMessage[] netMessages = new Valve.Sockets.NetworkingMessage[maxMessages];
 
@@ -87,9 +91,10 @@ public class ClientController : MonoBehaviour
 
         address.SetAddress(serverIP, serverport);
 
-        connection = client.Connect(address);
+        connection = client.Connect(ref address);
 
         status = OnClientStatusUpdate;
+        utils.SetStatusCallback(status);
     }
 
     public void JoinGame(string username, ulong accountID, int accountType, OnConnect onConnect, OnDisconnect onDisconnect, OnReject onReject, OnAccountCreate onAccountCreate, OnLogin onLogin, OnGlobalLeaderboardData onGlobalLeaderboardData)
@@ -99,7 +104,7 @@ public class ClientController : MonoBehaviour
 
             if (connected)
             {
-                Send(NetworkingMessageTranslator.GenerateClientJoinMessage(new JoinRequest(username, version, rc.selectedCarModel, accountID, accountType)), SendType.Reliable, null);
+                Send(NetworkingMessageTranslator.GenerateClientJoinMessage(new JoinRequest(username, version, rc.selectedCarModel, accountID, accountType)), SendFlags.Reliable, null);
             }
             else
             {
@@ -115,7 +120,7 @@ public class ClientController : MonoBehaviour
         // Todo handle failed to connect
         this.onConnect = (bool connected) => {
             if(connected)
-                Send(NetworkingMessageTranslator.GenerateNewAccountMessage(), SendType.Reliable, null);
+                Send(NetworkingMessageTranslator.GenerateNewAccountMessage(), SendFlags.Reliable, null);
         };
 
         this.onDisconnect = null;
@@ -132,7 +137,7 @@ public class ClientController : MonoBehaviour
         // Todo handle failed to connect
         this.onConnect = (bool connected) => {
             if(connected)
-                Send(NetworkingMessageTranslator.GenerateLoginMessage(accountID, accountType), SendType.Reliable, null);
+                Send(NetworkingMessageTranslator.GenerateLoginMessage(accountID, accountType), SendFlags.Reliable, null);
         };
 
         this.onDisconnect = null;
@@ -149,7 +154,7 @@ public class ClientController : MonoBehaviour
         // Todo handle failed to connect
         this.onConnect = (bool connected) => {
             if (connected)
-                Send(NetworkingMessageTranslator.GenerateSaveSelectedCarMessage(accountID, accountType, carID), SendType.Reliable, null);
+                Send(NetworkingMessageTranslator.GenerateSaveSelectedCarMessage(accountID, accountType, carID), SendFlags.Reliable, null);
         };
 
         this.onDisconnect = null;
@@ -166,7 +171,7 @@ public class ClientController : MonoBehaviour
         // Todo handle failed to connect
         this.onConnect = (bool connected) => {
             if (connected)
-                Send(NetworkingMessageTranslator.GenerateGlobalLeaderboardMessage(), SendType.Reliable, null);
+                Send(NetworkingMessageTranslator.GenerateGlobalLeaderboardMessage(), SendFlags.Reliable, null);
         };
 
         this.onDisconnect = null;
@@ -179,7 +184,7 @@ public class ClientController : MonoBehaviour
     }
 
     [MonoPInvokeCallback(typeof(StatusCallback))]
-    static void OnClientStatusUpdate(StatusInfo info, System.IntPtr context)
+    static void OnClientStatusUpdate(ref StatusInfo info)
     {
         switch (info.connectionInfo.state)
         {
@@ -222,12 +227,28 @@ public class ClientController : MonoBehaviour
     {
         // Debug.Log(String.Format("Message received client - ID: {0}, Channel ID: {1}, Data length: {2}", netMessage.connection, netMessage.channel, netMessage.length));
 
+        minCounter += Time.deltaTime;
+        numMsgsPerMin++;
+        bytesPerMin += netMessage.length;
+
         byte[] messageDataBuffer = new byte[netMessage.length];
 
         netMessage.CopyTo(messageDataBuffer);
         netMessage.Destroy();
 
+        //Debug.Log("Received msg of length " + netMessage.length);
+
+        if (minCounter > 1f)
+        {
+            Debug.Log(String.Format("Bytes {0}, Msgs {1}", bytesPerMin, numMsgsPerMin));
+            minCounter = 0.0f;
+            bytesPerMin = 0;
+            numMsgsPerMin = 0;
+        }
+
         string result = Encoding.ASCII.GetString(messageDataBuffer);
+
+        //Debug.Log(result);
 
         try
         {
@@ -311,7 +332,7 @@ public class ClientController : MonoBehaviour
 
                     // TODO
                     // Check if we should load this trackdata...
-                    // .Log("RECEIVED TRACK DATA!");
+                    Debug.Log("RECEIVED TRACK DATA!");
                     UnityMainThreadDispatcher.Instance().Enqueue(() => {
 
                         GeneratedTrackData gtd = NetworkingMessageTranslator.ParseGenerateTrackData(msg.content);
@@ -341,7 +362,7 @@ public class ClientController : MonoBehaviour
     {
         if(client != null)
         {
-            client.DispatchCallback(status);
+            client.RunCallbacks();
 
             int netMessagesCount = client.ReceiveMessagesOnConnection(connection, netMessages, maxMessages);
 
@@ -377,20 +398,20 @@ public class ClientController : MonoBehaviour
 
     public void SendInput(InputState inputState)
     {
-        Send(NetworkingMessageTranslator.GenerateInputMessage(inputState, connection), SendType.NoDelay, null);
+        Send(NetworkingMessageTranslator.GenerateInputMessage(inputState, connection), SendFlags.NoDelay, null);
     }
 
     public void SendCarModel(int carModel)
     {
-        Send(NetworkingMessageTranslator.GenerateCarModelMessage(carModel, connection), SendType.Reliable, null);
+        Send(NetworkingMessageTranslator.GenerateCarModelMessage(carModel, connection), SendFlags.Reliable, null);
     }
 
-    public void Send(String data, SendType flags, OnSent onSent)
+    public void Send(String data, SendFlags flags, OnSent onSent)
     {
         Send(Encoding.ASCII.GetBytes(data), flags, onSent);
     }
 
-    public void Send(Byte[] data, SendType flags, OnSent onSent)
+    public void Send(Byte[] data, SendFlags flags, OnSent onSent)
     {
         if(connected)
         {
