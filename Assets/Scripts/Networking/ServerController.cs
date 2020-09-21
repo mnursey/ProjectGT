@@ -45,8 +45,11 @@ public class ServerController : MonoBehaviour
         Debug.Log("Networking Debug - Type: " + type + ", Message: " + message);
     };
 
+
     void Awake()
     {
+        SetupCommandLineArguments();
+
         Library.Initialize();
 
         Debug.Log("Initialized ValveSockets");
@@ -56,6 +59,20 @@ public class ServerController : MonoBehaviour
     {
         Instance = this;
         StartServer();
+    }
+
+    void SetupCommandLineArguments()
+    {
+        string[] args = Environment.GetCommandLineArgs();
+        for (int i = 0; i < args.Length; i++)
+        {
+            Debug.Log("ARG " + i + ": " + args[i]);
+            if (args[i] == "-sfrq")
+            {
+                rc.serverSendRate = Int32.Parse(args[i + 1]);
+                Debug.Log(String.Format("Set server send frequency to {0}", args[i + 1]));
+            }
+        }
     }
 
     void StartServer()

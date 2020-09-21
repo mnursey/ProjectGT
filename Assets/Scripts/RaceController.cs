@@ -101,7 +101,7 @@ public class RaceController : MonoBehaviour
     public bool ready;
     public int selectedCarModel = 0;
     private int frame = 0;
-
+    public int serverSendRate = 3;
     public float idleTime = 5.0f;
 
     public float clientFastestLapTime = float.MaxValue;
@@ -988,7 +988,13 @@ public class RaceController : MonoBehaviour
                 RemovePlayer(leavingPlayerNetworkID);
             }
 
-            sc.SendGameState(GetGameState());
+            if(frame % serverSendRate == 0)
+            {
+                if (serverSendRate < 1)
+                    serverSendRate = 1;
+
+                sc.SendGameState(GetGameState());
+            }
         }
 
         switch (raceControllerState)

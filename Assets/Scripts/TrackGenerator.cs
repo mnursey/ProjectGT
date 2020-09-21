@@ -772,8 +772,8 @@ public class TrackGenerator : MonoBehaviour
             }
 
             serializedTrack = JsonUtility.ToJson(Serialize());
-            Debug.Log(serializedTrack.Length);
-            Debug.Log(serializedTrack);
+            // Debug.Log(serializedTrack.Length);
+            // Debug.Log(serializedTrack);
         }
     }
 
