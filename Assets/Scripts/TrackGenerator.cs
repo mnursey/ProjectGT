@@ -488,12 +488,23 @@ public class TrackGenerator : MonoBehaviour
                 }
             }
         }
-        
+
+
+        // Get list of possible trees to spawn for current biome
+        List<GameObject> possibleTrees = new List<GameObject>();
+
+        for(int i = 0; i < treePrefabs.Count; ++i)
+        {
+            if (biomes[currentBiomeIndex].treeIndicies.Contains(i))
+            {
+                possibleTrees.Add(treePrefabs[i]);
+            }
+        }
 
         // Spawn potential trees
         for (int i = 0; i < biomes[currentBiomeIndex].numTrees; ++i)
         {
-            int prefabID = r.Next(treePrefabs.Count);
+            int prefabID = treePrefabs.IndexOf(possibleTrees[r.Next(possibleTrees.Count)]);
             GameObject prefab = treePrefabs[prefabID];
             treeInstanecPrefabID.Add(prefabID);
             GameObject tree = Instantiate(prefab, new Vector3(UnityEngine.Random.Range(0f, 454f), 2048f, UnityEngine.Random.Range(0f, 454f)), prefab.transform.rotation, transform);
@@ -1188,6 +1199,8 @@ public class Biome
     public float scaleB;
     public float powerC;
     public float scaleC;
+
+    public List<int> treeIndicies = new List<int>();
 }
 
 public enum TrackPeiceTags { HOLE, JUMP, OBSTACLE, BRIDGE, ANIMAL, LANDMARK, WIDE, USE_TERRAIN };

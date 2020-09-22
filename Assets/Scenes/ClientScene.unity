@@ -35668,7 +35668,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   version: 1.0
-  serverIP: 154.20.89.206
+  serverIP: 192.168.1.100
   serverport: 10069
   connection: 0
   rc: {fileID: 1893463311}
@@ -39965,6 +39965,7 @@ MonoBehaviour:
   carCameraMode: 0
   ready: 0
   selectedCarModel: 0
+  serverSendRate: 3
   idleTime: 5
   clientFastestLapTime: 3.4028235e+38
   clientCurrentLap: 0

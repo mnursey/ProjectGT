@@ -313,6 +313,9 @@ MonoBehaviour:
   - {fileID: 850051677182801884, guid: 64e1cc8f54903a04f8ec03c75b183b1b, type: 3}
   - {fileID: 850051677182801884, guid: ab26e2b29c9039a4b89637c7825561c2, type: 3}
   - {fileID: 850051677182801884, guid: ef573115864f24d4cbf19fa601c2a091, type: 3}
+  - {fileID: 850051677182801884, guid: f837ed4a1331f6145957f9f600da19a2, type: 3}
+  - {fileID: 850051677182801884, guid: bc1a1b19136beff45ae097a35d77b24f, type: 3}
+  - {fileID: 850051677182801884, guid: 519092d9f485adf479fd0607fd8e133e, type: 3}
   treeInstances: []
   treeInstanecPrefabID: 
   biomes:
@@ -327,6 +330,7 @@ MonoBehaviour:
     scaleB: 0.1
     powerC: 3
     scaleC: 0.5
+    treeIndicies: 000000000100000002000000
   - name: Desert
     grassColour: 0.49
     cliffColour: 0.09
@@ -338,6 +342,7 @@ MonoBehaviour:
     scaleB: 0.1
     powerC: 1
     scaleC: 0.5
+    treeIndicies: 030000000400000005000000
   - name: Cliffs
     grassColour: 0.55
     cliffColour: 0.09
@@ -349,6 +354,7 @@ MonoBehaviour:
     scaleB: 0.5
     powerC: 1
     scaleC: 0.5
+    treeIndicies: 000000000100000002000000
   currentBiomeIndex: 0
   xOffsetA: 0
   yOffsetA: 0
