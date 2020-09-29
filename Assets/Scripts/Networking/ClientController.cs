@@ -127,12 +127,17 @@ public class ClientController : MonoBehaviour
         ConnectToServer("", 0, 0, this.onConnect, this.onDisconnect, this.onReject, this.onAccountCreate, this.onLogin, this.onGLD);
     }
 
-    public void Login(ulong accountID, int accountType, OnLogin onLogin)
+    public void Login(ulong accountID, int accountType, OnConnect onConnect, OnLogin onLogin)
     {
         // Todo handle failed to connect
         this.onConnect = (bool connected) => {
-            if(connected)
+
+            this.onConnect = onConnect;
+
+            if (connected)
                 Send(NetworkingMessageTranslator.GenerateLoginMessage(accountID, accountType), SendType.Reliable, null);
+
+            onConnect?.Invoke(connected);
         };
 
         this.onDisconnect = null;

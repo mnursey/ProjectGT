@@ -31,7 +31,7 @@ public class ClientAccountManager : MonoBehaviour
 
     void Start()
     {
-        //LoadAccount();
+        LoadAccount();
     }
 
     // Update is called once per frame
@@ -105,7 +105,18 @@ public class ClientAccountManager : MonoBehaviour
 
     void Login()
     {
-        cc.Login(accountID, accountType, LoginCallback);
+        cc.Login(accountID, accountType, OnConnect, LoginCallback);
+        mc.ShowConnectingUI(true);
+    }
+
+    void OnConnect(bool connected)
+    {
+        mc.ShowConnectingUI(false);
+
+        if (!connected)
+        {
+            mc.ShowPopup("Failed to connect...\nTry again\nand check your connection or check the server status on itch.io");
+        }
     }
 
     void LoginCallback(AccountData ad)

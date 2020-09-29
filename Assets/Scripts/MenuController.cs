@@ -176,12 +176,12 @@ public class MenuController : MonoBehaviour
         if(resetCamera) MainMenuCamera();
     }
 
-    void ShowConnectingUI(bool show)
+    public void ShowConnectingUI(bool show)
     {
         connectingUI.SetActive(show);
     }
 
-    void ShowPopup(string text)
+    public void ShowPopup(string text)
     {
         popupMenuText.text = text;
         popupMenu.SetActive(true);
