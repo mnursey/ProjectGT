@@ -123,6 +123,9 @@ public class RaceController : MonoBehaviour
     public int skippedCheckpointTolerance = 2;
     public SkippedTrackArrowController stac;
 
+    public int loadTrackFailureDelay = 32;
+    int loadTrackDelayCounter = 0;
+
     CarController GetCarControllerFromID(int id)
     {
         if(id < 0)
@@ -217,6 +220,7 @@ public class RaceController : MonoBehaviour
         cameraController.targetObject = null;
         frame = 0;
         clientFastestLapTime = float.MaxValue;
+        loadTrackDelayCounter = 0;
 
         // Index for this starts at 1. You can't have 0 laps
         clientCurrentLap = 1;
@@ -935,6 +939,8 @@ public class RaceController : MonoBehaviour
         {
             stac.DisableSkippedTrackArrow();
         }
+
+        loadTrackDelayCounter = 0;
     }
 
     void GetRaceModeState()
@@ -1489,7 +1495,7 @@ public class RaceController : MonoBehaviour
     public GameState GetGameState()
     {
         RaceControllerState rcs = new RaceControllerState(raceControllerState, raceModeState, targetNumberOfLaps, maxRaceTimer, raceTimer, leaderFinishedRaceTime, maxReadyTimer, readyTimer, maxStartTimer, startTimer);
-        GameState state = new GameState(frame, em.GetAllStates(), players, em.removedEntities, rcs);
+        GameState state = new GameState(frame, em.GetAllStates(), players, em.removedEntities, rcs, trackGenerator.serializedTrack.Length);
 
         return state;
     }
@@ -1536,6 +1542,19 @@ public class RaceController : MonoBehaviour
         em.SetAllStates(state.entities, true);
 
         UpdateRaceControllerState(state.raceControllerState);
+
+        // Detect if map mismatch...
+        if(state.mapStringLength != trackGenerator.serializedTrack.Length)
+        {
+            loadTrackDelayCounter++;
+
+            if(loadTrackDelayCounter > loadTrackFailureDelay)
+            {
+                cc.RequestTrack();
+                Debug.Log("Detected track mismatch... requesting track from server.");
+                loadTrackDelayCounter = 0;
+            }
+        }
     }
 
     public InputState GetUserInputs(int frame)
@@ -1674,19 +1693,21 @@ public class GameState
     public List<int> removedEntities = new List<int>();
     public RaceControllerState raceControllerState = new RaceControllerState();
     public int frame;
+    public int mapStringLength = 0;
 
     public GameState()
     {
 
     }
 
-    public GameState(int frame, List<EntityState> entities, List<PlayerEntity> playerEntities, List<int> removedEntities, RaceControllerState raceControllerState)
+    public GameState(int frame, List<EntityState> entities, List<PlayerEntity> playerEntities, List<int> removedEntities, RaceControllerState raceControllerState, int mapStringLength)
     {
         this.entities = entities;
         this.playerEntities = playerEntities;
         this.removedEntities = removedEntities;
         this.frame = frame;
         this.raceControllerState = raceControllerState;
+        this.mapStringLength = mapStringLength;
     }
 }
 

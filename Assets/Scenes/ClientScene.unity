@@ -37654,6 +37654,7 @@ MonoBehaviour:
   scoreMulti: 2
   skippedCheckpointTolerance: 2
   stac: {fileID: 0}
+  loadTrackFailureDelay: 32
 --- !u!4 &1893463312
 Transform:
   m_ObjectHideFlags: 0

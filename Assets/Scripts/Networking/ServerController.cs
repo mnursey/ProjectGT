@@ -346,6 +346,13 @@ public class ServerController : MonoBehaviour
                     RemoveClient(clientID, DisconnectionReason.ERROR, "Closing client after set car");
 
                     break;
+
+                case NetworkingMessageType.TRACK_DATA:
+
+                    // Send Track data
+                    SendTrackData(clientID);
+                        
+                    break;
             }
         }
         catch (Exception ex)

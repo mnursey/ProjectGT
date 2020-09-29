@@ -315,7 +315,7 @@ public class ClientController : MonoBehaviour
                     UnityMainThreadDispatcher.Instance().Enqueue(() => {
 
                         GeneratedTrackData gtd = NetworkingMessageTranslator.ParseGenerateTrackData(msg.content);
-
+                        rc.trackGenerator.serializedTrack = msg.content;
                         rc.trackGenerator.LoadTrackData(gtd);
 
                     });
@@ -383,6 +383,11 @@ public class ClientController : MonoBehaviour
     public void SendCarModel(int carModel)
     {
         Send(NetworkingMessageTranslator.GenerateCarModelMessage(carModel, connection), SendType.Reliable, null);
+    }
+
+    public void RequestTrack()
+    {
+        Send(NetworkingMessageTranslator.GenerateTrackDataMessage("", connection), SendType.Reliable, null);
     }
 
     public void Send(String data, SendType flags, OnSent onSent)
