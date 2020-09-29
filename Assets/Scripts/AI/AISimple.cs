@@ -20,8 +20,11 @@ public class AISimple : MonoBehaviour
     public float minVelMag = 100.0f;
     public bool setupCheckpoints = false;
 
+    public TrackGenerator tg;
+
     void SetupCheckpoints()
     {
+        /*
         checkpoints = new List<Transform>();
         foreach (Transform child in transform)
         {
@@ -32,6 +35,14 @@ public class AISimple : MonoBehaviour
                 child.position = new Vector3(child.position.x, hit.point.y + (checkpointRadius / 2.0f), child.position.z);
             }
             checkpoints.Add(child);
+        }
+        */
+
+        checkpoints = new List<Transform>();
+
+        foreach(CheckPoint cp in tg.checkPoints)
+        {
+            checkpoints.Add(cp.t);
         }
     }
 
@@ -87,14 +98,18 @@ public class AISimple : MonoBehaviour
 
         if(Mathf.Abs(angle) > turnAngle)
         {
-            if(Mathf.Sign(angle) > 0.0f)
+            float rotAdjustment = Mathf.Clamp01(Mathf.Abs(angle - turnAngle) / turnAngle);
+
+            Debug.Log(rotAdjustment);
+
+            if (Mathf.Sign(angle) > 0.0f)
             {
-                carInput[0] = -1;
+                carInput[0] = -rotAdjustment;
             }
 
             if (Mathf.Sign(angle) < 0.0f)
             {
-                carInput[0] = 1;
+                carInput[0] = rotAdjustment;
             }
         }
 

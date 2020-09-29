@@ -287,6 +287,7 @@ MonoBehaviour:
   carCameraMode: 0
   ready: 0
   selectedCarModel: 0
+  serverSendRate: 3
   idleTime: 5
   clientFastestLapTime: 3.4028235e+38
   clientCurrentLap: 0
@@ -365,7 +366,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   version: 1.0
-  port: 10069
+  port: 10070
   connectedClients: 
   acceptingClients: 1
   maxConnections: 100
@@ -401,7 +402,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6f0b23cbf1e47f54baaa3ae7a4686b9e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  host: 192.168.1.170
+  host: 192.168.1.110
   user: dev0
   password: 1212
 --- !u!4 &1490767504

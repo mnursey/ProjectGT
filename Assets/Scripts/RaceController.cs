@@ -102,6 +102,7 @@ public class RaceController : MonoBehaviour
     public int selectedCarModel = 0;
     private int frame = 0;
     public int serverSendRate = 3;
+    public int clientSendRate = 3;
     public float idleTime = 5.0f;
 
     public float clientFastestLapTime = float.MaxValue;
@@ -363,14 +364,7 @@ public class RaceController : MonoBehaviour
 
     void ClientHandleIncomingGameState()
     {
-        if(incomingGameState.frame > frame)
-        {
-            UpdateGameState(incomingGameState);
-            frame = incomingGameState.frame;
-        } else
-        {
-            UpdateGameState(incomingGameState);
-        }
+        UpdateGameState(incomingGameState);
     }
 
     void HandleAI(ref InputState input)
@@ -964,7 +958,13 @@ public class RaceController : MonoBehaviour
 
             ClientHandleInitialCarSpawn();
 
-            cc.SendInput(input);
+            if (clientSendRate < 1)
+                clientSendRate = 1;
+
+            if (frame % clientSendRate == 0)
+            {
+                cc.SendInput(input);
+            }
 
             RewardForPersonalBestTime();
         }
@@ -988,11 +988,11 @@ public class RaceController : MonoBehaviour
                 RemovePlayer(leavingPlayerNetworkID);
             }
 
-            if(frame % serverSendRate == 0)
-            {
-                if (serverSendRate < 1)
-                    serverSendRate = 1;
+            if (serverSendRate < 1)
+                serverSendRate = 1;
 
+            if (frame % serverSendRate == 0)
+            {
                 sc.SendGameState(GetGameState());
             }
         }
@@ -1216,36 +1216,41 @@ public class RaceController : MonoBehaviour
                 // Check if at next checkpoint...
                 int nextCheckPointID = (pe.checkpoint + 1) % currentTrack.checkPoints.Count;
                 CheckPoint nextCheckPoint = currentTrack.checkPoints[nextCheckPointID];
-                if(Vector3.Distance(c.transform.position, nextCheckPoint.t.position) < nextCheckPoint.raduis)
+
+                if(pe.networkID == networkID)
                 {
-                    bool failedCheckpoint = false;
-
-                    if(nextCheckPointID == 0)
+                    if (Vector3.Distance(c.transform.position, nextCheckPoint.t.position) < nextCheckPoint.raduis)
                     {
-                        if(c.transform.position.z < nextCheckPoint.t.position.z)
-                        {
-                            failedCheckpoint = true;
-                        } else
-                        {
-                            pe.lap++;
+                        bool failedCheckpoint = false;
 
-                            if (pe.currentLapTime < pe.fastestLapTime)
+                        if (nextCheckPointID == 0)
+                        {
+                            if (c.transform.position.z < nextCheckPoint.t.position.z)
                             {
-                                pe.fastestLapTime = pe.currentLapTime;
+                                failedCheckpoint = true;
                             }
-
-                            pe.currentLapTime = 0.0f;
-
-                            if (pe.lap > targetNumberOfLaps && pe.finishedTime < 0.0f)
+                            else
                             {
-                                pe.finishedTime = Time.time;
+                                pe.lap++;
+
+                                if (pe.currentLapTime < pe.fastestLapTime)
+                                {
+                                    pe.fastestLapTime = pe.currentLapTime;
+                                }
+
+                                pe.currentLapTime = 0.0f;
+
+                                if (pe.lap > targetNumberOfLaps && pe.finishedTime < 0.0f)
+                                {
+                                    pe.finishedTime = Time.time;
+                                }
                             }
                         }
-                    }
 
-                    if(!failedCheckpoint)
-                    {
-                        pe.checkpoint = nextCheckPointID;
+                        if (!failedCheckpoint)
+                        {
+                            pe.checkpoint = nextCheckPointID;
+                        }
                     }
                 }
             }
@@ -1505,7 +1510,28 @@ public class RaceController : MonoBehaviour
 
     public void UpdateGameState(GameState state)
     {
-        players = state.playerEntities;
+        PlayerEntity pe = players.Find(x => x.networkID == networkID);
+
+        if(pe != null)
+        {
+            int localCheckpoint = pe.checkpoint;
+            int localLap = pe.lap;
+            float localFastestLapTime = pe.fastestLapTime;
+            float localCurrentLapTime = pe.currentLapTime;
+
+            players = state.playerEntities;
+
+            pe = players[players.FindIndex(x => x.networkID == networkID)];
+            pe.checkpoint = localCheckpoint;
+            pe.lap = localLap;
+            pe.fastestLapTime = localFastestLapTime;
+            pe.currentLapTime = localCurrentLapTime;
+
+        } else
+        {
+            players = state.playerEntities;
+        }
+
         em.removedEntities = state.removedEntities;
         em.SetAllStates(state.entities, true);
 
@@ -1527,7 +1553,7 @@ public class RaceController : MonoBehaviour
             }
             else
             {
-                InputState s = new InputState(networkID, frame, car.steeringInput, car.accelerationInput, car.brakingInput, car.resetInput, car.resetToCheckpointInput, car.hornInput, ready, em.GetEntityState(pe.carID));
+                InputState s = new InputState(networkID, frame, car.steeringInput, car.accelerationInput, car.brakingInput, car.resetInput, car.resetToCheckpointInput, car.hornInput, ready, em.GetEntityState(pe.carID), pe.lap, pe.checkpoint, pe.fastestLapTime, pe.currentLapTime);
                 return s;
             }
         }
@@ -1580,6 +1606,11 @@ public class RaceController : MonoBehaviour
                 {
                     em.SetEntityState(inputState.currentState, false);
                 }
+
+                p.lap = inputState.lap;
+                p.checkpoint = inputState.checkpoint;
+                p.fastestLapTime = inputState.fastestLapTime;
+                p.currentLapTime = inputState.currentLapTime;
             }
         }
     }
@@ -1711,6 +1742,10 @@ public class InputState
     public bool resetInput = false;
     public bool resetToCheckpointInput = false;
     public bool hornInput = false;
+    public int lap = 0;
+    public int checkpoint = 0;
+    public float fastestLapTime = float.MaxValue;
+    public float currentLapTime = float.MaxValue;
 
     public EntityState currentState = new EntityState(-1);
 
@@ -1726,20 +1761,7 @@ public class InputState
         this.frameID = frameID;
     }
 
-    public InputState(UInt32 networkID, int frameID, float steeringInput, float accelerationInput, float brakingInput, bool resetInput, bool resetToCheckpointInput, bool hornInput, EntityState currentState)
-    {
-        this.networkID = networkID;
-        this.frameID = frameID;
-        this.steeringInput = steeringInput;
-        this.accelerationInput = accelerationInput;
-        this.brakingInput = brakingInput;
-        this.resetInput = resetInput;
-        this.resetToCheckpointInput = resetToCheckpointInput;
-        this.hornInput = hornInput;
-        this.currentState = currentState;
-    }
-
-    public InputState(UInt32 networkID, int frameID, float steeringInput, float accelerationInput, float brakingInput, bool resetInput, bool resetToCheckpointInput, bool hornInput, bool ready, EntityState currentState)
+    public InputState(UInt32 networkID, int frameID, float steeringInput, float accelerationInput, float brakingInput, bool resetInput, bool resetToCheckpointInput, bool hornInput, bool ready, EntityState currentState, int lap, int checkpoint, float fastestLapTime, float currentLapTime)
     {
         this.networkID = networkID;
         this.frameID = frameID;
@@ -1751,6 +1773,10 @@ public class InputState
         this.hornInput = hornInput;
         this.ready = ready;
         this.currentState = currentState;
+        this.lap = lap;
+        this.checkpoint = checkpoint;
+        this.fastestLapTime = fastestLapTime;
+        this.currentLapTime = currentLapTime;
     }
 
     public void SetInput(float steeringInput, float accelerationInput, float brakingInput, bool resetToCheckpointInput)

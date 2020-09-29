@@ -171,7 +171,8 @@ public class CarController : MonoBehaviour
     {
         if(other.gameObject.tag == "Water")
         {
-            splashSound.Play();
+            if(splashSound.enabled)
+                splashSound.Play();
 
             Instantiate(splashEffectPrefab, other.ClosestPoint(transform.position), splashEffectPrefab.transform.rotation);
 
@@ -189,7 +190,8 @@ public class CarController : MonoBehaviour
         }
         else
         {
-            hitSound.Play(other.impulse.magnitude / hitSoundMaxImpulse);
+            if (hitSound.enabled)
+                hitSound.Play(other.impulse.magnitude / hitSoundMaxImpulse);
 
             GameObject go = Instantiate(hitEffectPrefab, other.GetContact(0).point, hitEffectPrefab.transform.rotation);
             go.GetComponent<ParticleSystem>().emission.SetBursts(new ParticleSystem.Burst[] {
@@ -262,7 +264,8 @@ public class CarController : MonoBehaviour
         {
             if(!hornSound.hitSound.isPlaying)
             {
-                hornSound.Play();
+                if(hornSound.enabled)
+                    hornSound.Play();
             } else
             {
                 hornInput = false;
