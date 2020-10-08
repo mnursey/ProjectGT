@@ -5,201 +5,214 @@ using System.Net;
 using System.Net.Sockets;
 using System;
 using System.Text;
+using System.Runtime.Serialization.Formatters.Binary;
+using System.IO;
 
 public delegate void OnSent();
 
-public class MessageObject
-{
-    // Todo:
-    // multi by 10 was quick fix... this is hacky... slow to send / receive large packets.
-    public byte[] buffer = new byte[65535];
-    public EndPoint sender;
-    public IPPacketInformation packetInformation;
-    public OnSent onSent;
-}
-
 public static class NetworkingMessageTranslator
 {
+    static BinaryFormatter bf = new BinaryFormatter();
+
+    public static byte[] ToByteArray(object obj)
+    {
+        using (var ms = new MemoryStream())
+        {
+            bf.Serialize(ms, obj);
+            return ms.ToArray();
+        }
+    }
+
+    public static System.Object ByteArrayToObject(byte[] arrBytes)
+    {
+        using (var memStream = new MemoryStream())
+        {
+            memStream.Write(arrBytes, 0, arrBytes.Length);
+            memStream.Seek(0, SeekOrigin.Begin);
+            var obj = bf.Deserialize(memStream);
+            return obj;
+        }
+    }
 
     private static string ToJson(object obj)
     {
         return JsonUtility.ToJson(obj);
     }
 
-    public static string GenerateClientJoinMessage(JoinRequest joinRequest)
+    public static byte[] GenerateClientJoinMessage(JoinRequest joinRequest)
     {
         NetworkingMessage msg = new NetworkingMessage(NetworkingMessageType.CLIENT_JOIN, 0);
-        msg.content = ToJson(joinRequest);
-        return ToJson(msg);
+        msg.content = ToByteArray(joinRequest);
+        return ToByteArray(msg);
     }
 
-    public static string GenerateServerJoinResponseMessage(JoinRequestResponce joinRequestResponce)
+    public static byte[] GenerateServerJoinResponseMessage(JoinRequestResponce joinRequestResponce)
     {
         NetworkingMessage msg = new NetworkingMessage(NetworkingMessageType.SERVER_JOIN_RESPONSE, joinRequestResponce.clientID);
-        msg.content = ToJson(joinRequestResponce);
+        msg.content = ToByteArray(joinRequestResponce);
 
-        return ToJson(msg);
+        return ToByteArray(msg);
     }
 
-    public static string GeneratePingMessage(UInt32 clientID)
+    public static byte[] GeneratePingMessage(UInt32 clientID)
     {
         NetworkingMessage msg = new NetworkingMessage(NetworkingMessageType.PING, clientID);
-        return ToJson(msg);
+        return ToByteArray(msg);
     }
 
-    public static string GeneratePingResponseMessage(UInt32 clientID)
+    public static byte[] GeneratePingResponseMessage(UInt32 clientID)
     {
         NetworkingMessage msg = new NetworkingMessage(NetworkingMessageType.PING_RESPONSE, clientID);
-        return ToJson(msg);
+        return ToByteArray(msg);
     }
 
-    public static string GenerateDisconnectMessage(UInt32 clientID)
+    public static byte[] GenerateDisconnectMessage(UInt32 clientID)
     {
         NetworkingMessage msg = new NetworkingMessage(NetworkingMessageType.DISCONNECT, clientID);
-        return ToJson(msg);
+        return ToByteArray(msg);
     }
 
-    public static string GenerateGameStateMessage(GameState gamestate, UInt32 clientID)
+    public static byte[] GenerateGameStateMessage(GameState gamestate, UInt32 clientID)
     {
         NetworkingMessage msg = new NetworkingMessage(NetworkingMessageType.GAME_STATE, clientID);
-        msg.content = ToJson(gamestate);
-        return ToJson(msg);
+        msg.content = ToByteArray(gamestate);
+        return ToByteArray(msg);
     }
 
-    public static string GenerateUserManagerStateMessage(UserManagerState userManagerState, UInt32 clientID)
+    public static byte[] GenerateUserManagerStateMessage(UserManagerState userManagerState, UInt32 clientID)
     {
         NetworkingMessage msg = new NetworkingMessage(NetworkingMessageType.USER_MANAGER_STATE, clientID);
-        msg.content = ToJson(userManagerState);
-        return ToJson(msg);
+        msg.content = ToByteArray(userManagerState);
+        return ToByteArray(msg);
     }
 
-    public static string GenerateInputMessage(InputState inputState, UInt32 clientID)
+    public static byte[] GenerateInputMessage(InputState inputState, UInt32 clientID)
     {
         NetworkingMessage msg = new NetworkingMessage(NetworkingMessageType.INPUT_STATE, clientID);
-        msg.content = ToJson(inputState);
-        return ToJson(msg);
+        msg.content = ToByteArray(inputState);
+        return ToByteArray(msg);
     }
 
-    public static string GenerateCarModelMessage(int carModel, UInt32 clientID)
+    public static byte[] GenerateCarModelMessage(int carModel, UInt32 clientID)
     {
         NetworkingMessage msg = new NetworkingMessage(NetworkingMessageType.CAR_MODEL, clientID);
-        msg.content = carModel.ToString();
-        return ToJson(msg);
+        msg.content = BitConverter.GetBytes(carModel);
+        return ToByteArray(msg);
     }
 
-    public static string GenerateTrackDataMessage(string serializedTrackData, UInt32 clientID)
+    public static byte[] GenerateTrackDataMessage(byte[] serializedTrackData, UInt32 clientID)
     {
         NetworkingMessage msg = new NetworkingMessage(NetworkingMessageType.TRACK_DATA, clientID);
         msg.content = serializedTrackData;
-        return ToJson(msg);
+        return ToByteArray(msg);
     }
 
-    public static string GenerateNewAccountMessage()
+    public static byte[] GenerateNewAccountMessage()
     {
         NetworkingMessage msg = new NetworkingMessage(NetworkingMessageType.NEW_ACCOUNT, 0);
-        msg.content = ToJson(new NewAccountMsg(0, 1));
-        return ToJson(msg);
+        msg.content = ToByteArray(new NewAccountMsg(0, 1));
+        return ToByteArray(msg);
     }
 
-    public static string GenerateNewAccountMessageResponce(NewAccountMsg accountMsg)
+    public static byte[] GenerateNewAccountMessageResponce(NewAccountMsg accountMsg)
     {
         NetworkingMessage msg = new NetworkingMessage(NetworkingMessageType.NEW_ACCOUNT_RESPONCE, 0);
-        msg.content = ToJson(accountMsg);
-        return ToJson(msg);
+        msg.content = ToByteArray(accountMsg);
+        return ToByteArray(msg);
     }
 
-    public static string GenerateLoginMessage(ulong id, int type)
+    public static byte[] GenerateLoginMessage(ulong id, int type)
     {
         NetworkingMessage msg = new NetworkingMessage(NetworkingMessageType.LOGIN, 0);
-        msg.content = ToJson(new NewAccountMsg(id, type));
-        return ToJson(msg);
+        msg.content = ToByteArray(new NewAccountMsg(id, type));
+        return ToByteArray(msg);
     }
 
-    public static string GenerateLoginMessageResponce(AccountData ac)
+    public static byte[] GenerateLoginMessageResponce(AccountData ac)
     {
         NetworkingMessage msg = new NetworkingMessage(NetworkingMessageType.LOGIN_RESPONCE, 0);
-        msg.content = ToJson(ac);
-        return ToJson(msg);
+        msg.content = ToByteArray(ac);
+        return ToByteArray(msg);
     }
 
-    public static string GenerateSaveSelectedCarMessage(ulong id, int type, int carID)
+    public static byte[] GenerateSaveSelectedCarMessage(ulong id, int type, int carID)
     {
         NetworkingMessage msg = new NetworkingMessage(NetworkingMessageType.SAVE_SELECTED_CAR, 0);
-        msg.content = ToJson(new SelectedCarData(id, type, carID));
-        return ToJson(msg);
+        msg.content = ToByteArray(new SelectedCarData(id, type, carID));
+        return ToByteArray(msg);
     }
 
-    public static string GenerateGlobalLeaderboardMessage()
+    public static byte[] GenerateGlobalLeaderboardMessage()
     {
         NetworkingMessage msg = new NetworkingMessage(NetworkingMessageType.GLOBAL_LEADERBOARD, 0);
-        return ToJson(msg);
+        return ToByteArray(msg);
     }
 
-    public static string GenerateGlobalLeaderboardMessage(List<AccountData> accountData)
+    public static byte[] GenerateGlobalLeaderboardMessage(List<AccountData> accountData)
     {
         NetworkingMessage msg = new NetworkingMessage(NetworkingMessageType.GLOBAL_LEADERBOARD, 0);
-        msg.content = ToJson(new AccountDataList(accountData));
-        return ToJson(msg);
+        msg.content = ToByteArray(new AccountDataList(accountData));
+        return ToByteArray(msg);
     }
 
-    public static NetworkingMessage ParseMessage(string json)
+    public static NetworkingMessage ParseMessage(byte[] data)
     {
-        return JsonUtility.FromJson<NetworkingMessage>(json);
+        return (NetworkingMessage)ByteArrayToObject(data);
     }
 
-    public static GameState ParseGameState(string json)
+    public static GameState ParseGameState(byte[] data)
     {
-        return JsonUtility.FromJson<GameState>(json);
+        return (GameState)ByteArrayToObject(data);
     }
 
-    public static UserManagerState ParseUserManagerState(string json)
+    public static UserManagerState ParseUserManagerState(byte[] data)
     {
-        return JsonUtility.FromJson<UserManagerState>(json);
+        return (UserManagerState)ByteArrayToObject(data);
     }
 
-    public static JoinRequest ParseJoinRequest(string json)
+    public static JoinRequest ParseJoinRequest(byte[] data)
     {
-        return JsonUtility.FromJson<JoinRequest>(json);
+        return (JoinRequest)ByteArrayToObject(data);
     }
 
-    public static JoinRequestResponce ParseJoinRequestResponce(string json)
+    public static JoinRequestResponce ParseJoinRequestResponce(byte[] data)
     {
-        return JsonUtility.FromJson<JoinRequestResponce>(json);
+        return (JoinRequestResponce)ByteArrayToObject(data);
     }
 
-    public static InputState ParseInputState(string json)
+    public static InputState ParseInputState(byte[] data)
     {
-        return JsonUtility.FromJson<InputState>(json);
+        return (InputState)ByteArrayToObject(data);
     }
 
-    public static int ParseCarModel(string carModelString)
+    public static int ParseCarModel(byte[] data)
     {
-        return int.Parse(carModelString);
+        return BitConverter.ToInt32(data, 0);
     }
 
-    public static GeneratedTrackData ParseGenerateTrackData(string json)
+    public static GeneratedTrackData ParseGenerateTrackData(byte[] data)
     {
-        return JsonUtility.FromJson<GeneratedTrackData>(json);
+        return (GeneratedTrackData)ByteArrayToObject(data);
     }
 
-    public static NewAccountMsg ParseNewAccountMsg(string json)
+    public static NewAccountMsg ParseNewAccountMsg(byte[] data)
     {
-        return JsonUtility.FromJson<NewAccountMsg>(json);
+        return (NewAccountMsg)ByteArrayToObject(data);
     }
 
-    public static AccountData ParseAccountData(string json)
+    public static AccountData ParseAccountData(byte[] data)
     {
-        return JsonUtility.FromJson<AccountData>(json);
+        return (AccountData)ByteArrayToObject(data);
     }
 
-    public static AccountDataList ParseAccountDataList(string json)
+    public static AccountDataList ParseAccountDataList(byte[] data)
     {
-        return JsonUtility.FromJson<AccountDataList>(json);
+        return (AccountDataList)ByteArrayToObject(data);
     }
 
-    public static SelectedCarData ParseSelectedCarData(string json)
+    public static SelectedCarData ParseSelectedCarData(byte[] data)
     {
-        return JsonUtility.FromJson<SelectedCarData>(json);
+        return (SelectedCarData)ByteArrayToObject(data);
     }
 }
 
@@ -210,7 +223,7 @@ public enum NetworkingMessageType { CLIENT_JOIN, SERVER_JOIN_RESPONSE, DISCONNEC
 public class NetworkingMessage
 {
     public NetworkingMessageType type;
-    public string content;
+    public byte[] content;
     public UInt32 clientID;
 
     public NetworkingMessage()
@@ -224,7 +237,7 @@ public class NetworkingMessage
         this.clientID = clientID;
     }
 
-    public NetworkingMessage(NetworkingMessageType type, UInt32 clientID, string content)
+    public NetworkingMessage(NetworkingMessageType type, UInt32 clientID, byte[] content)
     {
         this.type = type;
         this.clientID = clientID;

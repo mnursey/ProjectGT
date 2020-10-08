@@ -153,11 +153,9 @@ public class ServerController : MonoBehaviour
         netMessage.CopyTo(messageDataBuffer);
         netMessage.Destroy();
 
-        string result = Encoding.ASCII.GetString(messageDataBuffer);
-
         try
         {
-            NetworkingMessage msg = NetworkingMessageTranslator.ParseMessage(result);
+            NetworkingMessage msg = NetworkingMessageTranslator.ParseMessage(messageDataBuffer);
 
             UInt32 clientID = netMessage.connection;
 
@@ -365,22 +363,22 @@ public class ServerController : MonoBehaviour
 
     public void SendGameState(GameState gameState)
     {
-        SendToAllPlayers(Encoding.ASCII.GetBytes(NetworkingMessageTranslator.GenerateGameStateMessage(gameState, 0)), SendType.Unreliable);
+        SendToAllPlayers(NetworkingMessageTranslator.GenerateGameStateMessage(gameState, 0), SendType.Unreliable);
     }
 
     public void SendUserManagerState()
     {
-        SendToAllPlayers(Encoding.ASCII.GetBytes(NetworkingMessageTranslator.GenerateUserManagerStateMessage(rc.um.GetState(), 0)), SendType.Reliable);
+        SendToAllPlayers(NetworkingMessageTranslator.GenerateUserManagerStateMessage(rc.um.GetState(), 0), SendType.Reliable);
     }
 
     public void SendTrackData()
     {
-        SendToAllPlayers(Encoding.ASCII.GetBytes(NetworkingMessageTranslator.GenerateTrackDataMessage(rc.trackGenerator.serializedTrack, 0)), SendType.Reliable);
+        SendToAllPlayers(NetworkingMessageTranslator.GenerateTrackDataMessage(rc.trackGenerator.serializedTrack, 0), SendType.Reliable);
     }
 
     public void SendTrackData(UInt32 connectionID)
     {
-        SendTo(connectionID, Encoding.ASCII.GetBytes(NetworkingMessageTranslator.GenerateTrackDataMessage(rc.trackGenerator.serializedTrack, 0)), SendType.Reliable);
+        SendTo(connectionID, NetworkingMessageTranslator.GenerateTrackDataMessage(rc.trackGenerator.serializedTrack, 0), SendType.Reliable);
     }
 
     public void SendTo(UInt32 connectionID, string data, SendType flags)

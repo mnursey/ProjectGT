@@ -51,7 +51,7 @@ public class TrackGenerator : MonoBehaviour
 
     public float trackSpawnWidth = 10.0f;
 
-    public string serializedTrack = "";
+    public byte[] serializedTrack = new byte[0];
 
     List<List<float>> noiseMap;
     public int noiseMapDensity = 3;
@@ -782,9 +782,7 @@ public class TrackGenerator : MonoBehaviour
                 ass.enabled = false;
             }
 
-            serializedTrack = JsonUtility.ToJson(Serialize());
-            // Debug.Log(serializedTrack.Length);
-            // Debug.Log(serializedTrack);
+            serializedTrack = NetworkingMessageTranslator.ToByteArray(Serialize());
         }
     }
 

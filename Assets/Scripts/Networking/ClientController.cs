@@ -232,11 +232,9 @@ public class ClientController : MonoBehaviour
         netMessage.CopyTo(messageDataBuffer);
         netMessage.Destroy();
 
-        string result = Encoding.ASCII.GetString(messageDataBuffer);
-
         try
         {
-            NetworkingMessage msg = NetworkingMessageTranslator.ParseMessage(result);
+            NetworkingMessage msg = NetworkingMessageTranslator.ParseMessage(messageDataBuffer);
 
             switch(msg.type)
             {
@@ -392,12 +390,7 @@ public class ClientController : MonoBehaviour
 
     public void RequestTrack()
     {
-        Send(NetworkingMessageTranslator.GenerateTrackDataMessage("", connection), SendType.Reliable, null);
-    }
-
-    public void Send(String data, SendType flags, OnSent onSent)
-    {
-        Send(Encoding.ASCII.GetBytes(data), flags, onSent);
+        Send(NetworkingMessageTranslator.GenerateTrackDataMessage(null, connection), SendType.Reliable, null);
     }
 
     public void Send(Byte[] data, SendType flags, OnSent onSent)
