@@ -568,6 +568,8 @@ public class RaceController : MonoBehaviour
 
     float CheckStartTimer()
     {
+        // TODO...
+        // FIX THIS MESS... Should the server really be incharge of timing everything? Like really? The laggy server? Gives advantage to players with low ping
         if (raceControllerMode == RaceControllerMode.SERVER) startTimer += Time.fixedDeltaTime;
 
         return startTimer;
@@ -619,6 +621,7 @@ public class RaceController : MonoBehaviour
     {
         // Todo
         // Only do this once...
+        // Refactor into function RaceStarted() or something...
         if(CheckStartTimer() > maxStartTimer)
         {
             foreach (PlayerEntity pe in players)
@@ -1158,9 +1161,6 @@ public class RaceController : MonoBehaviour
 
         if (c != null)
         {
-            pe.elapsedTime += Time.fixedDeltaTime;
-            pe.currentLapTime += Time.fixedDeltaTime;
-
             c.resetCheckpoint = GetCheckpointToResetTo(pe);
 
             // Check if at next checkpoint...
@@ -1214,8 +1214,13 @@ public class RaceController : MonoBehaviour
 
             if(c != null)
             {
-                pe.elapsedTime += Time.fixedDeltaTime;
-                pe.currentLapTime += Time.fixedDeltaTime;
+                // TODO
+                // Create function for this.. to see if race has started...
+                if(startTimer > maxStartTimer && raceModeState == RaceModeState.RACING)
+                {
+                    pe.elapsedTime += Time.fixedDeltaTime;
+                    pe.currentLapTime += Time.fixedDeltaTime;
+                }
 
                 c.resetCheckpoint = GetCheckpointToResetTo(pe);
 
@@ -1248,7 +1253,7 @@ public class RaceController : MonoBehaviour
 
                                 if (pe.lap > targetNumberOfLaps && pe.finishedTime < 0.0f)
                                 {
-                                    pe.finishedTime = Time.time;
+                                    pe.finishedTime = pe.elapsedTime;
                                 }
                             }
                         }
