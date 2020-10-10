@@ -165,54 +165,6 @@ MonoBehaviour:
     prefab: {fileID: 5691122574158358379, guid: 27ed3a2d03db48b45986528fb81283ac,
       type: 3}
     tags: 05000000
-  - type: 7
-    prefab: {fileID: 4811696120807914913, guid: 3418962430d75154f9cb94ff71b4db61,
-      type: 3}
-    tags: 
-  - type: 8
-    prefab: {fileID: 4431686284999537807, guid: 6810d9598f8eb4a438d191f135fad128,
-      type: 3}
-    tags: 
-  - type: 10
-    prefab: {fileID: 4431686284999537807, guid: 2fca9520976c31c49bd08154d7b30507,
-      type: 3}
-    tags: 
-  - type: 9
-    prefab: {fileID: 1292472890327022313, guid: 527b62a3d036e574ca0faa53bb52c842,
-      type: 3}
-    tags: 
-  - type: 9
-    prefab: {fileID: 3056580104586045011, guid: b90856fcd0b848e44bbfa2620a40a7d6,
-      type: 3}
-    tags: 
-  - type: 11
-    prefab: {fileID: 4431686284999537807, guid: a94c4c458f9d5c24181cbd79003caaa1,
-      type: 3}
-    tags: 
-  - type: 12
-    prefab: {fileID: 4431686284999537807, guid: 068c9a6dd8d12454abca07738c7cdcef,
-      type: 3}
-    tags: 
-  - type: 11
-    prefab: {fileID: 4431686284999537807, guid: 49c088339b9598e40a3d0d8079b4187a,
-      type: 3}
-    tags: 
-  - type: 8
-    prefab: {fileID: 8290117427089526282, guid: b3ec4a37ac028f048966709b3d1a586a,
-      type: 3}
-    tags: 
-  - type: 8
-    prefab: {fileID: 1678765456911091851, guid: cb24aac809f6a0e4981930d91ad263c9,
-      type: 3}
-    tags: 
-  - type: 10
-    prefab: {fileID: 4409933064841954170, guid: f9ca859fd6950f64bbf3cdfbc7bc3f21,
-      type: 3}
-    tags: 030000000500000007000000
-  - type: 10
-    prefab: {fileID: 4409933064841954170, guid: bbfbda72cce2faf4a806da5525fce9b6,
-      type: 3}
-    tags: 030000000500000007000000
   - type: 2
     prefab: {fileID: 1557698554331177871, guid: d84c90d003c591b4caec75fd7b78a77d,
       type: 3}
@@ -281,6 +233,34 @@ MonoBehaviour:
     prefab: {fileID: 4454764041570004665, guid: 10217ff0230a3bc4385a3eff494c2188,
       type: 3}
     tags: 0500000006000000
+  - type: 2
+    prefab: {fileID: 1557698554331177871, guid: 3b87e5f9a4ec43f46960990324760544,
+      type: 3}
+    tags: 
+  - type: 2
+    prefab: {fileID: 1557698554331177871, guid: a4e1cbea431dad5478972bd245d2657f,
+      type: 3}
+    tags: 
+  - type: 2
+    prefab: {fileID: 1557698554331177871, guid: 5920ce6c2f0e78a4bbc6854a9e1bf13c,
+      type: 3}
+    tags: 01000000
+  - type: 3
+    prefab: {fileID: 5691122574158358379, guid: 549128f3a33a6ac4c8007ee9e2f39b37,
+      type: 3}
+    tags: 
+  - type: 10
+    prefab: {fileID: 4409933064841954170, guid: f9ca859fd6950f64bbf3cdfbc7bc3f21,
+      type: 3}
+    tags: 050000000300000007000000
+  - type: 10
+    prefab: {fileID: 4409933064841954170, guid: bbfbda72cce2faf4a806da5525fce9b6,
+      type: 3}
+    tags: 050000000300000007000000
+  - type: 2
+    prefab: {fileID: 6670929847867414898, guid: a268754c64c313443835ce69a80e7146,
+      type: 3}
+    tags: 
   generationWidth: 16
   defaultCheckpointRadius: 25
   holeChance: 50
