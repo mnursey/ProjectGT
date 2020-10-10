@@ -356,10 +356,6 @@ public class RaceController : MonoBehaviour
                     c.GetComponent<AudioListener>().enabled = true;
                     c.cameraShake = cameraController.GetComponentInChildren<CameraShake>();
 
-                    // TODO
-                    // Figure out to use MOE or not...
-                    //em.useMOEEntities.Add(pe.carID);
-
                     em.ignoreUpdates.Add(pe.carID);
                 }
             }

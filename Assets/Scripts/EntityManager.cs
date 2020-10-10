@@ -11,12 +11,8 @@ public class EntityManager : MonoBehaviour
     public List<Entity> entities = new List<Entity>();
     public List<int> removedEntities = new List<int>();
 
-    public float posMarginOfError = 0.001f;
-    public float rotMarginOfError = 10.0f;
-
     private int entityIDTracker = 0;
 
-    public List<int> useMOEEntities = new List<int>();
     public List<int> ignoreUpdates = new List<int>();
 
     private Scene targetScene;
@@ -55,7 +51,6 @@ public class EntityManager : MonoBehaviour
         entities = new List<Entity>();
 
         entityIDTracker = 0;
-        useMOEEntities = new List<int>();
         removedEntities = new List<int>();
     }
 
@@ -206,31 +201,27 @@ public class EntityManager : MonoBehaviour
 
         if(rb != null)
         {
-            bool useMOE = useMOEEntities.Exists(x => x == state.id);
             bool ignoreUpdate = ignoreUpdates.Exists(x => x == state.id);
 
             if(!ignoreUpdate)
             {
-                Vector3 desiredValue = Vector3.zero;
-
-                desiredValue = state.velocity.GetValue();
-                rb.velocity = desiredValue;
-
-                desiredValue = state.position.GetValue();
-
-                if (!useMOE || (desiredValue - rb.position).magnitude > posMarginOfError)
+                // TODO
+                // NEVER DO THIS... USE LERP FOR EVERYTHING
+                if(entity.GetPrefabID() != 0)
                 {
+                    Vector3 desiredValue = Vector3.zero;
+
+                    desiredValue = state.velocity.GetValue();
+                    rb.velocity = desiredValue;
+
+                    desiredValue = state.position.GetValue();
                     rb.position = desiredValue;
-                }
+                    
+                    desiredValue = state.angularVelocity.GetValue();
+                    rb.angularVelocity = desiredValue;
 
-                desiredValue = state.angularVelocity.GetValue();
-                rb.angularVelocity = desiredValue;
-
-                Vector3 rotE = state.rotation.GetValue();
-                Quaternion rot = Quaternion.Euler(rotE.x, rotE.y, rotE.z);
-
-                if (!useMOE || Quaternion.Angle(rb.rotation, rot) > rotMarginOfError)
-                {
+                    Vector3 rotE = state.rotation.GetValue();
+                    Quaternion rot = Quaternion.Euler(rotE.x, rotE.y, rotE.z);
                     rb.rotation = rot;
                 }
 
@@ -250,6 +241,14 @@ public class EntityManager : MonoBehaviour
                     cc.steeringInput = state.extraValues[9];
                     cc.brakingInput = state.extraValues[10];
                     cc.hornInput = state.extraValues[11] > 0.0f ? true : false;
+
+                    LerpController lc = entity.GetGameObject().GetComponent<LerpController>();
+
+                    Vector3 rotE = state.rotation.GetValue();
+                    Quaternion rot = Quaternion.Euler(rotE.x, rotE.y, rotE.z);
+
+                    lc.UpdateTargets(state.position.GetValue(), rot);
+                    lc.updateRate = rc.serverSendRate;
                 }
 
                 // Boulder
@@ -277,6 +276,14 @@ public class EntityManager : MonoBehaviour
                         dc.timer = state.extraValues[0];
                         dc.currentRotationForce = state.extraValues[1];
                     }
+                }
+            } else
+            {
+                // Car
+                if (entity.GetPrefabID() == 0)
+                {
+                    LerpController lc = entity.GetGameObject().GetComponent<LerpController>();
+                    lc.lerp = false;
                 }
             }
         }

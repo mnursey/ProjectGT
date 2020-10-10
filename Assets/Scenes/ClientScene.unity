@@ -37645,8 +37645,8 @@ MonoBehaviour:
   carCameraMode: 0
   ready: 0
   selectedCarModel: 0
-  serverSendRate: 3
-  clientSendRate: 2
+  serverSendRate: 4
+  clientSendRate: 4
   idleTime: 5
   clientFastestLapTime: 3.4028235e+38
   clientCurrentLap: 0
