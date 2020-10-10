@@ -944,6 +944,8 @@ public class RaceController : MonoBehaviour
         }
 
         loadTrackDelayCounter = 0;
+
+        em.Reset();
     }
 
     void GetRaceModeState()
@@ -1636,6 +1638,9 @@ public class RaceController : MonoBehaviour
                 p.fastestLapTime = inputState.fastestLapTime;
                 p.currentLapTime = inputState.currentLapTime;
             }
+
+            // TODO
+            // FORWARD TO ALL OTHER CLIENTS
         }
     }
 }

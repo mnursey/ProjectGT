@@ -33506,7 +33506,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   version: 1.0
-  serverIP: 192.168.1.110
+  serverIP: 192.168.1.100
   serverport: 10070
   connection: 0
   rc: {fileID: 1893463311}

@@ -139,6 +139,7 @@ public class ServerController : MonoBehaviour
                 }
 
                 Instance.RemoveClient(info.connection, reason, closeDebug);
+                Instance.rc.QueueRemovePlayer(info.connection);
                 Debug.Log(String.Format("Client disconnected from server - ID: {0}, IP: {1}", info.connection, info.connectionInfo.address.GetIP()));
                 break;
         }
@@ -420,8 +421,10 @@ public class ServerController : MonoBehaviour
 
     public void RemoveClient(UInt32 connectionID, DisconnectionReason reason, string debug)
     {
-        connectedClients.Remove(connectionID);
-        server.CloseConnection(connectionID, (int)reason, debug, false);
+        if (connectedClients.Contains(connectionID)) {
+            connectedClients.Remove(connectionID);
+            server.CloseConnection(connectionID, (int)reason, debug, false);
+        }
     }
 
     void Update()
