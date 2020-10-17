@@ -169,6 +169,7 @@ public class AISimple : MonoBehaviour
             carInput[3] = 1.0f;
             sinceLastNode = 0.0f;
             targetIndex = -1;
+            turnAngle = Random.Range(0.5f, 3.5f);
         }
 
         if(car.rb.velocity.magnitude < minVelMag && Vector3.Dot(car.transform.up, Vector3.up) <= 0.1f) {

@@ -1826,6 +1826,11 @@ PrefabInstance:
       propertyPath: m_Name
       value: aiNode
       objectReference: {fileID: 0}
+    - target: {fileID: 8398555480413398907, guid: e68acc59a3114fd4d8ee057101cd8d06,
+        type: 3}
+      propertyPath: slowSpeed
+      value: 30
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: e68acc59a3114fd4d8ee057101cd8d06, type: 3}
 --- !u!4 &2190797312090608986 stripped
@@ -1915,6 +1920,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Name
       value: aiNode (1)
+      objectReference: {fileID: 0}
+    - target: {fileID: 8398555480413398907, guid: e68acc59a3114fd4d8ee057101cd8d06,
+        type: 3}
+      propertyPath: slowSpeed
+      value: 30
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: e68acc59a3114fd4d8ee057101cd8d06, type: 3}

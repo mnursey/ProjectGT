@@ -423,29 +423,29 @@ public class RaceController : MonoBehaviour
                 }
             } */
 
-       
-            PlayerEntity pe = players.Find(x => x.networkID == networkID);
-
-            if (pe != null)
+            foreach(PlayerEntity pe in players)
             {
-                CarController car = GetCarControllerFromID(pe.carID);
-                if (car != null)
-                { 
-                    float[] inputs;
-
-                    simpleAI.Process(car, out inputs);
-
-                    if (inputs != null)
+                if(pe.networkID != networkID)
+                {
+                    CarController car = GetCarControllerFromID(pe.carID);
+                    if (car != null)
                     {
-                        car.steeringInput = inputs[0];
-                        car.accelerationInput = inputs[1];
-                        car.brakingInput = inputs[2];
+                        float[] inputs;
 
-                        car.resetToCheckpointInput = inputs[3] > 0.5f;
-                        car.resetInput = inputs[4] > 0.5f;
+                        simpleAI.Process(car, out inputs);
 
-                        input.SetInput(inputs[0], inputs[1], inputs[2], inputs[3] > 0.5, inputs[4] > 0.5);
-                    }
+                        if (inputs != null)
+                        {
+                            car.steeringInput = inputs[0];
+                            car.accelerationInput = inputs[1];
+                            car.brakingInput = inputs[2];
+
+                            car.resetToCheckpointInput = inputs[3] > 0.5f;
+                            car.resetInput = inputs[4] > 0.5f;
+
+                            input.SetInput(inputs[0], inputs[1], inputs[2], inputs[3] > 0.5, inputs[4] > 0.5);
+                        }
+                    }                 
                 }
             }
         }
@@ -1093,13 +1093,13 @@ public class RaceController : MonoBehaviour
                 {
                     networkID = 1;
 
-                    for (uint i = 1; i <= 1; ++i)
+                    for (uint i = 1; i <= 2; ++i)
                     {
                         PlayerEntity pe = CreatePlayer(i);
-                        SpawnCar(players.Find(x => x.networkID == i), 0);
+                        SpawnCar(players.Find(x => x.networkID == i), openGridPos++);
                         CarController cc = GetCarControllerFromID(pe.carID);
 
-                        cc.gameObject.layer = LayerMask.NameToLayer("IgnoreColliders");
+                        //cc.gameObject.layer = LayerMask.NameToLayer("IgnoreColliders");
                     }
 
                     if (mc != null)

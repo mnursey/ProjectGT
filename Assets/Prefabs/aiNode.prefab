@@ -43,8 +43,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f139603b2ed793f4aa8416e66ced55e4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  slowDistance: 15
-  slowSpeed: 30
-  fastSpeed: 40
-  accelerationAngle: 30
+  slowDistance: 10
+  slowSpeed: 20
+  fastSpeed: 100
+  accelerationAngle: 20
   radius: 4
+  tags: 
+  rerouteNode: {fileID: 0}
