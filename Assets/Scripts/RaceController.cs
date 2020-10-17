@@ -8,7 +8,7 @@ using TMPro;
 using System.Linq;
 using System.Threading.Tasks;
 
-public enum RaceControllerStateEnum { IDLE , PRACTICE, RACE };
+public enum RaceControllerStateEnum { IDLE , PRACTICE, RACE, OFFLINE };
 public enum RaceControllerMode { CLIENT, SERVER };
 
 public enum RaceModeState { PRERACE, RACING, POSTRACE };
@@ -71,6 +71,7 @@ public class RaceController : MonoBehaviour
     [Header("AI")]
 
     public AISimple simpleAI;
+    public AIGANN aiGANN = new AIGANN();
     public bool aiActive = false;
 
     [Header("RaceMode")]
@@ -357,6 +358,11 @@ public class RaceController : MonoBehaviour
                     c.cameraShake = cameraController.GetComponentInChildren<CameraShake>();
 
                     em.ignoreUpdates.Add(pe.carID);
+
+                    if(aiActive)
+                    {
+                        simpleAI.SetupNodes();
+                    }
                 }
             }
         }
@@ -371,14 +377,62 @@ public class RaceController : MonoBehaviour
     {
         if(aiActive)
         {
+            /*
+            foreach(PlayerEntity pe in players)
+            {
+                CarController car = GetCarControllerFromID(pe.carID);
+                if (car != null)
+                {
+                    float[] inputs;
+
+                    
+                    bool resetCar = aiGANN.Update(car, pe, currentTrack.checkPoints, trackGenerator, out inputs);
+
+                    if (resetCar)
+                    {
+                        foreach(PlayerEntity peHat in players)
+                        {
+                            ResetCarToGrid(peHat.networkID, 0);
+
+                            peHat.fastestLapTime = float.MaxValue;
+                            peHat.elapsedTime = 0.0f;
+                            peHat.finishedTime = -1.0f;
+                            peHat.lapScore = 0.0f;
+                            peHat.currentLapTime = 0;
+                            peHat.SetLapState(1, 0);
+
+                            CarController carHat = GetCarControllerFromID(peHat.carID);
+
+                            if (carHat != null)
+                            {
+                                carHat.UnlockMovement();
+                            }
+                        }
+                    }
+
+                    if (inputs != null)
+                    {
+                        car.steeringInput = inputs[0];
+                        car.accelerationInput = inputs[1];
+                        car.brakingInput = inputs[2];
+
+                        car.resetToCheckpointInput = false;
+
+                        input.SetInput(inputs[0], inputs[1], inputs[2], false);
+                    }
+                }
+            } */
+
+       
             PlayerEntity pe = players.Find(x => x.networkID == networkID);
 
             if (pe != null)
             {
                 CarController car = GetCarControllerFromID(pe.carID);
                 if (car != null)
-                {
+                { 
                     float[] inputs;
+
                     simpleAI.Process(car, out inputs);
 
                     if (inputs != null)
@@ -386,8 +440,11 @@ public class RaceController : MonoBehaviour
                         car.steeringInput = inputs[0];
                         car.accelerationInput = inputs[1];
                         car.brakingInput = inputs[2];
-                        car.resetToCheckpointInput = inputs[3] > 0.5;
-                        input.SetInput(inputs[0], inputs[1], inputs[2], inputs[3] > 0.5);
+
+                        car.resetToCheckpointInput = inputs[3] > 0.5f;
+                        car.resetInput = inputs[4] > 0.5f;
+
+                        input.SetInput(inputs[0], inputs[1], inputs[2], inputs[3] > 0.5, inputs[4] > 0.5);
                     }
                 }
             }
@@ -566,14 +623,14 @@ public class RaceController : MonoBehaviour
     {
         // TODO...
         // FIX THIS MESS... Should the server really be incharge of timing everything? Like really? The laggy server? Gives advantage to players with low ping
-        if (raceControllerMode == RaceControllerMode.SERVER) startTimer += Time.fixedDeltaTime;
+        if (raceControllerMode == RaceControllerMode.SERVER || raceControllerState == RaceControllerStateEnum.OFFLINE) startTimer += Time.fixedDeltaTime;
 
         return startTimer;
     }
 
     void PlaceCarOnGrid(PlayerEntity pe)
     {
-        if(raceControllerMode == RaceControllerMode.SERVER)
+        if(raceControllerMode == RaceControllerMode.SERVER || raceControllerState == RaceControllerStateEnum.OFFLINE)
         {
             int carID = SpawnCar(pe, openGridPos++);
             GetCarControllerFromID(carID).LockMovement();
@@ -911,10 +968,7 @@ public class RaceController : MonoBehaviour
             pe.elapsedTime = 0.0f;
             pe.finishedTime = -1.0f;
             pe.lapScore = 0.0f;
-            pe.SetLapState(0, 0);
-
-            // Index for this starts at 1. You can't have 0 laps
-            pe.lap = 1;
+            pe.SetLapState(1, 0);
         }
 
         clientFastestLapTime = float.MaxValue;
@@ -959,7 +1013,8 @@ public class RaceController : MonoBehaviour
 
             HandleAI(ref input);
 
-            ClientHandleIncomingGameState();
+            if(raceControllerState != RaceControllerStateEnum.OFFLINE)
+                ClientHandleIncomingGameState();
 
             UpdateCarGameUI();
 
@@ -968,7 +1023,7 @@ public class RaceController : MonoBehaviour
             if (clientSendRate < 1)
                 clientSendRate = 1;
 
-            if (frame % clientSendRate == 0)
+            if (frame % clientSendRate == 0 && raceControllerState != RaceControllerStateEnum.OFFLINE)
             {
                 cc.SendInput(input);
             }
@@ -1028,6 +1083,30 @@ public class RaceController : MonoBehaviour
                 } else
                 {
                     RaceModeUpdate();
+                }
+
+                break;
+
+            case RaceControllerStateEnum.OFFLINE:
+
+                if(networkID < 1)
+                {
+                    networkID = 1;
+
+                    for (uint i = 1; i <= 1; ++i)
+                    {
+                        PlayerEntity pe = CreatePlayer(i);
+                        SpawnCar(players.Find(x => x.networkID == i), 0);
+                        CarController cc = GetCarControllerFromID(pe.carID);
+
+                        cc.gameObject.layer = LayerMask.NameToLayer("IgnoreColliders");
+                    }
+
+                    if (mc != null)
+                    {
+                        mc.BackMenu(false);
+                        mc.ToGame();
+                    }
                 }
 
                 break;
@@ -1420,6 +1499,15 @@ public class RaceController : MonoBehaviour
         }
     }
 
+    void ResetCarToGrid(uint networkID, int gridPos)
+    {
+        PlayerEntity pe = players.Find(x => x.networkID == networkID);
+        CarController cc = GetCarControllerFromID(pe.carID);
+        cc.transform.position = currentTrack.carStarts[gridPos % currentTrack.carStarts.Count].position;
+        cc.transform.rotation = currentTrack.carStarts[gridPos % currentTrack.carStarts.Count].rotation;
+        cc.GetComponent<Rigidbody>().velocity = new Vector3();
+        cc.GetComponent<Rigidbody>().angularVelocity = new Vector3();
+    }
 
     int SpawnCar(PlayerEntity pe, int gridPos)
     {
@@ -1806,12 +1894,13 @@ public class InputState
         this.currentLapTime = currentLapTime;
     }
 
-    public void SetInput(float steeringInput, float accelerationInput, float brakingInput, bool resetToCheckpointInput)
+    public void SetInput(float steeringInput, float accelerationInput, float brakingInput, bool resetToCheckpointInput, bool resetInput)
     {
         this.steeringInput = steeringInput;
         this.accelerationInput = accelerationInput;
         this.brakingInput = brakingInput;
         this.resetToCheckpointInput = resetToCheckpointInput;
+        this.resetInput = resetInput;
     }
 }
 

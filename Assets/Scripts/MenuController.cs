@@ -313,7 +313,10 @@ public class MenuController : MonoBehaviour
     public void ToGame()
     {
         inGameMode = true;
-        currentMenu.SetActive(false);
+
+        if(currentMenu != null)
+            currentMenu.SetActive(false);
+
         EnableGameUI();
 
         gameMenuPlay.text = gameMenuPlayResumeText;

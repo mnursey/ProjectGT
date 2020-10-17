@@ -6,52 +6,28 @@ using UnityEngine;
 public class AISimple : MonoBehaviour
 {
     public float turnAngle = 10.0f;
-    public float accelerationAngle = 30.0f;
 
-    public float checkpointRadius = 2.0f;
-    public float slowDistance = 5.0f;
-    public float fastVelocity = 10.0f;
+    public List<AINode> nodes = new List<AINode>();
+    public int targetIndex = -1;
 
-    public List<Transform> checkpoints = new List<Transform>();
-    public int checkpointIndex = -1;
-
-    public float sinceLastCheckpoint = 0.0f;
-    public float maxSinceLastCheckpointTime = 4.0f;
+    public float sinceLastNode = 0.0f;
+    public float maxSinceLastNodeTime = 4.0f;
     public float minVelMag = 100.0f;
-    public bool setupCheckpoints = false;
+    public bool setupNodes = false;
 
     public TrackGenerator tg;
 
-    void SetupCheckpoints()
+    public void SetupNodes()
     {
-        /*
-        checkpoints = new List<Transform>();
-        foreach (Transform child in transform)
-        {
-            RaycastHit hit;
-            if(Physics.Raycast(child.position + (Vector3.up * 100.0f), Vector3.down, out hit))
-            {
-                Debug.Log("Hit " + hit.point.y);
-                child.position = new Vector3(child.position.x, hit.point.y + (checkpointRadius / 2.0f), child.position.z);
-            }
-            checkpoints.Add(child);
-        }
-        */
-
-        checkpoints = new List<Transform>();
-
-        foreach(CheckPoint cp in tg.checkPoints)
-        {
-            checkpoints.Add(cp.t);
-        }
+        nodes = tg.aiNodes;
     }
 
     public void Update()
     {
-        if(setupCheckpoints)
+        if(setupNodes)
         {
-            SetupCheckpoints();
-            setupCheckpoints = false;
+            SetupNodes();
+            setupNodes = false;
         }
     }
 
@@ -59,39 +35,93 @@ public class AISimple : MonoBehaviour
     {
         int closestIndex = 0;
 
-        for(int i = 0; i < checkpoints.Count; ++i)
+        for(int i = 0; i < nodes.Count; ++i)
         {
-            if (Vector3.Distance(car.transform.position, checkpoints[i].position) < Vector3.Distance(car.transform.position, checkpoints[closestIndex].position))
+            if (Vector3.Distance(car.transform.position, nodes[i].transform.position) < Vector3.Distance(car.transform.position, nodes[closestIndex].transform.position))
             {
                 closestIndex = i;
             }
         }
-        checkpointIndex = closestIndex;
+
+        targetIndex = closestIndex;
     }
 
-    int GetNextCheckpointIndex()
+    bool InRadius(CarController car, AINode node)
     {
-        return (checkpointIndex + 1) % checkpoints.Count;
+        return Vector3.Distance(car.transform.position, node.transform.position) < node.radius;
+    }
+
+    void CheckReroute(CarController cc)
+    {
+        for(int i = 0; i < nodes.Count; ++i) 
+        {
+            AINode node = nodes[i];
+            if(CheckNodeTag(node, AINodeTags.REROUTE))
+            {
+                if(InRadius(cc, node))
+                {
+                    if(node.rerouteNode != null)
+                    {
+                        
+                    }
+                }
+            }
+        }
+    }
+
+    bool CheckNodeTag(int index, AINodeTags tag)
+    {
+        return CheckNodeTag(nodes[index], tag);
+    }
+
+    bool CheckNodeTag(AINode node, AINodeTags tag)
+    {
+        if (node.tags.Contains(tag))
+        {
+            return true;
+        }
+
+        return false;
+    }
+
+    int GetNextNodeIndex()
+    {
+        int index = (targetIndex + 1) % nodes.Count;
+
+        while(CheckNodeTag(index, AINodeTags.SKIP)) {
+            index = (index + 1) % nodes.Count;
+        }
+
+        return index;
     }
 
     public void Process(CarController car, out float[] carInput)
     {
-        carInput = new float[4];
+        if(nodes.Count == 0)
+        {
+            SetupNodes();
+        }
 
-        if(checkpointIndex == -1)
+        // Steering, acceleration, braking, reset, flip
+
+        carInput = new float[5];
+
+        if(targetIndex == -1)
         {
             SetToClosestCheckpoint(car);
         }
 
-        sinceLastCheckpoint += Time.fixedDeltaTime;
+        sinceLastNode += Time.fixedDeltaTime;
 
-        if (Vector3.Distance(car.transform.position, checkpoints[GetNextCheckpointIndex()].position) < checkpointRadius)
+        Vector3 targetPos = nodes[targetIndex].transform.position;
+
+        if (InRadius(car, nodes[targetIndex]))
         {
-            sinceLastCheckpoint = 0.0f;
-            checkpointIndex = GetNextCheckpointIndex();
+            sinceLastNode = 0.0f;
+            targetIndex = GetNextNodeIndex();
         }
 
-        Vector3 targetDir = checkpoints[GetNextCheckpointIndex()].position - car.transform.position;
+        Vector3 targetDir = (targetPos - car.transform.position).normalized;
         Vector3 forward = car.transform.forward;
 
         float angle = Vector3.SignedAngle(targetDir, forward, Vector3.up);
@@ -99,8 +129,6 @@ public class AISimple : MonoBehaviour
         if(Mathf.Abs(angle) > turnAngle)
         {
             float rotAdjustment = Mathf.Clamp01(Mathf.Abs(angle - turnAngle) / turnAngle);
-
-            Debug.Log(rotAdjustment);
 
             if (Mathf.Sign(angle) > 0.0f)
             {
@@ -113,22 +141,52 @@ public class AISimple : MonoBehaviour
             }
         }
 
-        if (Mathf.Abs(angle) < accelerationAngle)
+        Debug.Log(angle);
+        if (Mathf.Abs(angle) < nodes[targetIndex].accelerationAngle)
         {
             carInput[1] = 1;
         }
 
-        if(Vector3.Distance(car.transform.position, checkpoints[GetNextCheckpointIndex()].position) < slowDistance && car.rb.velocity.magnitude > fastVelocity)
+        if(Vector3.Distance(car.transform.position, targetPos) < nodes[targetIndex].slowDistance)
         {
-            carInput[1] = 0;
-            carInput[2] = 1;
+            if(car.rb.velocity.magnitude > nodes[targetIndex].slowSpeed)
+            {
+                carInput[1] = 0;
+                carInput[2] = 1;
+            }
+
+        } else
+        {
+            if (car.rb.velocity.magnitude > nodes[targetIndex].fastSpeed)
+            {
+                carInput[1] = 0;
+                carInput[2] = 1;
+            }
         }
 
-        if (sinceLastCheckpoint > maxSinceLastCheckpointTime && car.rb.velocity.magnitude < minVelMag)
+        if (sinceLastNode > maxSinceLastNodeTime)
         {
             carInput[3] = 1.0f;
-            sinceLastCheckpoint = 0.0f;
-            checkpointIndex = -1;
+            sinceLastNode = 0.0f;
+            targetIndex = -1;
+        }
+
+        if(car.rb.velocity.magnitude < minVelMag && Vector3.Dot(car.transform.up, Vector3.up) <= 0.1f) {
+            carInput[4] = 1.0f;
+        }
+    }
+
+    void OnDrawGizmos()
+    {
+        for(int i = 0; i < nodes.Count; ++i)
+        {
+            // Draw a yellow sphere at the transform's position
+            Gizmos.color = new Color(242 / 255f, 245 / 255f, 66 / 255f, 190 / 255f);
+
+            if(i == targetIndex)
+                Gizmos.color = new Color(242 / 255f, 66 / 255f, 66 / 255f, 190 / 255f);
+
+            Gizmos.DrawSphere(nodes[i].transform.position, nodes[i].radius);
         }
     }
 }

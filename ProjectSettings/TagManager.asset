@@ -16,7 +16,7 @@ TagManager:
   - 
   - Entities
   - CameraIgnore
-  - 
+  - IgnoreColliders
   - 
   - 
   - 

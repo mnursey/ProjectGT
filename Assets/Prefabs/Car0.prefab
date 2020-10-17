@@ -1198,6 +1198,7 @@ MonoBehaviour:
   originalFrame: 0
   frame: 0
   updateRate: 0
+  lerp: 0
 --- !u!1 &4261872027879443404
 GameObject:
   m_ObjectHideFlags: 0

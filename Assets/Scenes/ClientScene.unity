@@ -3021,46 +3021,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   turnAngle: 2
-  accelerationAngle: 30
-  checkpointRadius: 5
-  slowDistance: 10
-  fastVelocity: 20
-  checkpoints:
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  checkpointIndex: -1
-  sinceLastCheckpoint: 0
-  maxSinceLastCheckpointTime: 4
-  minVelMag: 2
-  setupCheckpoints: 0
+  nodes: []
+  targetIndex: -1
+  sinceLastNode: 0
+  maxSinceLastNodeTime: 8
+  minVelMag: 0.05
+  setupNodes: 0
   tg: {fileID: 723834984}
 --- !u!4 &163062764
 Transform:
@@ -33506,7 +33472,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   version: 1.0
-  serverIP: 192.168.1.100
+  serverIP: 192.168.1.110
   serverport: 10070
   connection: 0
   rc: {fileID: 1893463311}
@@ -37623,14 +37589,26 @@ MonoBehaviour:
   objectiveAnimator: {fileID: 1616885388}
   objectTitle: {fileID: 1662239620}
   objectValue: {fileID: 397648887}
-  raceControllerState: 1
+  raceControllerState: 3
   raceControllerMode: 0
   fastestLaptimeSound: {fileID: 1893463314}
   lapCompletedSound: {fileID: 1893463319}
   shortTone: {fileID: 1893463317}
   longTone: {fileID: 1893463316}
   simpleAI: {fileID: 163062763}
-  aiActive: 0
+  aiGANN:
+    state: 1
+    weightsSaveName: /aiWeights.dat
+    generation: 0
+    populationSize: 30
+    mutationRate: 475
+    maxTestTime: 60
+    maxTimeBetweenCheckpoints: 10
+    visionDistance: 20
+    saveWeights: 0
+    lookAngle: 5
+    numberFailedCars: 0
+  aiActive: 1
   raceModeState: 0
   prevRaceModeState: 2
   targetNumberOfLaps: 0

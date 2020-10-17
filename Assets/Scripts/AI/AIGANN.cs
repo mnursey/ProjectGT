@@ -19,50 +19,68 @@ public class AIGANN
 
     public int generation = 0;
     public int populationSize = 20;
-    public int currentSubject = 0;
 
     // Chance for mutation per weight is 1 / mutation race
     public int mutationRate = 100;
-    public float timeSinceTest = 0.0f;
+
     public float maxTestTime = 60.0f;
 
-    public float lowVelocityTime = 0.0f;
-    public float lowVelocity = 1.0f;
-    public float lowVelocityMaxTime = 2.0f;
-
-    public float maxImpact = 300.0f;
+    public float maxTimeBetweenCheckpoints = 6f;
 
     public float visionDistance = 20.0f;
 
     public bool saveWeights = false;
 
-    bool CheckFail(CarController car, ref int reason)
+    public float lookAngle = 15f;
+
+    public int numberFailedCars = 0;
+
+    bool CheckIfOnTrack(Vector3 position, TrackGenerator tg)
     {
         bool result = false;
 
-        timeSinceTest += Time.fixedDeltaTime;
+        int trackX;
+        int trackY;
 
-        if(timeSinceTest > maxTestTime)
+        tg.WorldToTrackPos(position.x, position.z, out trackX, out trackY);
+
+        for (int i = 0; i < tg.trackPath.Count; ++i)
+        {
+            if (tg.trackPath[i][0] == trackX && tg.trackPath[i][1] == trackY)
+            {
+                result = true;
+                break;
+            }
+        }
+
+        if(trackX == 8 && trackY == 8)
+        {
+            result = true;
+        }
+
+        return result;
+    }
+
+    bool CheckFail(int subjectIndex, Vector3 carPos, TrackGenerator tg, ref int reason)
+    {
+        bool result = false;
+
+        subjects[subjectIndex].timeSinceTest += Time.fixedDeltaTime;
+        subjects[subjectIndex].timeSinceLastCheckpoint += Time.fixedDeltaTime;
+
+        if(subjects[subjectIndex].timeSinceTest > maxTestTime)
         {
             result = true;
             reason = 1;
         }
 
-        if(car.rb.velocity.magnitude < lowVelocity)
+        if(subjects[subjectIndex].timeSinceLastCheckpoint > maxTimeBetweenCheckpoints)
         {
-            lowVelocityTime += Time.fixedDeltaTime;
-
-            if(lowVelocityTime > lowVelocityMaxTime)
-            {
-                result = true;
-                reason = 2;
-            }
-        } else
-        {
-            lowVelocityTime = 0.0f;
+            result = true;
+            reason = 2;
         }
 
-        if(car.largestHitImpact > maxImpact)
+        if(!CheckIfOnTrack(carPos, tg))
         {
             result = true;
             reason = 3;
@@ -73,6 +91,22 @@ public class AIGANN
 
     Weights SelectParent(List<Weights> parents)
     {
+        float sum_of_weight = 0f;
+        for (int i = 0; i < parents.Count; i++)
+        {
+            sum_of_weight += parents[i].score;
+        }
+
+        float rnd = UnityEngine.Random.Range(0.0f, sum_of_weight);
+        for (int i = 0; i < parents.Count; i++)
+        {
+            if (rnd < parents[i].score)
+                return parents[i];
+            rnd -= parents[i].score;
+        }
+
+        /*
+
         float totalScore = 0.0f;
 
         foreach(Weights p in parents)
@@ -96,10 +130,16 @@ public class AIGANN
         }
 
         return parents[0];
+        */
+        return null;
     }
 
-    public void Update(CarController car, CheckPoint targetCheckpoint, CheckPoint startingCheckpoint, PlayerEntity e, List<CheckPoint> checkpoints, out float[] carInput)
+    public bool Update(CarController car, PlayerEntity e, List<CheckPoint> checkpoints, TrackGenerator tg, out float[] carInput)
     {
+        CheckPoint targetCheckpoint = checkpoints[(e.checkpoint + 1) % checkpoints.Count];
+
+        bool resetCar = false;
+
         if(saveWeights)
         {
             SaveWeights();
@@ -121,47 +161,37 @@ public class AIGANN
             }
 
             int failReason = 0;
-            if(CheckFail(car, ref failReason))
+
+            if(e.checkpoint != subjects[(int)e.networkID - 1].currentCheckpoint)
             {
-                //subjects[currentSubject].score = e.lapScore;
-                float disCheckpointToCheckPoint = Vector3.Distance(checkpoints[e.checkpoint].t.position, checkpoints[(e.checkpoint + 1) % checkpoints.Count].t.position);
-                float disCheckpointToCar = Vector3.Distance(car.transform.position, checkpoints[(e.checkpoint + 1) % checkpoints.Count].t.position);
+                subjects[(int)e.networkID - 1].currentCheckpoint = e.checkpoint;
+                subjects[(int)e.networkID - 1].timeSinceLastCheckpoint = 0.0f;
+            }
 
-                subjects[currentSubject].score = (e.checkpoint + checkpoints.Count * e.lap) + Mathf.Max((disCheckpointToCheckPoint - disCheckpointToCar) / disCheckpointToCheckPoint, 0.0f);
-
-                if(failReason == 1)
+            if(CheckFail((int)e.networkID - 1, car.transform.position, tg, ref failReason))
+            {
+                if (subjects[(int)e.networkID - 1].score < -10000 + 5)
                 {
-                    subjects[currentSubject].score *= 0.5f;
+                    float disCheckpointToCheckPoint = Vector3.Distance(checkpoints[e.checkpoint].t.position, checkpoints[(e.checkpoint + 1) % checkpoints.Count].t.position);
+                    float disCheckpointToCar = Vector3.Distance(car.transform.position, checkpoints[(e.checkpoint + 1) % checkpoints.Count].t.position);
+
+                    subjects[(int)e.networkID - 1].score = (e.checkpoint + (checkpoints.Count * (e.lap - 1f))) + 0.0001f;
+                    //+ Mathf.Max(((disCheckpointToCheckPoint) - disCheckpointToCar) / (disCheckpointToCheckPoint), 0.0f) + 0.001f;
+
+                    numberFailedCars++;
+
+                    car.LockMovement();
                 }
 
-                // reset car
-
-                car.rb.velocity = new Vector3();
-                car.rb.angularVelocity = new Vector3();
-
-                car.transform.rotation = startingCheckpoint.t.rotation;
-                car.transform.position = startingCheckpoint.t.position;
-                car.largestHitImpact = 0.0f;
-
-                // reset fail timers
-                timeSinceTest = 0.0f;
-                lowVelocityTime = 0.0f;
-
-                // reset lap & checkpoint state
-                e.checkpoint = 0;
-                e.lap = 0;
-                e.lapScore = 0;
-
-                currentSubject++;
-
-                if(currentSubject == populationSize)
+                if(numberFailedCars >= populationSize)
                 {
-                    subjects.Sort((x, y) => y.score.CompareTo(x.score));
+                    resetCar = true;
 
-                    foreach(Weights s in subjects)
+                    subjects.Sort((x, y) => y.score.CompareTo(x.score));
+                    subjects.Reverse();
+
+                    foreach (Weights s in subjects)
                     {
-                        // Make all scores positive
-                        s.score += Mathf.Abs(subjects[subjects.Count - 1].score);
                         Debug.Log(s.score);
                     }
 
@@ -178,16 +208,22 @@ public class AIGANN
 
                     subjects = children;
 
-                    currentSubject = 0;
                     generation++;
+                    numberFailedCars = 0;
                 }
             }
 
-            float[] input = new float[16];
-            GenerateInput(car, targetCheckpoint, input);
+            if(subjects[(int)e.networkID - 1].score < 0f)
+            {
+                float[] input = new float[16];
 
-            carInput = NeuralNetwork.Forward(subjects[currentSubject], input);
+                GenerateInput(car, targetCheckpoint, input);
+
+                carInput = NeuralNetwork.Forward(subjects[(int)e.networkID - 1], input);
+            }
         }
+
+        return resetCar;
     }
 
     public void GenerateInput(CarController car, CheckPoint targetCheckpoint, float[] input)
@@ -208,11 +244,11 @@ public class AIGANN
         */
 
         // 9 raycasts
-        int layerMask = ~LayerMask.GetMask("Water");
+        int layerMask = ~LayerMask.GetMask("Water", "IgnoreColliders");
         for (int i = 0; i < 9; ++i)
         {
             RaycastHit hit;
-            Vector3 direction = car.transform.TransformDirection(Quaternion.AngleAxis(i * (180.0f / 8.0f) - 90, Vector3.up) * Vector3.forward);
+            Vector3 direction = car.transform.TransformDirection(Quaternion.AngleAxis(lookAngle, Vector3.right) * Quaternion.AngleAxis(i * (180.0f / 8.0f) - 90, Vector3.up) * Vector3.forward);
 
             if (car.physicsScene.Raycast(car.transform.position, direction, out hit, visionDistance, layerMask, QueryTriggerInteraction.Ignore))
             {
@@ -285,7 +321,12 @@ public class Weights
     static int[] layers = { 16, 9, 5, 3 };
     public float[] weights;
     static float weightRange = 1000.0f;
-    public float score = 0.0f;
+    public float score = -10000.0f;
+
+    public float timeSinceTest = 0.0f;
+
+    public float timeSinceLastCheckpoint = 0.0f;
+    public int currentCheckpoint = 0;
 
     public Weights()
     {

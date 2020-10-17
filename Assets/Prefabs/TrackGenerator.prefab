@@ -53,18 +53,6 @@ MonoBehaviour:
     prefab: {fileID: 4732334817661378973, guid: ee813d924301766439c076f9874a12ed,
       type: 3}
     tags: 
-  - type: 0
-    prefab: {fileID: 3747090962397192214, guid: c83ba91650dfaab41a1dfb2e6abbaba5,
-      type: 3}
-    tags: 
-  - type: 0
-    prefab: {fileID: 5691122574158358379, guid: 628b6fddb4c859e4fbfe46b295535061,
-      type: 3}
-    tags: 
-  - type: 0
-    prefab: {fileID: 5691122574158358379, guid: 5151b271f2d968b4db1bb38829b81b9c,
-      type: 3}
-    tags: 
   - type: 2
     prefab: {fileID: 4454764041570004665, guid: dadc40fdb5f9c7c4e8458ec07bccbccf,
       type: 3}
@@ -89,22 +77,6 @@ MonoBehaviour:
     prefab: {fileID: 4338775768554391120, guid: b6dba13087753734d93dce2d8b01db26,
       type: 3}
     tags: 
-  - type: 0
-    prefab: {fileID: 5691122574158358379, guid: 85d1893c0fb9ec7408911ea74089398c,
-      type: 3}
-    tags: 
-  - type: 0
-    prefab: {fileID: 5691122574158358379, guid: 04a16065ee039494fa04d18f51e72936,
-      type: 3}
-    tags: 
-  - type: 0
-    prefab: {fileID: 5691122574158358379, guid: 39561770b356e124cbb68eb8504e3216,
-      type: 3}
-    tags: 
-  - type: 0
-    prefab: {fileID: 5691122574158358379, guid: b8ff7bab608ebc345ad0bdbd4ae0218d,
-      type: 3}
-    tags: 
   - type: 2
     prefab: {fileID: 1557698554331177871, guid: c813b2cfa36a9854eb5e4a2bc616e872,
       type: 3}
@@ -125,46 +97,10 @@ MonoBehaviour:
     prefab: {fileID: 1557698554331177871, guid: d75d24379d452754bbf10ea64f950c2f,
       type: 3}
     tags: 0200000006000000
-  - type: 5
-    prefab: {fileID: 6638033786677637244, guid: 720c616d63f4f92409636732ded4cbf9,
-      type: 3}
-    tags: 
-  - type: 5
-    prefab: {fileID: 8392944567628146564, guid: b8a9b38919a2a9743bf7042fdbc1ccf9,
-      type: 3}
-    tags: 
-  - type: 6
-    prefab: {fileID: 6638033786677637244, guid: 8aa6bbf461d91cd41a95cb30e1ab8ebc,
-      type: 3}
-    tags: 
-  - type: 5
-    prefab: {fileID: 5162340405626663344, guid: 53836b4d1fd0fd843bdd9f85ec76784a,
-      type: 3}
-    tags: 
-  - type: 5
-    prefab: {fileID: 6638033786677637244, guid: ae1711fe6fd831d44aa3f9c87e7541b2,
-      type: 3}
-    tags: 
-  - type: 5
-    prefab: {fileID: 8392944567628146564, guid: 04aeb8245b3c7a545a99ddecc95bd241,
-      type: 3}
-    tags: 
-  - type: 5
-    prefab: {fileID: 5162340405626663344, guid: 9f190e8977a849e4393165bf51f57329,
-      type: 3}
-    tags: 
-  - type: 6
-    prefab: {fileID: 6638033786677637244, guid: 1f5ac29dd94a7e341ba3c8bf5ffc3c20,
-      type: 3}
-    tags: 
   - type: 2
     prefab: {fileID: 4409933064841954170, guid: 389a8251e929385409000f34b8dd587c,
       type: 3}
     tags: 0000000007000000
-  - type: 0
-    prefab: {fileID: 5691122574158358379, guid: 27ed3a2d03db48b45986528fb81283ac,
-      type: 3}
-    tags: 05000000
   - type: 2
     prefab: {fileID: 1557698554331177871, guid: d84c90d003c591b4caec75fd7b78a77d,
       type: 3}
@@ -185,14 +121,6 @@ MonoBehaviour:
     prefab: {fileID: 1557698554331177871, guid: f411b10e2787dd84580b7b562934222a,
       type: 3}
     tags: 06000000
-  - type: 0
-    prefab: {fileID: 5691122574158358379, guid: 006f5111ecedeb742bf381000d34838b,
-      type: 3}
-    tags: 
-  - type: 0
-    prefab: {fileID: 5691122574158358379, guid: aed1927f4cf9bce43a4b780988a661eb,
-      type: 3}
-    tags: 
   - type: 2
     prefab: {fileID: 6670929847867414898, guid: 8cd2265fecc5b9f4dac67f07f9acafde,
       type: 3}
@@ -225,10 +153,6 @@ MonoBehaviour:
     prefab: {fileID: 5691122574158358379, guid: 3932c6db9ff35aa4f8fe968747434921,
       type: 3}
     tags: 0500000006000000
-  - type: 0
-    prefab: {fileID: 3747090962397192214, guid: e039544aaa678d14ab6aaf4e1f9db480,
-      type: 3}
-    tags: 05000000
   - type: 2
     prefab: {fileID: 4454764041570004665, guid: 10217ff0230a3bc4385a3eff494c2188,
       type: 3}
@@ -259,6 +183,18 @@ MonoBehaviour:
     tags: 050000000300000007000000
   - type: 2
     prefab: {fileID: 6670929847867414898, guid: a268754c64c313443835ce69a80e7146,
+      type: 3}
+    tags: 
+  - type: 0
+    prefab: {fileID: 3747090962397192214, guid: c83ba91650dfaab41a1dfb2e6abbaba5,
+      type: 3}
+    tags: 
+  - type: 5
+    prefab: {fileID: 3747090962397192214, guid: c83ba91650dfaab41a1dfb2e6abbaba5,
+      type: 3}
+    tags: 
+  - type: 6
+    prefab: {fileID: 3747090962397192214, guid: c83ba91650dfaab41a1dfb2e6abbaba5,
       type: 3}
     tags: 
   generationWidth: 16

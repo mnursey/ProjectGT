@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 public enum TrackPeiceType { EMPTY, START, STRAIGHT, TURN, PIT, CLIFF, CLIFF_CORNER, WATER, WATER_CLIFF, WATER_CORNER, WATER_NARROW, WATER_END, WATER_POND };
@@ -27,13 +28,14 @@ public class TrackGenerator : MonoBehaviour
 
     public List<List<int>> rotations = new List<List<int>>();
     public List<List<int>> prefabIndex = new List<List<int>>();
-    List<int[]> trackPath = new List<int[]>();
+    public List<int[]> trackPath = new List<int[]>();
 
     public GameObject generatedTilePrefab;
 
     public List<List<GameObject>> trackPeices = new List<List<GameObject>>();
     public List<Transform> trackStarts = new List<Transform>();
     public List<CheckPoint> checkPoints = new List<CheckPoint>();
+    public List<AINode> aiNodes = new List<AINode>();
 
     public System.Random r = new System.Random();
 
@@ -758,6 +760,7 @@ public class TrackGenerator : MonoBehaviour
 
         SetupStartPositions();
         SetupCheckpoints(trackPath);
+        SetupAINodes(trackPath);
         SetupRaceTrackController();
 
         if (serverMode)
@@ -804,7 +807,7 @@ public class TrackGenerator : MonoBehaviour
 
         foreach(Transform t in trackPeices[trackPeices.Count / 2][trackPeices[0].Count / 2].transform)
         {
-            if(t.name.ToLower() != "checkpoint")
+            if(t.name.ToLower() != "checkpoint" && !t.name.Contains("aiNode"))
             {
                 trackStarts.Add(t);
             }
@@ -866,6 +869,36 @@ public class TrackGenerator : MonoBehaviour
         for(int i = 0; i < checkPoints.Count; ++i)
         {
             checkPoints[i].t.LookAt(checkPoints[(i + 1) % checkPoints.Count].t);
+        }
+    }
+
+    public void SetupAINodes(List<int[]> path)
+    {
+        aiNodes = new List<AINode>();
+
+        foreach(AINode node in trackPeices[trackPeices.Count / 2][trackPeices[0].Count / 2].gameObject.GetComponentsInChildren<AINode>())
+        {
+            aiNodes.Add(node);
+        }
+
+        foreach (int[] tp in path)
+        {
+            List<AINode> tpNodes = trackPeices[tp[0]][tp[1]].gameObject.GetComponentsInChildren<AINode>().ToList();
+
+            if(tpNodes.Count > 0)
+            {
+                if (Vector3.Distance(tpNodes[0].transform.position, aiNodes[aiNodes.Count - 1].transform.position) > Vector3.Distance(tpNodes[tpNodes.Count - 1].transform.position, aiNodes[aiNodes.Count - 1].transform.position))
+                {
+                    tpNodes.Reverse();
+                }
+
+                aiNodes.AddRange(tpNodes);
+            }
+        }
+
+        foreach (AINode node in trackPeices[trackPeices.Count / 2][(trackPeices[0].Count / 2) - 1].gameObject.GetComponentsInChildren<AINode>())
+        {
+            aiNodes.Add(node);
         }
     }
 
@@ -1169,6 +1202,8 @@ public class TrackGenerator : MonoBehaviour
 
         SetupStartPositions();
         SetupCheckpoints(trackPath);
+        SetupAINodes(trackPath);
+        SetupAINodes(trackPath);
         SetupRaceTrackController();
     }
 
