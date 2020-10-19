@@ -78,7 +78,6 @@ public class ClientController : MonoBehaviour
 
         utils = new NetworkingUtils();
         utils.SetDebugCallback(DebugType.Message, debug);
-
         Reset();
 
         client = new NetworkingSockets();
@@ -88,6 +87,16 @@ public class ClientController : MonoBehaviour
         address.SetAddress(serverIP, serverport);
 
         connection = client.Connect(address);
+
+        /*
+        IntPtr sbs = new IntPtr();
+        IntPtr sbsSize = new IntPtr();
+        utils.GetConfigurationValue(ConfigurationValue.SendBufferSize, ConfigurationScope.Global, (IntPtr)connection, ConfigurationDataType.Int64, sbs, sbsSize);
+
+        Debug.Log("Config values:");
+        Debug.Log(sbs.ToInt64());
+        Debug.Log(sbsSize.ToInt64());
+        */
 
         status = OnClientStatusUpdate;
     }
@@ -380,7 +389,7 @@ public class ClientController : MonoBehaviour
 
     public void SendInput(InputState inputState)
     {
-        Send(NetworkingMessageTranslator.GenerateInputMessage(inputState, connection), SendType.NoDelay, null);
+        Send(NetworkingMessageTranslator.GenerateInputMessage(inputState, connection), SendType.Unreliable | SendType.NoDelay | SendType.NoNagle, null);
     }
 
     public void SendCarModel(int carModel)
@@ -397,6 +406,7 @@ public class ClientController : MonoBehaviour
     {
         if(connected)
         {
+            Debug.Log(data.Length);
             client.SendMessageToConnection(connection, data, flags);
             onSent?.Invoke();
         }

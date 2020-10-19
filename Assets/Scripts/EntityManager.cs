@@ -66,6 +66,9 @@ public class EntityManager : MonoBehaviour
     {
         int id = GetNextEntityID();
         entities.Add(new Entity(id, prefabID, g));
+
+        ignoreUpdates.Add(id);
+
         return id;
     }
 
@@ -91,6 +94,7 @@ public class EntityManager : MonoBehaviour
         // If spawning car use modifier with car model manager...
         if (prefabID == 0)
         {
+            Debug.Log(modifier + " v " + cmm.models.Count);
             prefabObject = cmm.models[modifier % cmm.models.Count].prefab;
         }
 
@@ -192,6 +196,17 @@ public class EntityManager : MonoBehaviour
                     Entity e = entities.Find(x => x.GetID() == id);
                     e.GetGameObject().GetComponent<CarController>().PlayCarSounds();
                 }
+
+                // Donkey
+                if (state.prefabID == 3)
+                {
+                    Entity e = entities.Find(x => x.GetID() == id);
+
+                    Rigidbody rbHat = e.GetGameObject().GetComponent<Rigidbody>();
+
+                    rbHat.constraints = RigidbodyConstraints.FreezeAll;
+
+                }
             }
         }
 
@@ -203,88 +218,26 @@ public class EntityManager : MonoBehaviour
         {
             bool ignoreUpdate = ignoreUpdates.Exists(x => x == state.id);
 
-            if(!ignoreUpdate)
-            {
-                // TODO
-                // NEVER DO THIS... USE LERP FOR EVERYTHING
-                if(entity.GetPrefabID() != 0)
-                {
-                    Vector3 desiredValue = Vector3.zero;
+            LerpController lc = entity.GetGameObject().GetComponent<LerpController>();
 
-                    desiredValue = state.velocity.GetValue();
-                    rb.velocity = desiredValue;
+            if (!ignoreUpdate)
+            {   
+                Vector3 rotE = state.rotation.GetValue();
+                Quaternion rot = Quaternion.Euler(rotE.x, rotE.y, rotE.z);
 
-                    desiredValue = state.position.GetValue();
-                    rb.position = desiredValue;
-                    
-                    desiredValue = state.angularVelocity.GetValue();
-                    rb.angularVelocity = desiredValue;
+                lc.UpdateTargets(state.position.GetValue(), rot);
+                lc.updateRate = rc.serverSendRate;
 
-                    Vector3 rotE = state.rotation.GetValue();
-                    Quaternion rot = Quaternion.Euler(rotE.x, rotE.y, rotE.z);
-                    rb.rotation = rot;
-                }
-
-                // Check if entity is car... if so add wheel vectors
-
-                // TODO
-                // REFACTOR THIS
-                // Using prefab ID is terrible
-
-                // Car
                 if (entity.GetPrefabID() == 0)
                 {
                     CarController cc = entity.GetGameObject().GetComponent<CarController>();
 
-                    cc.SetWheelCompressionValues(state.extraValues.GetRange(0, 8));
-                    cc.accelerationInput = state.extraValues[8];
-                    cc.steeringInput = state.extraValues[9];
-                    cc.brakingInput = state.extraValues[10];
-                    cc.hornInput = state.extraValues[11] > 0.0f ? true : false;
-
-                    LerpController lc = entity.GetGameObject().GetComponent<LerpController>();
-
-                    Vector3 rotE = state.rotation.GetValue();
-                    Quaternion rot = Quaternion.Euler(rotE.x, rotE.y, rotE.z);
-
-                    lc.UpdateTargets(state.position.GetValue(), rot);
-                    lc.updateRate = rc.serverSendRate;
-                }
-
-                // Boulder
-                if (entity.GetPrefabID() == 2)
-                {
-                    MeshCollider mc = entity.GetGameObject().GetComponentInChildren<MeshCollider>();
-
-                    if (state.extraValues[0] > 0.5f)
-                    {
-                        mc.enabled = true;
-                    }
-                    else
-                    {
-                        mc.enabled = false;
-                    }
-                }
-
-                // Donkey
-                if (entity.GetPrefabID() == 3)
-                {
-                    DonkeyController dc = entity.GetGameObject().GetComponent<DonkeyController>();
-
-                    if(state.extraValues.Count > 0)
-                    {
-                        dc.timer = state.extraValues[0];
-                        dc.currentRotationForce = state.extraValues[1];
-                    }
+                    cc.steeringInput = state.extraValues[0];
+                    cc.hornInput = state.extraValues[1] > 0.0f ? true : false;
                 }
             } else
             {
-                // Car
-                if (entity.GetPrefabID() == 0)
-                {
-                    LerpController lc = entity.GetGameObject().GetComponent<LerpController>();
-                    lc.lerp = false;
-                }
+                lc.lerp = false;   
             }
         }
     }
@@ -306,49 +259,19 @@ public class EntityManager : MonoBehaviour
 
         Rigidbody rb = entity.GetGameObject().GetComponent<Rigidbody>();
 
-
-        // Check if entity is car... if so add wheel vectors
-
-        // TODO
-        // REFACTOR THIS
-        // Using prefab idea ID terrible
-
         EntityState entityState;
 
-        if (entity.GetPrefabID() == 0)
+        // Car
+        if(entity.GetPrefabID() == 0)
         {
-            // Car
             CarController cc = entity.GetGameObject().GetComponent<CarController>();
-            List<float> extraValues = cc.GetWheelCompressionValues();
-            extraValues.AddRange(new float[] { cc.accelerationInput, cc.steeringInput, cc.brakingInput, cc.hornInput == true ? 1f : 0f});
-            entityState = new EntityState(entity.GetID(), entity.GetPrefabID(), rb.velocity, rb.position, rb.angularVelocity, rb.rotation.eulerAngles, extraValues, entity.GetModifier());
-        }
-        else if (entity.GetPrefabID() == 2)
+            List<float> extraValue = new List<float> { cc.steeringInput, cc.hornInput == true ? 1f : 0f };
+
+            entityState = new EntityState(entity.GetID(), entity.GetPrefabID(), rb.position, rb.rotation.eulerAngles, extraValue, entity.GetModifier());
+        } else
         {
-            // Boulder
-            MeshCollider mc = entity.GetGameObject().GetComponentInChildren<MeshCollider>();
-
-            float enabledValue = 0.0f;
-
-            if (mc.enabled == true)
-            {
-                enabledValue = 1.0f;
-            }
-
-            List<float> values = new List<float> { enabledValue };
-            entityState = new EntityState(entity.GetID(), entity.GetPrefabID(), rb.velocity, rb.position, rb.angularVelocity, rb.rotation.eulerAngles, values);
+            entityState = new EntityState(entity.GetID(), entity.GetPrefabID(), rb.position, rb.rotation.eulerAngles);
         }
-        else if (entity.GetPrefabID() == 3)
-        {
-            DonkeyController dc = entity.GetGameObject().GetComponent<DonkeyController>();
-            List<float> extraValues = new List<float>(new []{ dc.timer, dc.currentRotationForce});
-            entityState = new EntityState(entity.GetID(), entity.GetPrefabID(), rb.velocity, rb.position, rb.angularVelocity, rb.rotation.eulerAngles, extraValues);
-        }
-        else
-        {
-            entityState = new EntityState(entity.GetID(), entity.GetPrefabID(), rb.velocity, rb.position, rb.angularVelocity, rb.rotation.eulerAngles);
-        }
-
 
         return entityState;
     }
@@ -444,9 +367,7 @@ public class EntityState
 {
     public int id = -1;
     public int prefabID;
-    public SVector3 velocity;
     public SVector3 position;
-    public SVector3 angularVelocity;
     public SVector3 rotation;
     public bool set;
     public bool created;
@@ -459,34 +380,28 @@ public class EntityState
         this.id = id;
     }
 
-    public EntityState(int id, int prefabID, Vector3 velocity, Vector3 position, Vector3 angularVelocity, Vector3 rotation)
+    public EntityState(int id, int prefabID, Vector3 position, Vector3 rotation)
     {
         this.id = id;
         this.prefabID = prefabID;
-        this.velocity = new SVector3(velocity);
         this.position = new SVector3(position);
-        this.angularVelocity = new SVector3(angularVelocity);
         this.rotation = new SVector3(rotation);
     }
 
-    public EntityState(int id, int prefabID, Vector3 velocity, Vector3 position, Vector3 angularVelocity, Vector3 rotation, List<float> extraValues)
+    public EntityState(int id, int prefabID, Vector3 position, Vector3 rotation, List<float> extraValues)
     {
         this.id = id;
         this.prefabID = prefabID;
-        this.velocity = new SVector3(velocity);
         this.position = new SVector3(position);
-        this.angularVelocity = new SVector3(angularVelocity);
         this.rotation = new SVector3(rotation);
         this.extraValues = extraValues;
     }
 
-    public EntityState(int id, int prefabID, Vector3 velocity, Vector3 position, Vector3 angularVelocity, Vector3 rotation, List<float> extraValues, int modifier)
+    public EntityState(int id, int prefabID, Vector3 position, Vector3 rotation, List<float> extraValues, int modifier)
     {
         this.id = id;
         this.prefabID = prefabID;
-        this.velocity = new SVector3(velocity);
         this.position = new SVector3(position);
-        this.angularVelocity = new SVector3(angularVelocity);
         this.rotation = new SVector3(rotation);
         this.extraValues = extraValues;
         this.modifier = modifier;

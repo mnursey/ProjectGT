@@ -142,10 +142,6 @@ MonoBehaviour:
       type: 3}
     tags: 06000000
   - type: 2
-    prefab: {fileID: 4454764041570004665, guid: 6e893bafdcb3b2b44b9200b03a5f1047,
-      type: 3}
-    tags: 04000000
-  - type: 2
     prefab: {fileID: 4454764041570004665, guid: 13ab27fb07a642143849ec60a56c67c9,
       type: 3}
     tags: 05000000
@@ -207,6 +203,7 @@ MonoBehaviour:
     type: 3}
   trackStarts: []
   checkPoints: []
+  aiNodes: []
   raceTrackController: {fileID: 5337012155297989955}
   rc: {fileID: 0}
   serverMode: 0

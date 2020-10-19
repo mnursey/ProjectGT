@@ -141,7 +141,6 @@ public class AISimple : MonoBehaviour
             }
         }
 
-        Debug.Log(angle);
         if (Mathf.Abs(angle) < nodes[targetIndex].accelerationAngle)
         {
             carInput[1] = 1;

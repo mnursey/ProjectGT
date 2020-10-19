@@ -316,26 +316,6 @@ public class RaceController : MonoBehaviour
         return false;
     }
 
-    void ClientSetOwnInputState(InputState inputState)
-    {
-        PlayerEntity pe = players.Find(x => x.networkID == networkID);
-
-        if (pe != null)
-        {
-            CarController car = GetCarControllerFromID(pe.carID);
-                
-            if (car != null)
-            {
-                car.steeringInput = inputState.steeringInput;
-                car.accelerationInput = inputState.accelerationInput;
-                car.brakingInput = inputState.brakingInput;
-                car.resetInput = inputState.resetInput;
-                car.resetToCheckpointInput = inputState.resetToCheckpointInput;
-                car.hornInput = inputState.hornInput;
-            }
-        }
-    }
-
     void ClientHandleInitialCarSpawn()
     {
         if (cameraController.targetObject == null && networkID > 0)
@@ -442,8 +422,6 @@ public class RaceController : MonoBehaviour
 
                             car.resetToCheckpointInput = inputs[3] > 0.5f;
                             car.resetInput = inputs[4] > 0.5f;
-
-                            input.SetInput(inputs[0], inputs[1], inputs[2], inputs[3] > 0.5, inputs[4] > 0.5);
                         }
                     }                 
                 }
@@ -1663,7 +1641,7 @@ public class RaceController : MonoBehaviour
             }
             else
             {
-                InputState s = new InputState(networkID, frame, car.steeringInput, car.accelerationInput, car.brakingInput, car.resetInput, car.resetToCheckpointInput, car.hornInput, ready, em.GetEntityState(pe.carID), pe.lap, pe.checkpoint, pe.fastestLapTime, pe.currentLapTime);
+                InputState s = new InputState(networkID, frame, ready, em.GetEntityState(pe.carID), pe.lap, pe.checkpoint, pe.fastestLapTime, pe.currentLapTime);
                 return s;
             }
         }
@@ -1705,13 +1683,6 @@ public class RaceController : MonoBehaviour
             }
             else
             {
-                car.steeringInput = inputState.steeringInput;
-                car.accelerationInput = inputState.accelerationInput;
-                car.brakingInput = inputState.brakingInput;
-                car.resetInput = (inputState.resetInput || car.resetInput);
-                car.resetToCheckpointInput = (inputState.resetToCheckpointInput || car.resetToCheckpointInput);
-                car.hornInput = (inputState.hornInput || car.hornInput);
-
                 if(inputState.currentState.id > -1)
                 {
                     em.SetEntityState(inputState.currentState, false);
@@ -1850,15 +1821,9 @@ public class InputState
 {
     public UInt32 networkID;
     public int frameID;
-    public float steeringInput = 0.0f;
-    public float accelerationInput = 0.0f;
-    public float brakingInput = 0.0f;
     public bool ready = false;
-    public bool resetInput = false;
-    public bool resetToCheckpointInput = false;
-    public bool hornInput = false;
-    public int lap = 0;
-    public int checkpoint = 0;
+    public ushort lap = 0;
+    public ushort checkpoint = 0;
     public float fastestLapTime = float.MaxValue;
     public float currentLapTime = float.MaxValue;
 
@@ -1876,31 +1841,16 @@ public class InputState
         this.frameID = frameID;
     }
 
-    public InputState(UInt32 networkID, int frameID, float steeringInput, float accelerationInput, float brakingInput, bool resetInput, bool resetToCheckpointInput, bool hornInput, bool ready, EntityState currentState, int lap, int checkpoint, float fastestLapTime, float currentLapTime)
+    public InputState(UInt32 networkID, int frameID, bool ready, EntityState currentState, int lap, int checkpoint, float fastestLapTime, float currentLapTime)
     {
         this.networkID = networkID;
         this.frameID = frameID;
-        this.steeringInput = steeringInput;
-        this.accelerationInput = accelerationInput;
-        this.brakingInput = brakingInput;
-        this.resetInput = resetInput;
-        this.resetToCheckpointInput = resetToCheckpointInput;
-        this.hornInput = hornInput;
         this.ready = ready;
         this.currentState = currentState;
-        this.lap = lap;
-        this.checkpoint = checkpoint;
+        this.lap = (ushort)lap;
+        this.checkpoint = (ushort)checkpoint;
         this.fastestLapTime = fastestLapTime;
         this.currentLapTime = currentLapTime;
-    }
-
-    public void SetInput(float steeringInput, float accelerationInput, float brakingInput, bool resetToCheckpointInput, bool resetInput)
-    {
-        this.steeringInput = steeringInput;
-        this.accelerationInput = accelerationInput;
-        this.brakingInput = brakingInput;
-        this.resetToCheckpointInput = resetToCheckpointInput;
-        this.resetInput = resetInput;
     }
 }
 

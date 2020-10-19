@@ -364,7 +364,7 @@ public class ServerController : MonoBehaviour
 
     public void SendGameState(GameState gameState)
     {
-        SendToAllPlayers(NetworkingMessageTranslator.GenerateGameStateMessage(gameState, 0), SendType.Unreliable);
+        SendToAllPlayers(NetworkingMessageTranslator.GenerateGameStateMessage(gameState, 0), SendType.Unreliable | SendType.NoDelay | SendType.NoNagle);
     }
 
     public void SendUserManagerState()
