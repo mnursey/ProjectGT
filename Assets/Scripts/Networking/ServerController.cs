@@ -82,20 +82,21 @@ public class ServerController : MonoBehaviour
         utils = new NetworkingUtils();
         utils.SetDebugCallback(DebugType.Message, debug);
 
+        status = OnServerStatusUpdate;
+        utils.SetStatusCallback(status);
+
         server = new NetworkingSockets();
 
         Address address = new Address();
         address.SetAddress("::0", port);
 
-        listenSocket = server.CreateListenSocket(address);
+        listenSocket = server.CreateListenSocket(ref address);
 
         //connectedPollGroup = server.CreatePollGroup();
-
-        status = OnServerStatusUpdate;
     }
 
     [MonoPInvokeCallback(typeof(StatusCallback))]
-    static void OnServerStatusUpdate(StatusInfo info, System.IntPtr context)
+    static void OnServerStatusUpdate(ref StatusInfo info)
     {
         // Debug.Log("Server Status: " + info.ToString());
         switch(info.connectionInfo.state)
@@ -177,7 +178,7 @@ public class ServerController : MonoBehaviour
                             rc.CreatePlayer(clientID, jr.carModel, jr.accountID, jr.accountType);
 
                             // Send Accept Connect msg
-                            SendTo(clientID, NetworkingMessageTranslator.GenerateServerJoinResponseMessage(new JoinRequestResponce(clientID)), SendType.Reliable);
+                            SendTo(clientID, NetworkingMessageTranslator.GenerateServerJoinResponseMessage(new JoinRequestResponce(clientID)), SendFlags.Reliable);
 
                             // Send Usernames
                             SendUserManagerState();
@@ -189,7 +190,7 @@ public class ServerController : MonoBehaviour
                             Debug.Log("Server full. Cannot allow client to join as player." + jr.version);
 
                             // Send Disconnect msg
-                            SendTo(clientID, NetworkingMessageTranslator.GenerateServerJoinResponseMessage(new JoinRequestResponce("Server full.")), SendType.Reliable);
+                            SendTo(clientID, NetworkingMessageTranslator.GenerateServerJoinResponseMessage(new JoinRequestResponce("Server full.")), SendFlags.Reliable);
                         }
                     }
                     else
@@ -197,7 +198,7 @@ public class ServerController : MonoBehaviour
                         Debug.Log("Server Rejected client connection due to version mismatch... Client Version " + jr.version);
 
                         // Send Disconnect msg
-                        SendTo(clientID, NetworkingMessageTranslator.GenerateServerJoinResponseMessage(new JoinRequestResponce("Version Mismatch.\nVisit itch.io to download the up-to-date client.")), SendType.Reliable);
+                        SendTo(clientID, NetworkingMessageTranslator.GenerateServerJoinResponseMessage(new JoinRequestResponce("Version Mismatch.\nVisit itch.io to download the up-to-date client.")), SendFlags.Reliable);
                     }
 
                     break;
@@ -249,7 +250,7 @@ public class ServerController : MonoBehaviour
                         Task.Run(() =>
                         {
                             db.AddAccount(newAccountID, 1, UsernameGenerator.GenerateUsername());
-                            SendTo(clientID, NetworkingMessageTranslator.GenerateNewAccountMessageResponce(new NewAccountMsg(newAccountID, 1)), SendType.Reliable);
+                            SendTo(clientID, NetworkingMessageTranslator.GenerateNewAccountMessageResponce(new NewAccountMsg(newAccountID, 1)), SendFlags.Reliable);
                         });
                     }
 
@@ -301,7 +302,7 @@ public class ServerController : MonoBehaviour
                             }
 
                             // return account info
-                            SendTo(clientID, NetworkingMessageTranslator.GenerateLoginMessageResponce(accountData), SendType.Reliable);
+                            SendTo(clientID, NetworkingMessageTranslator.GenerateLoginMessageResponce(accountData), SendFlags.Reliable);
                         });
                     }
 
@@ -325,7 +326,7 @@ public class ServerController : MonoBehaviour
 
 
                         // return account info
-                        SendTo(clientID, NetworkingMessageTranslator.GenerateGlobalLeaderboardMessage(topScores), SendType.Reliable);
+                        SendTo(clientID, NetworkingMessageTranslator.GenerateGlobalLeaderboardMessage(topScores), SendFlags.Reliable);
                     });
 
                     break;
@@ -364,35 +365,35 @@ public class ServerController : MonoBehaviour
 
     public void SendGameState(GameState gameState)
     {
-        SendToAllPlayers(NetworkingMessageTranslator.GenerateGameStateMessage(gameState, 0), SendType.Unreliable | SendType.NoDelay | SendType.NoNagle);
+        SendToAllPlayers(NetworkingMessageTranslator.GenerateGameStateMessage(gameState, 0), SendFlags.Unreliable | SendFlags.NoDelay | SendFlags.NoNagle);
     }
 
     public void SendUserManagerState()
     {
-        SendToAllPlayers(NetworkingMessageTranslator.GenerateUserManagerStateMessage(rc.um.GetState(), 0), SendType.Reliable);
+        SendToAllPlayers(NetworkingMessageTranslator.GenerateUserManagerStateMessage(rc.um.GetState(), 0), SendFlags.Reliable);
     }
 
     public void SendTrackData()
     {
-        SendToAllPlayers(NetworkingMessageTranslator.GenerateTrackDataMessage(rc.trackGenerator.serializedTrack, 0), SendType.Reliable);
+        SendToAllPlayers(NetworkingMessageTranslator.GenerateTrackDataMessage(rc.trackGenerator.serializedTrack, 0), SendFlags.Reliable);
     }
 
     public void SendTrackData(UInt32 connectionID)
     {
-        SendTo(connectionID, NetworkingMessageTranslator.GenerateTrackDataMessage(rc.trackGenerator.serializedTrack, 0), SendType.Reliable);
+        SendTo(connectionID, NetworkingMessageTranslator.GenerateTrackDataMessage(rc.trackGenerator.serializedTrack, 0), SendFlags.Reliable);
     }
 
-    public void SendTo(UInt32 connectionID, string data, SendType flags)
+    public void SendTo(UInt32 connectionID, string data, SendFlags flags)
     {
         SendTo(connectionID, Encoding.ASCII.GetBytes(data), flags);
     }
 
-    public void SendTo(UInt32 connectionID, byte[] data, SendType flags)
+    public void SendTo(UInt32 connectionID, byte[] data, SendFlags flags)
     {
         server.SendMessageToConnection(connectionID, data, flags);
     }
 
-    public void SendToAll(Byte[] data, SendType flags)
+    public void SendToAll(Byte[] data, SendFlags flags)
     {
         if (ServerActive())
         {
@@ -403,7 +404,7 @@ public class ServerController : MonoBehaviour
         }
     }
 
-    public void SendToAllPlayers(Byte[] data, SendType flags)
+    public void SendToAllPlayers(Byte[] data, SendFlags flags)
     {
         if (ServerActive())
         {
@@ -436,7 +437,7 @@ public class ServerController : MonoBehaviour
     {
         if (ServerActive())
         {
-            server.DispatchCallback(status);
+            server.RunCallbacks();
 
             for(int c = 0; c < connectedClients.Count; ++c){
                 int netMessagesCount = server.ReceiveMessagesOnConnection(connectedClients[c], netMessages, maxMessages);
@@ -451,7 +452,7 @@ public class ServerController : MonoBehaviour
             }
 
             {
-                int netMessagesCount = server.ReceiveMessagesOnListenSocket(listenSocket, netMessages, maxMessages);
+                int netMessagesCount = server.ReceiveMessagesOnConnection(listenSocket, netMessages, maxMessages);
 
                 if (netMessagesCount > 0)
                 {

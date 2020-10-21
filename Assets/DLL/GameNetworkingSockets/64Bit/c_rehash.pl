@@ -12,8 +12,8 @@
 # Perl c_rehash script, scan all files in a directory
 # and add symbolic links to their hash values.
 
-my $dir = "D:/dev/GameNetworkingSockets/vcpkg/packages/openssl-windows_x64-windows";
-my $prefix = "D:/dev/GameNetworkingSockets/vcpkg/packages/openssl-windows_x64-windows";
+my $dir = "D:/SteamworksSDK/GameNetworkingSockets/vcpkg/packages/openssl-windows_x64-windows/debug";
+my $prefix = "D:/SteamworksSDK/GameNetworkingSockets/vcpkg/packages/openssl-windows_x64-windows/debug";
 
 my $errorcount = 0;
 my $openssl = $ENV{OPENSSL} || "openssl";

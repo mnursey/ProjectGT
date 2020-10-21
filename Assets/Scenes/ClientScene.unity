@@ -33472,9 +33472,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   version: 1.0
-  serverIP: 192.168.1.100
+  serverIP: 192.168.1.110
   serverport: 10070
-  connection: 0
   rc: {fileID: 1893463311}
   connected: 0
 --- !u!4 &1639248995

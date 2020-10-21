@@ -28,10 +28,10 @@ public class ClientController : MonoBehaviour
     public string serverIP;
     public ushort serverport = 10069;
 
-    private StatusCallback status;
-    NetworkingSockets client;
-    NetworkingUtils utils;
-    public UInt32 connection;
+    private static StatusCallback status;
+    static NetworkingSockets client;
+    static NetworkingUtils utils;
+    public static UInt32 connection;
 
     public RaceController rc;
 
@@ -55,6 +55,8 @@ public class ClientController : MonoBehaviour
 
     void Awake()
     {
+        Instance = this;
+
         Library.Initialize();
 
         Debug.Log("Initialized ValveSockets");
@@ -62,7 +64,7 @@ public class ClientController : MonoBehaviour
 
     void Start()
     {
-        Instance = this;
+
     }
 
     public void ConnectToServer(string username, ulong accountID, int accountType, OnConnect onConnect, OnDisconnect onDisconnect, OnReject onReject, OnAccountCreate onAccountCreate, OnLogin onLogin, OnGlobalLeaderboardData onGlobalLeaderboardData)
@@ -78,6 +80,7 @@ public class ClientController : MonoBehaviour
 
         utils = new NetworkingUtils();
         utils.SetDebugCallback(DebugType.Message, debug);
+
         Reset();
 
         client = new NetworkingSockets();
@@ -86,19 +89,10 @@ public class ClientController : MonoBehaviour
 
         address.SetAddress(serverIP, serverport);
 
-        connection = client.Connect(address);
-
-        /*
-        IntPtr sbs = new IntPtr();
-        IntPtr sbsSize = new IntPtr();
-        utils.GetConfigurationValue(ConfigurationValue.SendBufferSize, ConfigurationScope.Global, (IntPtr)connection, ConfigurationDataType.Int64, sbs, sbsSize);
-
-        Debug.Log("Config values:");
-        Debug.Log(sbs.ToInt64());
-        Debug.Log(sbsSize.ToInt64());
-        */
-
         status = OnClientStatusUpdate;
+        utils.SetStatusCallback(status);
+
+        connection = client.Connect(ref address);
     }
 
     public void JoinGame(string username, ulong accountID, int accountType, OnConnect onConnect, OnDisconnect onDisconnect, OnReject onReject, OnAccountCreate onAccountCreate, OnLogin onLogin, OnGlobalLeaderboardData onGlobalLeaderboardData)
@@ -108,7 +102,7 @@ public class ClientController : MonoBehaviour
 
             if (connected)
             {
-                Send(NetworkingMessageTranslator.GenerateClientJoinMessage(new JoinRequest(username, version, rc.selectedCarModel, accountID, accountType)), SendType.Reliable, null);
+                Send(NetworkingMessageTranslator.GenerateClientJoinMessage(new JoinRequest(username, version, rc.selectedCarModel, accountID, accountType)), SendFlags.Reliable, null);
             }
             else
             {
@@ -124,7 +118,7 @@ public class ClientController : MonoBehaviour
         // Todo handle failed to connect
         this.onConnect = (bool connected) => {
             if(connected)
-                Send(NetworkingMessageTranslator.GenerateNewAccountMessage(), SendType.Reliable, null);
+                Send(NetworkingMessageTranslator.GenerateNewAccountMessage(), SendFlags.Reliable, null);
         };
 
         this.onDisconnect = null;
@@ -144,7 +138,7 @@ public class ClientController : MonoBehaviour
             this.onConnect = onConnect;
 
             if (connected)
-                Send(NetworkingMessageTranslator.GenerateLoginMessage(accountID, accountType), SendType.Reliable, null);
+                Send(NetworkingMessageTranslator.GenerateLoginMessage(accountID, accountType), SendFlags.Reliable, null);
 
             onConnect?.Invoke(connected);
         };
@@ -163,7 +157,7 @@ public class ClientController : MonoBehaviour
         // Todo handle failed to connect
         this.onConnect = (bool connected) => {
             if (connected)
-                Send(NetworkingMessageTranslator.GenerateSaveSelectedCarMessage(accountID, accountType, carID), SendType.Reliable, null);
+                Send(NetworkingMessageTranslator.GenerateSaveSelectedCarMessage(accountID, accountType, carID), SendFlags.Reliable, null);
         };
 
         this.onDisconnect = null;
@@ -180,7 +174,7 @@ public class ClientController : MonoBehaviour
         // Todo handle failed to connect
         this.onConnect = (bool connected) => {
             if (connected)
-                Send(NetworkingMessageTranslator.GenerateGlobalLeaderboardMessage(), SendType.Reliable, null);
+                Send(NetworkingMessageTranslator.GenerateGlobalLeaderboardMessage(), SendFlags.Reliable, null);
         };
 
         this.onDisconnect = null;
@@ -193,7 +187,7 @@ public class ClientController : MonoBehaviour
     }
 
     [MonoPInvokeCallback(typeof(StatusCallback))]
-    static void OnClientStatusUpdate(StatusInfo info, System.IntPtr context)
+    static void OnClientStatusUpdate(ref StatusInfo info)
     {
         switch (info.connectionInfo.state)
         {
@@ -204,7 +198,7 @@ public class ClientController : MonoBehaviour
                 break;
 
             case Valve.Sockets.ConnectionState.Connected:
-                Debug.Log(String.Format("Connected to server - ID: {0}, IP: {1}", Instance.connection, info.connectionInfo.address.GetIP()));
+                Debug.Log(String.Format("Connected to server - ID: {0}, IP: {1}", connection, info.connectionInfo.address.GetIP()));
 
                 Instance.connected = true;
                 Instance.onConnect?.Invoke(Instance.connected);
@@ -215,7 +209,7 @@ public class ClientController : MonoBehaviour
                 Instance.onDisconnect?.Invoke();
                 Instance.Disconnect();
 
-                Debug.Log(String.Format("Disconnected from server (closed by server) - ID: {0}, IP: {1}", Instance.connection, info.connectionInfo.address.GetIP()));
+                Debug.Log(String.Format("Disconnected from server (closed by server) - ID: {0}, IP: {1}", connection, info.connectionInfo.address.GetIP()));
                 break;
 
             case Valve.Sockets.ConnectionState.ProblemDetectedLocally:
@@ -227,7 +221,7 @@ public class ClientController : MonoBehaviour
 
                 Instance.Disconnect();
 
-                Debug.Log(String.Format("Disconnected from server (error) - ID: {0}, IP: {1}", Instance.connection, info.connectionInfo.address.GetIP()));
+                Debug.Log(String.Format("Disconnected from server (error) - ID: {0}, IP: {1}", connection, info.connectionInfo.address.GetIP()));
                 break;
         }
     }
@@ -353,7 +347,7 @@ public class ClientController : MonoBehaviour
     {
         if(client != null)
         {
-            client.DispatchCallback(status);
+            client.RunCallbacks();
 
             int netMessagesCount = client.ReceiveMessagesOnConnection(connection, netMessages, maxMessages);
 
@@ -389,24 +383,24 @@ public class ClientController : MonoBehaviour
 
     public void SendInput(InputState inputState)
     {
-        Send(NetworkingMessageTranslator.GenerateInputMessage(inputState, connection), SendType.Unreliable | SendType.NoDelay | SendType.NoNagle, null);
+        Send(NetworkingMessageTranslator.GenerateInputMessage(inputState, connection), SendFlags.Unreliable | SendFlags.NoDelay | SendFlags.NoNagle, null);
     }
 
     public void SendCarModel(int carModel)
     {
-        Send(NetworkingMessageTranslator.GenerateCarModelMessage(carModel, connection), SendType.Reliable, null);
+        Send(NetworkingMessageTranslator.GenerateCarModelMessage(carModel, connection), SendFlags.Reliable, null);
     }
 
     public void RequestTrack()
     {
-        Send(NetworkingMessageTranslator.GenerateTrackDataMessage(null, connection), SendType.Reliable, null);
+        Send(NetworkingMessageTranslator.GenerateTrackDataMessage(null, connection), SendFlags.Reliable, null);
     }
 
-    public void Send(Byte[] data, SendType flags, OnSent onSent)
+    public void Send(Byte[] data, SendFlags flags, OnSent onSent)
     {
         if(connected)
         {
-            Debug.Log(data.Length);
+            //Debug.Log(data.Length);
             client.SendMessageToConnection(connection, data, flags);
             onSent?.Invoke();
         }
