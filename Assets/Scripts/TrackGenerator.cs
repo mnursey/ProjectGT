@@ -72,6 +72,18 @@ public class TrackGenerator : MonoBehaviour
     public float xOffsetC;
     public float yOffsetC;
 
+    public static TrackGenerator Instance;
+
+    public void Awake()
+    {
+        if(Instance == null) {
+            Instance = this;
+        } else
+        {
+            Debug.LogError("MORE THEN ONE TRACK GENERATOR");
+        }
+    }
+
     public void Start()
     {
 

@@ -17,11 +17,21 @@ public class PlaceOnGround : MonoBehaviour
 
         RaycastHit hit;
 
+        foreach(Collider c in GetComponentsInChildren<Collider>())
+        {
+            c.enabled = false;
+        }
+
         if (rc.targetPhysicsScene.Raycast(new Vector3(transform.position.x, 1024f, transform.position.z), Vector3.down, out hit, Mathf.Infinity, ~LayerMask.GetMask("Water")))
         {
             height = hit.point.y;
             iHitThis = hit.transform.gameObject;
             Debug.DrawLine(new Vector3(transform.position.x, 1024f, transform.position.z), hit.point);
+
+            foreach (Collider c in GetComponentsInChildren<Collider>())
+            {
+                c.enabled = true;
+            }
         }
         else
         {

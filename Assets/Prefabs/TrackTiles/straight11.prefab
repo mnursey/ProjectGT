@@ -1540,6 +1540,7 @@ GameObject:
   - component: {fileID: 4418908346177213151}
   - component: {fileID: 7957742692764298790}
   - component: {fileID: 8021652317630182126}
+  - component: {fileID: 2766761791078689271}
   m_Layer: 0
   m_Name: tree_1 Variant Variant
   m_TagString: Untagged
@@ -1576,7 +1577,7 @@ MeshRenderer:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 8526232038741580538}
-  m_Enabled: 1
+  m_Enabled: 0
   m_CastShadows: 1
   m_ReceiveShadows: 1
   m_DynamicOccludee: 1
@@ -1617,11 +1618,25 @@ MeshCollider:
   m_GameObject: {fileID: 8526232038741580538}
   m_Material: {fileID: 0}
   m_IsTrigger: 0
-  m_Enabled: 1
+  m_Enabled: 0
   serializedVersion: 4
   m_Convex: 0
   m_CookingOptions: 30
   m_Mesh: {fileID: 352359275752214291, guid: 65faf143785152546bbacacc9a254b6d, type: 3}
+--- !u!114 &2766761791078689271
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8526232038741580538}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5598b1429283ce947b939fb771eda7be, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  treeIndex: 2
+  tg: {fileID: 0}
 --- !u!1 &8659643770877969830
 GameObject:
   m_ObjectHideFlags: 0
