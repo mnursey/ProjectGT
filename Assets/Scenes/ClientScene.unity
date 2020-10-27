@@ -37607,7 +37607,7 @@ MonoBehaviour:
     saveWeights: 0
     lookAngle: 5
     numberFailedCars: 0
-  aiActive: 1
+  aiActive: 0
   raceModeState: 0
   prevRaceModeState: 2
   targetNumberOfLaps: 0

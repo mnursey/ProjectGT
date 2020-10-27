@@ -52,6 +52,7 @@ public class EntityManager : MonoBehaviour
 
         entityIDTracker = 0;
         removedEntities = new List<int>();
+        ignoreUpdates = new List<int>();
     }
 
     public void AddTrackNetworkEntities(List<TrackNetworkEntity> trackNetworkEntities)
@@ -234,6 +235,8 @@ public class EntityManager : MonoBehaviour
 
                     cc.steeringInput = state.extraValues[0];
                     cc.hornInput = state.extraValues[1] > 0.0f ? true : false;
+
+                    cc.LockMovement();
                 }
             } else
             {
