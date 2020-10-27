@@ -33471,7 +33471,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9f40f0a9c396b824293767681d0f98cf, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  version: 1.0
+  version: 1.1
   serverIP: 192.168.1.110
   serverport: 10070
   rc: {fileID: 1893463311}

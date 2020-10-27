@@ -272,6 +272,18 @@ MonoBehaviour:
   shortTone: {fileID: 0}
   longTone: {fileID: 0}
   simpleAI: {fileID: 0}
+  aiGANN:
+    state: 0
+    weightsSaveName: /aiWeights.dat
+    generation: 0
+    populationSize: 20
+    mutationRate: 100
+    maxTestTime: 60
+    maxTimeBetweenCheckpoints: 6
+    visionDistance: 20
+    saveWeights: 0
+    lookAngle: 15
+    numberFailedCars: 0
   aiActive: 0
   raceModeState: 0
   prevRaceModeState: 0
@@ -288,6 +300,7 @@ MonoBehaviour:
   ready: 0
   selectedCarModel: 0
   serverSendRate: 3
+  clientSendRate: 3
   idleTime: 5
   clientFastestLapTime: 3.4028235e+38
   clientCurrentLap: 0
@@ -295,6 +308,7 @@ MonoBehaviour:
   scoreMulti: 5
   skippedCheckpointTolerance: 2
   stac: {fileID: 0}
+  loadTrackFailureDelay: 32
 --- !u!4 &368693197
 Transform:
   m_ObjectHideFlags: 0
@@ -365,7 +379,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e2f06e5285f99ce4990567a15e88d2d7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  version: 1.0
+  version: 1.1
   port: 10070
   connectedClients: 
   acceptingClients: 1
