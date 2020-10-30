@@ -1299,7 +1299,7 @@ public class RaceController : MonoBehaviour
                             {
                                 pe.lap++;
 
-                                if (pe.currentLapTime < pe.fastestLapTime)
+                                if (pe.currentLapTime < pe.fastestLapTime && pe.finishedTime < 0.0f)
                                 {
                                     pe.fastestLapTime = pe.currentLapTime;
                                 }
