@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -370,13 +371,67 @@ public class EntityState
 {
     public int id = -1;
     public int prefabID;
-    public SVector3 position;
-    public SVector3 rotation;
-    public bool set;
+    public SVector3 position = new SVector3(Vector3.zero);
+    public SVector3 rotation = new SVector3(Vector3.zero);
     public bool created;
     public int modifier = -1;
 
     public List<float> extraValues = new List<float>();
+
+    public EntityState(byte[] bytes, out int numBytes)
+    {
+        List<byte> data = bytes.ToList();
+        int i = 0;
+
+        id = BitConverter.ToInt32(bytes, i);
+        i += sizeof(int);
+
+        prefabID = BitConverter.ToInt32(bytes, i);
+        i += sizeof(int);
+
+        float posX = BitConverter.ToSingle(bytes, i);
+        i += sizeof(float);
+
+        float posY = BitConverter.ToSingle(bytes, i);
+        i += sizeof(float);
+
+        float posZ = BitConverter.ToSingle(bytes, i);
+        i += sizeof(float);
+
+        position = new SVector3(new Vector3(posX, posY, posZ));
+
+        float rotX = BitConverter.ToSingle(bytes, i);
+        i += sizeof(float);
+
+        float rotY = BitConverter.ToSingle(bytes, i);
+        i += sizeof(float);
+
+        float rotZ = BitConverter.ToSingle(bytes, i);
+        i += sizeof(float);
+
+        rotation = new SVector3(new Vector3(rotX, rotY, rotZ));
+
+        created = BitConverter.ToBoolean(bytes, i);
+        i += sizeof(bool);
+
+        modifier = BitConverter.ToInt32(bytes, i);
+        i += sizeof(int);
+
+        int numExtraValues = BitConverter.ToInt32(bytes, i);
+        i += sizeof(int);
+
+        extraValues = new List<float>();
+
+        int totalData = i + (numExtraValues * sizeof(float));
+
+        numBytes = totalData;
+
+        while (i < totalData)
+        {
+            extraValues.Add(BitConverter.ToSingle(bytes, i));
+            i += sizeof(float);
+        }
+    }
 
     public EntityState(int id)
     {
@@ -408,5 +463,33 @@ public class EntityState
         this.rotation = new SVector3(rotation);
         this.extraValues = extraValues;
         this.modifier = modifier;
+    }
+
+    public byte[] AsBytes()
+    {
+        List<byte> bytes = new List<byte>();
+
+        bytes.AddRange(BitConverter.GetBytes(id));
+        bytes.AddRange(BitConverter.GetBytes(prefabID));
+
+        bytes.AddRange(BitConverter.GetBytes(position.x));
+        bytes.AddRange(BitConverter.GetBytes(position.y));
+        bytes.AddRange(BitConverter.GetBytes(position.z));
+
+        bytes.AddRange(BitConverter.GetBytes(rotation.x));
+        bytes.AddRange(BitConverter.GetBytes(rotation.y));
+        bytes.AddRange(BitConverter.GetBytes(rotation.z));
+
+        bytes.AddRange(BitConverter.GetBytes(created));
+        bytes.AddRange(BitConverter.GetBytes(modifier));
+
+        bytes.AddRange(BitConverter.GetBytes(extraValues.Count));
+
+        foreach (float extraValue in extraValues)
+        {
+            bytes.AddRange(BitConverter.GetBytes(extraValue));
+        }
+
+        return bytes.ToArray();
     }
 }

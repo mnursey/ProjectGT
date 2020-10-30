@@ -232,6 +232,8 @@ public class ClientController : MonoBehaviour
 
         byte[] messageDataBuffer = new byte[netMessage.length];
 
+        //Debug.Log("REC: " + netMessage.length);
+
         netMessage.CopyTo(messageDataBuffer);
         netMessage.Destroy();
 
@@ -400,7 +402,7 @@ public class ClientController : MonoBehaviour
     {
         if(connected)
         {
-            //Debug.Log(data.Length);
+            Debug.Log(data.Length);
             client.SendMessageToConnection(connection, data, flags);
             onSent?.Invoke();
         }

@@ -7,6 +7,7 @@ using System;
 using System.Text;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.IO;
+using System.Linq;
 
 public delegate void OnSent();
 
@@ -75,7 +76,7 @@ public static class NetworkingMessageTranslator
     public static byte[] GenerateGameStateMessage(GameState gamestate, UInt32 clientID)
     {
         NetworkingMessage msg = new NetworkingMessage(NetworkingMessageType.GAME_STATE, clientID);
-        msg.content = ToByteArray(gamestate);
+        msg.content = gamestate.AsBytes();
         return ToByteArray(msg);
     }
 
@@ -89,7 +90,7 @@ public static class NetworkingMessageTranslator
     public static byte[] GenerateInputMessage(InputState inputState, UInt32 clientID)
     {
         NetworkingMessage msg = new NetworkingMessage(NetworkingMessageType.INPUT_STATE, clientID);
-        msg.content = ToByteArray(inputState);
+        msg.content = inputState.AsBytes();
         return ToByteArray(msg);
     }
 
@@ -162,7 +163,7 @@ public static class NetworkingMessageTranslator
 
     public static GameState ParseGameState(byte[] data)
     {
-        return (GameState)ByteArrayToObject(data);
+        return new GameState(data);
     }
 
     public static UserManagerState ParseUserManagerState(byte[] data)
@@ -182,7 +183,7 @@ public static class NetworkingMessageTranslator
 
     public static InputState ParseInputState(byte[] data)
     {
-        return (InputState)ByteArrayToObject(data);
+        return new InputState(data);
     }
 
     public static int ParseCarModel(byte[] data)
@@ -223,12 +224,21 @@ public enum NetworkingMessageType { CLIENT_JOIN, SERVER_JOIN_RESPONSE, DISCONNEC
 public class NetworkingMessage
 {
     public NetworkingMessageType type;
-    public byte[] content;
+    public byte[] content = new byte[0];
     public UInt32 clientID;
 
-    public NetworkingMessage()
+    public NetworkingMessage(byte[] bytes)
     {
+        List<byte> data = bytes.ToList();
+        int i = 0;
 
+        type = (NetworkingMessageType)BitConverter.ToUInt16(bytes, i);
+        i += sizeof(ushort);
+
+        clientID = BitConverter.ToUInt32(bytes, i);
+        i += sizeof(UInt32);
+
+        content = data.GetRange(i, data.Count - i).ToArray();
     }
 
     public NetworkingMessage(NetworkingMessageType type, UInt32 clientID)
@@ -243,9 +253,20 @@ public class NetworkingMessage
         this.clientID = clientID;
         this.content = content;
     }
+
+    public byte[] AsBytes()
+    {
+        List<byte> bytes = new List<byte>();
+
+        bytes.AddRange(BitConverter.GetBytes((ushort)type));
+        bytes.AddRange(BitConverter.GetBytes(clientID));
+        bytes.AddRange(content);
+
+        return bytes.ToArray();
+    }
 }
 
-[Serializable]
+    [Serializable]
 public class NewAccountMsg
 {
     public ulong accountID;

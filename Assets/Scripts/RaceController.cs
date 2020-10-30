@@ -80,7 +80,7 @@ public class RaceController : MonoBehaviour
     public RaceModeState prevRaceModeState = RaceModeState.PRERACE;
 
     // Index for this starts at 1. You can't have 0 laps
-    public int targetNumberOfLaps = 1;
+    public ushort targetNumberOfLaps = 1;
 
     public float maxRaceTimer = 60f * 5;
     public float raceTimer = 0f;
@@ -1280,7 +1280,7 @@ public class RaceController : MonoBehaviour
                 c.resetCheckpoint = GetCheckpointToResetTo(pe);
 
                 // Check if at next checkpoint...
-                int nextCheckPointID = (pe.checkpoint + 1) % currentTrack.checkPoints.Count;
+                ushort nextCheckPointID = (ushort)((pe.checkpoint + 1) % currentTrack.checkPoints.Count);
                 CheckPoint nextCheckPoint = currentTrack.checkPoints[nextCheckPointID];
 
                 if(pe.networkID == networkID)
@@ -1373,7 +1373,7 @@ public class RaceController : MonoBehaviour
             return float.MinValue + 1.0f;
         }
 
-        int l = Math.Max(targetNumberOfLaps, 1);
+        int l = Math.Max(targetNumberOfLaps, (ushort)1);
         int lHat = pe.lap;
 
         int c = currentTrack.checkPoints.Count;
@@ -1589,8 +1589,8 @@ public class RaceController : MonoBehaviour
 
         if(pe != null)
         {
-            int localCheckpoint = pe.checkpoint;
-            int localLap = pe.lap;
+            ushort localCheckpoint = pe.checkpoint;
+            ushort localLap = pe.lap;
             float localFastestLapTime = pe.fastestLapTime;
             float localCurrentLapTime = pe.currentLapTime;
 
@@ -1708,8 +1708,8 @@ public class PlayerEntity
     public bool ready = false;
 
     // Index for this starts at 1. You can't have 0 laps
-    public int lap = 1;
-    public int checkpoint = 0;
+    public ushort lap = 1;
+    public ushort checkpoint = 0;
     public int frame;
 
     public UInt32 networkID;
@@ -1726,6 +1726,59 @@ public class PlayerEntity
 
     private float lastInputReceivedFrom = -1.0f;
 
+    public PlayerEntity(Byte[] bytes, out int numBytes)
+    {
+        List<byte> data = bytes.ToList();
+        int i = 0;
+
+        carID = BitConverter.ToInt32(bytes, i);
+        i += sizeof(int);
+
+        carModel = BitConverter.ToInt32(bytes, i);
+        i += sizeof(int);
+
+        ready = BitConverter.ToBoolean(bytes, i);
+        i += sizeof(bool);
+
+        lap = BitConverter.ToUInt16(bytes, i);
+        i += sizeof(UInt16);
+
+        checkpoint = BitConverter.ToUInt16(bytes, i);
+        i += sizeof(UInt16);
+
+        frame = BitConverter.ToInt32(bytes, i);
+        i += sizeof(int);
+
+        networkID = BitConverter.ToUInt32(bytes, i);
+        i += sizeof(UInt32);
+
+        accountID = BitConverter.ToUInt64(bytes, i);
+        i += sizeof(UInt64);
+
+        accountType = BitConverter.ToInt32(bytes, i);
+        i += sizeof(Int32);
+
+        position = BitConverter.ToInt32(bytes, i);
+        i += sizeof(Int32);
+
+        lapScore = BitConverter.ToSingle(bytes, i);
+        i += sizeof(float);
+
+        finishedTime = BitConverter.ToSingle(bytes, i);
+        i += sizeof(float);
+
+        currentLapTime = BitConverter.ToSingle(bytes, i);
+        i += sizeof(float);
+
+        fastestLapTime = BitConverter.ToSingle(bytes, i);
+        i += sizeof(float);
+
+        elapsedTime = BitConverter.ToSingle(bytes, i);
+        i += sizeof(float);
+
+        numBytes = i;
+    }
+
     public PlayerEntity(UInt32 networkID, ulong accountID, int accountType)
     {
         this.networkID = networkID;
@@ -1733,7 +1786,7 @@ public class PlayerEntity
         this.accountType = accountType;
     }
 
-    public void SetLapState(int lap, int checkpoint)
+    public void SetLapState(ushort lap, ushort checkpoint)
     {
         this.lap = lap;
         this.checkpoint = checkpoint;
@@ -1747,6 +1800,29 @@ public class PlayerEntity
     public float GetLastInputReceivedFrom()
     {
         return lastInputReceivedFrom;
+    }
+
+    public byte[] AsBytes()
+    {
+        List<byte> bytes = new List<byte>();
+
+        bytes.AddRange(BitConverter.GetBytes(carID));
+        bytes.AddRange(BitConverter.GetBytes(carModel));
+        bytes.AddRange(BitConverter.GetBytes(ready));
+        bytes.AddRange(BitConverter.GetBytes(lap));
+        bytes.AddRange(BitConverter.GetBytes(checkpoint));
+        bytes.AddRange(BitConverter.GetBytes(frame));
+        bytes.AddRange(BitConverter.GetBytes(networkID));
+        bytes.AddRange(BitConverter.GetBytes(accountID));
+        bytes.AddRange(BitConverter.GetBytes(accountType));
+        bytes.AddRange(BitConverter.GetBytes(position));
+        bytes.AddRange(BitConverter.GetBytes(lapScore));
+        bytes.AddRange(BitConverter.GetBytes(finishedTime));
+        bytes.AddRange(BitConverter.GetBytes(currentLapTime));
+        bytes.AddRange(BitConverter.GetBytes(fastestLapTime));
+        bytes.AddRange(BitConverter.GetBytes(elapsedTime));
+
+        return bytes.ToArray();
     }
 }
 
@@ -1765,6 +1841,53 @@ public class GameState
 
     }
 
+    public GameState(byte[] bytes)
+    {
+        List<byte> data = bytes.ToList();
+        int i = 0;
+
+        int numEntities = BitConverter.ToInt32(bytes, i);
+        i += sizeof(int);
+
+        for(int e = 0; e < numEntities; ++e)
+        {
+            int sizeOfEntity = 0;
+            EntityState entity = new EntityState(data.GetRange(i, data.Count - i).ToArray(), out sizeOfEntity);
+            entities.Add(entity);
+            i += sizeOfEntity;
+        }
+
+        int numPlayerEntities = BitConverter.ToInt32(bytes, i);
+        i += sizeof(int);
+
+        for (int pe = 0; pe < numPlayerEntities; ++pe)
+        {
+            int sizeOfPlayerEntity = 0;
+            PlayerEntity playerEntity = new PlayerEntity(data.GetRange(i, data.Count - i).ToArray(), out sizeOfPlayerEntity);
+            playerEntities.Add(playerEntity);
+            i += sizeOfPlayerEntity;
+        }
+
+        int numRemovedEntities = BitConverter.ToInt32(bytes, i);
+        i += sizeof(int);
+
+        for (int r = 0; r < numRemovedEntities; ++r)
+        {
+            removedEntities.Add(BitConverter.ToInt32(bytes, i));
+            i += sizeof(int);
+        }
+
+        int sizeOfRaceControllerState = 0;
+        raceControllerState = new RaceControllerState(data.GetRange(i, data.Count - i).ToArray(), out sizeOfRaceControllerState);
+        i += sizeOfRaceControllerState;
+
+        frame = BitConverter.ToInt32(bytes, i);
+        i += sizeof(int);
+
+        mapStringLength = BitConverter.ToInt32(bytes, i);
+        i += sizeof(int);
+    }
+
     public GameState(int frame, List<EntityState> entities, List<PlayerEntity> playerEntities, List<int> removedEntities, RaceControllerState raceControllerState, int mapStringLength)
     {
         this.entities = entities;
@@ -1773,6 +1896,36 @@ public class GameState
         this.frame = frame;
         this.raceControllerState = raceControllerState;
         this.mapStringLength = mapStringLength;
+    }
+
+    public byte[] AsBytes()
+    {
+        List<byte> bytes = new List<byte>();
+
+        bytes.AddRange(BitConverter.GetBytes(entities.Count));
+        foreach (EntityState es in entities)
+        {
+            bytes.AddRange(es.AsBytes());
+        }
+
+        bytes.AddRange(BitConverter.GetBytes(playerEntities.Count));
+        foreach(PlayerEntity pe in playerEntities)
+        {
+            bytes.AddRange(pe.AsBytes());
+        }
+
+        bytes.AddRange(BitConverter.GetBytes(removedEntities.Count()));
+        foreach(int re in removedEntities)
+        {
+            bytes.AddRange(BitConverter.GetBytes(re));
+        }
+
+        bytes.AddRange(raceControllerState.AsBytes());
+
+        bytes.AddRange(BitConverter.GetBytes(frame));
+        bytes.AddRange(BitConverter.GetBytes(mapStringLength));
+
+        return bytes.ToArray();
     }
 }
 
@@ -1784,7 +1937,7 @@ public class RaceControllerState
     public RaceModeState raceModeState = RaceModeState.PRERACE;
 
     // Index for this starts at 1. You can't have 0 laps
-    public int targetNumberOfLaps = 1;
+    public ushort targetNumberOfLaps = 1;
 
     public float maxRaceTimer = 60f * 5;
     public float raceTimer = 0f;
@@ -1801,7 +1954,45 @@ public class RaceControllerState
 
     }
 
-    public RaceControllerState(RaceControllerStateEnum raceControllerState, RaceModeState raceModeState, int targetNumberOfLaps, float maxRaceTimer, float raceTimer, float leaderFinishedRaceTime, float maxReadyTimer, float readyTimer, float maxStartTimer, float startTimer)
+    public RaceControllerState(Byte[] bytes, out int numBytes)
+    {
+        List<byte> data = bytes.ToList();
+        int i = 0;
+
+        raceControllerState = (RaceControllerStateEnum)BitConverter.ToUInt16(bytes, i);
+        i += sizeof(UInt16);
+
+        raceModeState = (RaceModeState)BitConverter.ToUInt16(bytes, i);
+        i += sizeof(UInt16);
+
+        targetNumberOfLaps = BitConverter.ToUInt16(bytes, i);
+        i += sizeof(UInt16);
+
+        maxRaceTimer = BitConverter.ToSingle(bytes, i);
+        i += sizeof(float);
+
+        raceTimer = BitConverter.ToSingle(bytes, i);
+        i += sizeof(float);
+
+        leaderFinishedRaceTime = BitConverter.ToSingle(bytes, i);
+        i += sizeof(float);
+
+        maxReadyTimer = BitConverter.ToSingle(bytes, i);
+        i += sizeof(float);
+
+        readyTimer = BitConverter.ToSingle(bytes, i);
+        i += sizeof(float);
+
+        maxStartTimer = BitConverter.ToSingle(bytes, i);
+        i += sizeof(float);
+
+        startTimer = BitConverter.ToSingle(bytes, i);
+        i += sizeof(float);
+
+        numBytes = i;
+    }
+
+    public RaceControllerState(RaceControllerStateEnum raceControllerState, RaceModeState raceModeState, ushort targetNumberOfLaps, float maxRaceTimer, float raceTimer, float leaderFinishedRaceTime, float maxReadyTimer, float readyTimer, float maxStartTimer, float startTimer)
     {
         this.raceControllerState = raceControllerState;
         this.raceModeState = raceModeState;
@@ -1813,6 +2004,24 @@ public class RaceControllerState
         this.readyTimer = readyTimer;
         this.maxStartTimer = maxStartTimer;
         this.startTimer = startTimer;
+    }
+
+    public byte[] AsBytes()
+    {
+        List<byte> bytes = new List<byte>();
+
+        bytes.AddRange(BitConverter.GetBytes((ushort)raceControllerState));
+        bytes.AddRange(BitConverter.GetBytes((ushort)raceModeState));
+        bytes.AddRange(BitConverter.GetBytes(targetNumberOfLaps));
+        bytes.AddRange(BitConverter.GetBytes(maxRaceTimer));
+        bytes.AddRange(BitConverter.GetBytes(raceTimer));
+        bytes.AddRange(BitConverter.GetBytes(leaderFinishedRaceTime));
+        bytes.AddRange(BitConverter.GetBytes(maxReadyTimer));
+        bytes.AddRange(BitConverter.GetBytes(readyTimer));
+        bytes.AddRange(BitConverter.GetBytes(maxStartTimer));
+        bytes.AddRange(BitConverter.GetBytes(startTimer));
+
+        return bytes.ToArray();
     }
 }
 
@@ -1834,6 +2043,36 @@ public class InputState
 
     }
 
+    public InputState(byte[] bytes)
+    {
+        List<byte> data = bytes.ToList();
+        int i = 0;
+
+        networkID = BitConverter.ToUInt32(bytes, i);
+        i += sizeof(UInt32);
+
+        frameID = BitConverter.ToInt32(bytes, i);
+        i += sizeof(int);
+
+        ready = BitConverter.ToBoolean(bytes, i);
+        i += sizeof(bool);
+
+        lap = BitConverter.ToUInt16(bytes, i);
+        i += sizeof(ushort);
+
+        checkpoint = BitConverter.ToUInt16(bytes, i);
+        i += sizeof(ushort);
+
+        float fastestLapTime = BitConverter.ToSingle(bytes, i);
+        i += sizeof(float);
+
+        float currentLapTime = BitConverter.ToSingle(bytes, i);
+        i += sizeof(float);
+
+        int entityStateSize = 0;
+        currentState = new EntityState(data.GetRange(i, data.Count - i).ToArray(), out entityStateSize);
+    }
+
     public InputState(UInt32 networkID, int frameID, bool ready)
     {
         this.networkID = networkID;
@@ -1851,6 +2090,23 @@ public class InputState
         this.checkpoint = (ushort)checkpoint;
         this.fastestLapTime = fastestLapTime;
         this.currentLapTime = currentLapTime;
+    }
+
+    public byte[] AsBytes()
+    {
+        List<byte> bytes = new List<byte>();
+
+        bytes.AddRange(BitConverter.GetBytes(networkID));
+        bytes.AddRange(BitConverter.GetBytes(frameID));
+        bytes.AddRange(BitConverter.GetBytes(ready));
+        bytes.AddRange(BitConverter.GetBytes(lap));
+        bytes.AddRange(BitConverter.GetBytes(checkpoint));
+        bytes.AddRange(BitConverter.GetBytes(fastestLapTime));
+        bytes.AddRange(BitConverter.GetBytes(currentLapTime));
+
+        bytes.AddRange(currentState.AsBytes());
+
+        return bytes.ToArray();
     }
 }
 
